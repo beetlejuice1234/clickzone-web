@@ -38,10 +38,14 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
 ## Conventions
 - **snake_case** in the DB; components use camelCase. Mapping layer: `src/lib/mappers.ts`
   (the `items` JSON inside sales is already camelCase — passed through).
-- Money mutations go through atomic `plpgsql` RPCs (all SECURITY DEFINER, `search_path=public`,
+- Money/stock mutations go through atomic `plpgsql` RPCs (all SECURITY DEFINER, `search_path=public`,
   internal `auth_role()` gate, EXECUTE to `authenticated`): `checkout`, `return_item`,
-  `phone_swap`, `verify_override_pin`, `daily_revenue`, `upsert_phone`.
+  `phone_swap`, `verify_override_pin`, `daily_revenue`, `upsert_phone`, `find_phone_by_identifier`.
 - Dates pinned to **Asia/Colombo** in RPCs.
+- Devices: `phones` carries `device_type` (phone|tablet|watch) + nullable `serial_number`; a phone
+  needs a 15-digit IMEI, a tablet/watch needs a serial (CHECK: imei OR serial). Empty identifiers are
+  stored as NULL. Active-stock uniqueness on both imei and serial (partial unique indexes); a
+  previously sold/removed IMEI/serial can be re-added (revive-vs-new).
 
 ## Progress (build order §8)
 - ✅ Phase 1 — Vite SPA skeleton
@@ -49,34 +53,60 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
 - ✅ Phase 3 — schema migration (`supabase/migrations/20260701_phase3_schema.sql`) — staging
 - ✅ Phase 4 — RLS + `auth_role()` + views + test users (`20260701_phase4_rls.sql`) — staging
 - ✅ Phase 5 — atomic RPCs (`20260701_phase5_rpcs.sql`) — staging
-- ✅ **Phase 6 — data layer + auth rewrite (COMPLETE, staging)**:
-  - Stage A: `AuthContext.tsx` (Supabase Auth, role from profiles, PIN-override capability),
-    `LoginScreen.tsx`, `mappers.ts`.
-  - Stage B: `api.ts` rewritten as TanStack Query hooks over the views/RPCs; modals wired
-    (`upsert_phone`/`checkout`/`return_item` etc.); `20260702_phase6_data_layer.sql`.
-  - Verified 13/13: owner sees 353 active phones + 462 sales WITH cost/profit; staff sees
-    inventory with NO cost and NO profit; a real UI checkout wrote a sale via the RPC.
-- ⏭️ **NEXT: Phase 7** — wire all pages/modals end-to-end on the new layer + owner store-switcher
-  / staff store pinning. (Do NOT build the Phase 8 client-issue features yet.)
+- ✅ **Phase 6 — data layer + auth rewrite (staging)**: `AuthContext.tsx` (Supabase Auth, role from
+  profiles, PIN-override capability), `LoginScreen.tsx`, `mappers.ts`; `api.ts` = TanStack Query hooks
+  over views/RPCs; modals wired; `20260702_phase6_data_layer.sql`. Verified 13/13 (owner sees
+  cost/profit; staff none; real UI checkout wrote a sale).
+- ✅ **Phase 7 — multi-store scoping (staging)** `20260702_phase7_multistore.sql`: staff-facing views
+  filter to the caller's store (owner sees all); `daily_revenue` force-scopes staff to own store;
+  `enforce_staff_store` trigger blocks a staff profile with null store_id; owner store-switcher in
+  Header (zustand `useStoreScope`, persisted) scopes owner listings + stamps store_id on owner writes.
+  Verified: staff isolated per store, owner sees/switches both.
+- ✅ **Phase 8a — device_type / serial support (staging)** `20260702_phase8a_device_type.sql`:
+  Device Type selector (Phone/Tablet/Watch) in Add/Edit modals; serial required for tablet/watch,
+  IMEI optional; search + POS lookup match serial; inventory shows device badge + right identifier.
+  Verified 5/5.
+- ✅ **Phase 8b — duplicate-IMEI revive-vs-new (staging)** `20260702_phase8b_revive.sql`:
+  `find_phone_by_identifier` RPC; AddUnitModal prompts Revive (keeps id/history) vs Create-new for a
+  prior sold/soft-deleted IMEI/serial, blocks active duplicates; `upsert_phone` un-deletes on revive;
+  **checkout trade-in revives** a prior unit instead of duplicating. Verified 7/7 + 0 dup active
+  imei/serial. (Resolves follow-up #1.)
+- ⏭️ **NEXT: Phase 8c** — Sales Log date-range filter (Today/Week/Month/Custom → gte/lte in query) +
+  Dashboard month picker + monthly aggregate (Issue #2). Then 8d–8h (see below). Small sub-sessions,
+  commit between each.
 
-## Phase-5 RPC follow-ups (deferred — fix in the noted phases)
-1. **Checkout trade-in always inserts a NEW phones row** even if that IMEI existed before (sold),
-   whereas `phone_swap` revives the old one → decide revive-vs-duplicate for consistency (**Phase 8b**).
+## Phase-5 RPC follow-ups
+1. ✅ RESOLVED (Phase 8b) — checkout trade-in now revives instead of duplicating.
 2. **total_revenue contract:** checkout sets `net_payable = total_revenue − trade_in_value`,
    assuming the client sends the **GROSS** total (POS now does). Keep this contract to avoid the
-   profit double-count (**Phase 6/8**; dashboard double-count fix in **8h**).
+   profit double-count (dashboard double-count check in **8h**).
 3. **trade-in-return doesn't move the replacement phone out** — `return_item` records the return +
    delta but doesn't mark the different phone the customer takes as sold (**Phase 8d**).
-4. **Minor:** `return_status` is always `'returned'` (no partial/full); `daily_revenue` isn't
-   store-scoped for staff yet (**Phase 7**).
+4. ✅ RESOLVED (Phase 7) — `daily_revenue` now store-scopes staff. (Minor still open: `return_status`
+   is always `'returned'`, no partial/full distinction.)
 
-## Staging test users
+## Remaining Phase 8 sub-chunks
+8c date ranges/monthly · 8d trade-in-return flow · 8e payment method (Cash/Card) + customer records ·
+8f PDF fixes (T&C + Special Notes both render; bill == sales values) · 8g staff lock + daily-revenue
+staff dashboard · 8h profit double-count / Asia-Colombo timezone / in-stock vs sold counts.
+
+## Staging test users / stores
 - Owner: `owner@clickzone.test` / `ClickZoneOwner!2026`
-- Staff: `staff@clickzone.test` / `ClickZoneStaff!2026`
-- Kandy store id: `a0000000-0000-4000-8000-000000000001`; override PIN default `4321`.
+- Staff (Kandy): `staff@clickzone.test` / `ClickZoneStaff!2026`
+- Staff-2 (Test-2): `staff2@clickzone.test` / `ClickZoneStaff2!2026`
+- Stores: Kandy `a0000000-0000-4000-8000-000000000001`; Test-2 `a0000000-0000-4000-8000-000000000002`
+  (staging-only test store). Override PIN default `4321`.
+- Staging carries `[8A-TEST]`/`[8B-TEST]` marker rows from verification — safe to delete anytime.
+
+## Git
+- `clickzone-web/` is a git repo on branch **`web-migration`**. Commit at the end of each chunk
+  (message trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`).
+- `.env`, `.env.staging`, `docs/backups/` are **gitignored** (secrets + customer-data snapshots out
+  of history). Commits so far: `67466cb` (init through 8a), `5452c1f` (8b).
 
 ## Working rules
 - Every DB write goes to **staging (`ttaexrsipmwxhciisufc`) only**; confirm the ref before writing.
+  Production `zahoixqvkshqalvvrtbs` is read-only until cutover.
 - Each phase: snapshot → show SQL/diff → get approval → apply → verify → report → pause. Save DB
   changes as versioned files in `supabase/migrations/` (replayable at cutover).
-- Backups/snapshots live under `docs/backups/<date>*/`.
+- Backups/snapshots live under `docs/backups/<date>*/` (gitignored).
