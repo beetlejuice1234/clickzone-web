@@ -44,6 +44,22 @@ export function monthBounds(ym: string): { from: string; to: string } {
   return { from: `${ym}-01`, to: `${ym}-31` };
 }
 
+// The last `n` calendar days (Asia/Colombo), oldest→newest, as 'YYYY-MM-DD'. Anchored on the
+// Colombo "today" so the weekly chart buckets match how sales.date is stored (Colombo).
+export function lastNDaysColombo(n: number): string[] {
+  const base = new Date(`${todayColombo()}T00:00:00Z`);
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(base);
+    d.setUTCDate(d.getUTCDate() - (n - 1 - i));
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+// Short weekday label for a 'YYYY-MM-DD' calendar date, tz-stable (no off-by-one from the runtime tz).
+export function weekdayShortColombo(ymd: string): string {
+  return new Date(`${ymd}T00:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+}
+
 export const CONDITION_LABELS: Record<ConditionGrade, string> = {
   'sealed': 'Sealed',
   'a-plus': 'A+',

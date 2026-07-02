@@ -115,8 +115,16 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
   stock, other-brand model persists verbatim + sells. `[8G-TEST]` rows on staging. (Client Issue 7 +
   "Android not available for exchange".) **`phone_swap` left unwired** — no pure device-swap UI;
   open question for the client (trade-in + trade-in-return already cover the real workflows).
-- ⏭️ **NEXT: Phase 8h** — profit double-count check, Asia/Colombo timezone sweep, in-stock/sold counts
-  per store, and **build-green cleanup** (Sidebar/AddUnitModal/Dashboard TS errors) to unblock Phase 9.
+- ✅ **Phase 8h — correctness sweep + build-green (staging, no DB change)**: **profit audited** —
+  every calc uses `total_revenue − COGS` (never `net_payable`), so no trade-in double-count (worked
+  example: goods 150k, trade-in 40k, COGS 78k → profit 72k; `net_payable−COGS` would wrongly give 32k).
+  **Timezone → Asia/Colombo**: Dashboard today/month + 7-day chart (new `lastNDaysColombo`/
+  `weekdayShortColombo`), POS sale date/time, SalesLog export filename (fixes the weekly off-by-one).
+  **Phone counts**: IN STOCK/SOLD badges on Inventory (store-scoped). **Build GREEN**: Sidebar dead
+  sync code removed, `AddUnitModal` `status as const`, Dashboard unused `entry` dropped — `npm run
+  build` passes (`tsc -b` + `vite build`). Legacy zero-cost rows still need owner backfill (data, not math).
+- ⏭️ **NEXT: Phase 9** — PWA (vite-plugin-pwa: manifest + online-first service worker) + Vercel deploy
+  config (SPA rewrite, env vars from dashboard). Staging-backed test deploy — NOT the production cutover.
 - Note: `npm run build` still red on PRE-EXISTING errors cleared in **8h** (app runs via `vite dev`):
   `Sidebar` (legacy sync-status dead code), `AddUnitModal` (latent 8a `status: string` typing),
   one unused `entry` in Dashboard's chart map. `pdfBill` is now type-clean.

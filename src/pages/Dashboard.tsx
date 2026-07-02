@@ -5,7 +5,7 @@ import {
  Receipt
 } from 'lucide-react';
 import { usePhones, useAccessories, useSales, useExchanges } from '@/lib/api';
-import { formatLKR, cn, monthColombo, monthBounds } from '@/lib/utils';
+import { formatLKR, cn, monthColombo, monthBounds, todayColombo, lastNDaysColombo, weekdayShortColombo } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -39,7 +39,7 @@ export default function Dashboard() {
   return sum + sale.items.filter(i => i.type === 'accessory').reduce((qtySum, i) => qtySum + (i.quantity || 1), 0);
   }, 0);
   
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayColombo();
   const todaySales = sales.filter(s => s.date === today);
   const todayRevenue = todaySales.reduce((sum, s) => sum + s.totalRevenue, 0);
   const todayProfit = todaySales.reduce((sum, s) => {
@@ -64,7 +64,7 @@ export default function Dashboard() {
  .filter(p => p.status === 'in-stock')
  .reduce((sum, p) => sum + (p.targetSalePrice ? (p.targetSalePrice - p.costPrice) : 0), 0);
 
- const thisMonth = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+ const thisMonth = monthColombo(); // 'YYYY-MM' (Asia/Colombo)
  const returnsThisMonth = sales.filter(s =>
  s.date.startsWith(thisMonth) && (s.returnStatus === 'partial' || s.returnStatus === 'full')
  );
@@ -94,22 +94,16 @@ export default function Dashboard() {
 
  // Chart data: Sales for last 7 days
  const chartData = useMemo(() => {
- const last7Days = Array.from({ length: 7 }, (_, i) => {
- const d = new Date();
- d.setDate(d.getDate() - i);
- return d.toISOString().split('T')[0];
- }).reverse();
-
- return last7Days.map(date => {
+ // Last 7 Asia/Colombo days so the weekly boundary matches how sales.date is stored (Colombo),
+ // fixing the off-by-one "weekly revenue" bug near midnight.
+ return lastNDaysColombo(7).map(date => {
  const daySales = sales.filter(s => s.date === date);
  const revenue = daySales.reduce((sum, s) => sum + s.totalRevenue, 0);
  const profit = daySales.reduce((sum, s) => {
  const cost = s.items.reduce((acc, item) => acc + item.costPrice, 0);
  return sum + (s.totalRevenue - cost);
  }, 0);
- 
- const label = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
- return { label, revenue, profit, date };
+ return { label: weekdayShortColombo(date), revenue, profit, date };
  });
  }, [sales]);
 
@@ -317,7 +311,7 @@ export default function Dashboard() {
  }}
  />
  <Bar dataKey="revenue" radius={[0, 0, 0, 0]} barSize={36}>
- {chartData.map((entry, index) => (
+ {chartData.map((_, index) => (
  <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? 'var(--accent)' : 'var(--line)'} className="transition-all hover:opacity-80" />
  ))}
  </Bar>

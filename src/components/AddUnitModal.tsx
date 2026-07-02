@@ -130,7 +130,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  icloudStatus,
  costPrice: parseInt(costPrice),
  targetSalePrice: parseInt(salePrice),
- status: 'in-stock',
+ status: 'in-stock' as const,
  dateAdded: new Date().toISOString()
  };
 

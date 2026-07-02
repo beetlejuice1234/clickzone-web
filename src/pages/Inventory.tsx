@@ -51,6 +51,13 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  const { accessories, isLoading: isLoadingAcc } = useAccessories();
  const isLoading = isLoadingPhones || isLoadingAcc;
 
+ // In-stock vs sold counts for the current store scope (usePhones is already store-scoped:
+ // owner's active store, or the staff's own store). Client issue: "number of phones should be shown".
+ const phoneStock = useMemo(() => ({
+ inStock: phones.filter(p => p.status === 'in-stock').length,
+ sold: phones.filter(p => p.status === 'sold').length,
+ }), [phones]);
+
  const [selectedPhoneIds, setSelectedPhoneIds] = useState<Set<string>>(new Set());
  const [editPhone, setEditPhone] = useState<PhoneUnit | null>(null);
  const [editPhoneOpen, setEditPhoneOpen] = useState(false);
@@ -207,6 +214,11 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  </Button>
  </div>
 
+ <div className="flex items-center gap-2">
+ <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--success)]/30 bg-[var(--success)]/10 text-[var(--success)] rounded-none">IN STOCK · {phoneStock.inStock}</span>
+ <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--line)] bg-[var(--paper)] text-[var(--subtle)] rounded-none">SOLD · {phoneStock.sold}</span>
+ </div>
+
  <Tabs defaultValue="phones">
  <TabsList className="w-full mb-4 bg-[var(--paper)] border border-[var(--line)] rounded-none p-1">
  <TabsTrigger value="phones" className="flex-1 rounded-none text-[10px] font-bold data-[state=active]:bg-[var(--accent)] data-[state=active]:text-[var(--bg-app)] gap-1.5">
@@ -322,7 +334,10 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <div className="flex items-center justify-between">
  <div>
  <h1 className="text-2xl font-bold text-[var(--ink)] ">Inventory</h1>
- <p className="text-[var(--subtle)] text-[9px] mt-1 ">Stock Management</p>
+ <div className="flex items-center gap-2 mt-1.5">
+ <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--success)]/30 bg-[var(--success)]/10 text-[var(--success)] rounded-none">IN STOCK · {phoneStock.inStock}</span>
+ <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--line)] bg-[var(--paper)] text-[var(--subtle)] rounded-none">SOLD · {phoneStock.sold}</span>
+ </div>
  </div>
  
  <div className="relative group">

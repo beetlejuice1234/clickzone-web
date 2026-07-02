@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingCart, ReceiptText, Users, Loader2, Lock, Unlock, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, ReceiptText, Users, Lock, Unlock, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -19,9 +19,8 @@ const menuItems: { id: Page; label: string; icon: typeof Package; ownerOnly?: bo
 ];
 
 export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
- // Sync engine removed in the web rebuild (Supabase is the single source of truth).
- // Keep a static "online" indicator; live status can return in a later phase. TODO(Phase 6+).
- const syncStatus: 'idle' | 'syncing' | 'error' | 'offline' = 'idle';
+ // Sync engine removed in the web rebuild (Supabase is the single source of truth) — static
+ // "online" indicator. Live connection status can return in a later phase.
  const { isAdmin, logout } = useAuth();
  const { theme, toggleTheme } = useTheme();
  
@@ -57,25 +56,9 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
  </nav>
 
  <div className="p-4 space-y-3 mt-auto border-t border-[var(--line)] bg-[var(--bg-app)]">
- <div className={cn(
- 'flex items-center gap-2 px-3 py-2 border border-[var(--line)] text-xs font-medium bg-[var(--paper)]',
- syncStatus === 'idle' && 'text-[var(--success)]',
- syncStatus === 'syncing' && 'text-[var(--accent)]',
- syncStatus === 'error' && 'text-[var(--danger)]',
- syncStatus === 'offline' && 'text-[var(--subtle)]',
- )}>
- {syncStatus === 'syncing' && <Loader2 size={12} className="animate-spin" />}
- <div className={cn("w-1.5 h-1.5 shrink-0", 
- syncStatus === 'idle' ? "bg-[var(--success)]" :
- syncStatus === 'syncing' ? "bg-[var(--accent)]" :
- syncStatus === 'error' ? "bg-[var(--danger)]" : "bg-[var(--subtle)]"
- )} />
- <span>
- {syncStatus === 'idle' && 'System Online'}
- {syncStatus === 'syncing' && 'Syncing...'}
- {syncStatus === 'error' && 'Sync Error'}
- {syncStatus === 'offline' && 'Offline'}
- </span>
+ <div className="flex items-center gap-2 px-3 py-2 border border-[var(--line)] text-xs font-medium bg-[var(--paper)] text-[var(--success)]">
+ <div className="w-1.5 h-1.5 shrink-0 bg-[var(--success)]" />
+ <span>System Online</span>
  </div>
 
  <button

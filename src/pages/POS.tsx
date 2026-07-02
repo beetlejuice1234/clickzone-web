@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2 } from 'lucide-react';
 import { usePhones, useAccessories, reloadData, checkout } from '@/lib/api';
-import { formatLKR, cn } from '@/lib/utils';
+import { formatLKR, cn, todayColombo } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -178,8 +178,8 @@ export default function POS() {
  if (cartItems.length === 0) return;
  
  const now = new Date();
- const dateStr = now.toISOString().split('T')[0];
- const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+ const dateStr = todayColombo(); // Asia/Colombo, matches what the checkout RPC persists
+ const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Colombo' });
  
  // B2 FIX: Timestamp-based bill ID — no collision risk
  const ts = Date.now().toString(36).toUpperCase();
