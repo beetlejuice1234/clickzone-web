@@ -244,7 +244,11 @@ export async function checkout(payload: Record<string, unknown>) {
 export async function returnItem(payload: Record<string, unknown>) {
   const { data, error } = await supabase.rpc('return_item', { payload });
   if (error) throw new Error(error.message);
-  return data as { return_id: string; exchange_id?: string };
+  return data as {
+    return_id: string; exchange_id?: string | null; difference_direction?: string | null;
+    delta?: number; replacement_phone_id?: string; restocked_imei?: string;
+    new_total_revenue?: number; refund_amount?: number;
+  };
 }
 
 export async function phoneSwap(payload: Record<string, unknown>) {

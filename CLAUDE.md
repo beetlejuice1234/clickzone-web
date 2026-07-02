@@ -78,19 +78,31 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
   month-scoped `useSales`. Asia/Colombo date helpers in `utils.ts` (`todayColombo`/`startOfWeekColombo`/
   `monthColombo`/`monthBounds`). Verified 9/9 (owner: month 2026-06 = 255 sales / 14,041,250 matches
   manual sum, server range == client filter, months disjoint; staff: range works, zero cost/profit).
-- ⏭️ **NEXT: Phase 8d** — trade-in-return flow (`return_item` `trade-in-return` + `difference_direction`;
-  resolves follow-up #3). Then 8e–8h (see below). Small sub-sessions, commit between each.
-- Note: `npm run build` is red on PRE-EXISTING errors in Sidebar (legacy sync-status dead code),
-  ReturnModal/pdfBill (8d/8f), and one unused `entry` in Dashboard's chart map. The app runs via
-  `vite dev`; 8c files (`utils.ts`/`api.ts`/`SalesLog.tsx` + new Dashboard code) are type-clean.
+- ✅ **Phase 8d — trade-in-return flow (staging, Issue #3)** `20260702_phase8d_trade_in_return.sql`:
+  `return_item` `trade-in-return` branch now **moves the replacement phone out** — restocks the
+  returned phone, marks the chosen in-stock replacement sold, and swaps returned→replacement inside
+  the sale's cost/price snapshot so **profit follows the device** (cost stays in `phone_costs`; B's
+  cost only read in, R's untouched for resale). Delta recorded on the return row + an exchange row
+  (`cash_difference` + `difference_direction`). Revenue by direction: store-credit/refunded/customer-paid
+  → `old − p_ret + p_rep`; zeroed → keep `old` (shop keeps surplus). ReturnModal gets an "Exchange for
+  device" mode (default) with replacement picker + direction selector (cash refund behind a confirm);
+  "Cash / refund" mode = the old straight return. Verified 13/13 (50k→45k: R in-stock, B sold, rev 45k,
+  5k store-credit, profit 7,000; zeroed=12,000; customer-paid 60k; straight cash return; forced-failure
+  rollback leaves no partial writes). Resolves follow-up #3. `[8D]`-tagged test phones left on staging.
+- ⏭️ **NEXT: Phase 8e** — payment method (Cash/Card) on checkout/log/PDF + owner-only customer records.
+  Then 8f–8h (see below). Small sub-sessions, commit between each.
+- Note: `npm run build` still red on PRE-EXISTING errors (app runs via `vite dev`): `pdfBill` (→8f),
+  `Sidebar` (legacy sync-status dead code), `AddUnitModal` (latent 8a `status: string` typing),
+  one unused `entry` in Dashboard's chart map. ReturnModal is now type-clean (8d cleared it);
+  8c/8d files are type-clean.
 
 ## Phase-5 RPC follow-ups
 1. ✅ RESOLVED (Phase 8b) — checkout trade-in now revives instead of duplicating.
 2. **total_revenue contract:** checkout sets `net_payable = total_revenue − trade_in_value`,
    assuming the client sends the **GROSS** total (POS now does). Keep this contract to avoid the
    profit double-count (dashboard double-count check in **8h**).
-3. **trade-in-return doesn't move the replacement phone out** — `return_item` records the return +
-   delta but doesn't mark the different phone the customer takes as sold (**Phase 8d**).
+3. ✅ RESOLVED (Phase 8d) — `return_item` `trade-in-return` now restocks the returned phone, marks the
+   chosen replacement sold, and swaps the sale's cost snapshot to the replacement so profit reconciles.
 4. ✅ RESOLVED (Phase 7) — `daily_revenue` now store-scopes staff. (Minor still open: `return_status`
    is always `'returned'`, no partial/full distinction.)
 
