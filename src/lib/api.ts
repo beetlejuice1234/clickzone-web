@@ -7,7 +7,7 @@ import {
   mapPhone, mapAccessory, mapSale, mapReturn, mapExchange,
   phoneToUpsertPayload,
 } from '@/lib/mappers';
-import type { PhoneUnit, Accessory } from '@/types';
+import type { PhoneUnit, Accessory, Customer } from '@/types';
 
 /**
  * Phase 6 data layer — TanStack Query over Supabase.
@@ -124,15 +124,24 @@ export function useExchanges() {
   return { exchanges: data ?? [], isLoading, isError: error };
 }
 
+// Owner-only: customers table is blocked from staff by RLS (customers_owner_all).
 export function useCustomers() {
   const { isAdmin } = useAuth();
   const { data, error, isLoading } = useQuery({
     queryKey: ['customers'],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from('customers').select('*');
+      const { data, error } = await supabase.from('customers')
+        .select('id, name, nic, whatsapp, notes, created_at').order('created_at', { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).map((r): Customer => ({
+        id: r.id as string,
+        name: (r.name as string) ?? undefined,
+        nic: (r.nic as string) ?? undefined,
+        whatsapp: (r.whatsapp as string) ?? undefined,
+        notes: (r.notes as string) ?? undefined,
+        createdAt: (r.created_at as string) ?? undefined,
+      }));
     },
     ...listOpts,
   });

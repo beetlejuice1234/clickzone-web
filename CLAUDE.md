@@ -89,12 +89,20 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
   "Cash / refund" mode = the old straight return. Verified 13/13 (50k→45k: R in-stock, B sold, rev 45k,
   5k store-credit, profit 7,000; zeroed=12,000; customer-paid 60k; straight cash return; forced-failure
   rollback leaves no partial writes). Resolves follow-up #3. `[8D]`-tagged test phones left on staging.
-- ⏭️ **NEXT: Phase 8e** — payment method (Cash/Card) on checkout/log/PDF + owner-only customer records.
-  Then 8f–8h (see below). Small sub-sessions, commit between each.
+- ✅ **Phase 8e — payment method + customer records (staging)** `20260702_phase8e_customer_link.sql`:
+  POS gets a Cash/Card selector (wired to `checkout.payment_method`) + optional customer Name/NIC
+  (WhatsApp already captured); Sales Log shows a payment badge. `checkout` RPC now takes an optional
+  `payload.customer {name,nic,whatsapp}` — deduped (NIC then WhatsApp), insert-or-reuse, linked via
+  `sales.customer_id`; written inside the SECURITY DEFINER RPC so **staff can attach a customer at
+  checkout without gaining read access** to the owner-only `customers` table. New owner-only Customers
+  page (list + per-customer purchase history, `useCustomers` owner-gated, nav hidden for staff).
+  Verified 10/10 (cash/card saved+shown; customer created+linked; NIC dedup=1 row/2 sales/LKR 60k;
+  staff reads 0 customer rows but CAN attach at checkout). `[8E]` test phones left on staging.
+- ⏭️ **NEXT: Phase 8f** — PDF fixes (`pdfBill.ts`): render BOTH Special Notes + T&C, bill total ==
+  persisted sale values, show payment method. Then 8g–8h. Small sub-sessions, commit between each.
 - Note: `npm run build` still red on PRE-EXISTING errors (app runs via `vite dev`): `pdfBill` (→8f),
   `Sidebar` (legacy sync-status dead code), `AddUnitModal` (latent 8a `status: string` typing),
-  one unused `entry` in Dashboard's chart map. ReturnModal is now type-clean (8d cleared it);
-  8c/8d files are type-clean.
+  one unused `entry` in Dashboard's chart map. 8c/8d/8e files are type-clean.
 
 ## Phase-5 RPC follow-ups
 1. ✅ RESOLVED (Phase 8b) — checkout trade-in now revives instead of duplicating.

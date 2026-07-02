@@ -1,26 +1,30 @@
-import { LayoutDashboard, Package, ShoppingCart, ReceiptText } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, ReceiptText, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
-type Page = 'dashboard' | 'inventory' | 'pos' | 'sales';
+type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'customers';
 
 interface MobileNavProps {
  activePage: Page;
  onNavigate: (page: Page) => void;
 }
 
-const navItems: { id: Page; label: string; icon: typeof Package }[] = [
+const navItems: { id: Page; label: string; icon: typeof Package; ownerOnly?: boolean }[] = [
  { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
  { id: 'inventory', label: 'Stock', icon: Package },
  { id: 'pos', label: 'Sell', icon: ShoppingCart },
  { id: 'sales', label: 'Sales', icon: ReceiptText },
+ { id: 'customers', label: 'People', icon: Users, ownerOnly: true },
 ];
 
 export default function MobileNav({ activePage, onNavigate }: MobileNavProps) {
+ const { isAdmin } = useAuth();
+ const items = navItems.filter((item) => !item.ownerOnly || isAdmin);
  return (
  <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-app)] border-t border-[var(--line)] px-2 pb-safe">
  <div className="flex items-end justify-around">
- {navItems.map((item) => {
+ {items.map((item) => {
  const isActive = activePage === item.id;
  return (
  <button

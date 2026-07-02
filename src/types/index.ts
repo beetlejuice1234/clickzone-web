@@ -68,9 +68,20 @@ export interface SaleRecord {
  exchangeId?: string;
  tradeInValue?: number;
  netPayable?: number;
+ paymentMethod?: string; // 'cash' | 'card'
+ customerId?: string;
  localUpdatedAt?: string;
  syncedAt?: string;
  isDeleted?: number;
+}
+
+export interface Customer {
+ id: string;
+ name?: string;
+ nic?: string;
+ whatsapp?: string;
+ notes?: string;
+ createdAt?: string;
 }
 
 export interface ReturnRecord {

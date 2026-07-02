@@ -31,6 +31,9 @@ export default function POS() {
  const [imeiQuery, setImeiQuery] = useState('');
  const [cartItems, setCartItems] = useState<CartItem[]>([]);
  const [customerWhatsapp, setCustomerWhatsapp] = useState('');
+ const [customerName, setCustomerName] = useState('');
+ const [customerNic, setCustomerNic] = useState('');
+ const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
  const [billGenerated, setBillGenerated] = useState(false);
  const [lastBillId, setLastBillId] = useState('');
  const [notFound, setNotFound] = useState(false);
@@ -224,8 +227,15 @@ export default function POS() {
  items: saleItems,
  total_revenue: netAmount,
  total_discount: totalDiscount,
- payment_method: 'cash',
+ payment_method: paymentMethod,
  customer_whatsapp: customerWhatsapp || null,
+ // Optional customer record — created/linked inside the checkout RPC (owner-only table,
+ // written via SECURITY DEFINER so staff can attach without gaining read access).
+ customer: (customerName || customerNic || customerWhatsapp) ? {
+ name: customerName || null,
+ nic: customerNic || null,
+ whatsapp: customerWhatsapp || null,
+ } : null,
  trade_in: pendingExchange ? {
  imei: pendingExchange.tradeInImei,
  model: pendingExchange.tradeInModel,
@@ -260,6 +270,9 @@ export default function POS() {
     setCartItems([]);
     setImeiQuery('');
     setCustomerWhatsapp('');
+    setCustomerName('');
+    setCustomerNic('');
+    setPaymentMethod('cash');
     setPendingExchange(null);
 
     try {
@@ -332,7 +345,7 @@ _Please keep this message as your digital receipt._`;
       console.error("Receipt generation failed:", err);
       toast.error("Receipt generation failed, but the sale was saved successfully.");
     }
-  }, [cartItems, customerWhatsapp, netAmount, totalDiscount, pendingExchange]);
+  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, netAmount, totalDiscount, pendingExchange]);
 
  useEffect(() => {
  if (!billGenerated) return;
@@ -503,6 +516,39 @@ _Please keep this message as your digital receipt._`;
  placeholder="94..."
  className="w-full h-10 pl-20 px-4 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)] transition-all"
  />
+ </div>
+ <div className="grid grid-cols-2 gap-2">
+ <input
+ type="text"
+ value={customerName}
+ onChange={(e) => setCustomerName(e.target.value)}
+ placeholder="Name (optional)"
+ className="h-10 px-3 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)]"
+ />
+ <input
+ type="text"
+ value={customerNic}
+ onChange={(e) => setCustomerNic(e.target.value)}
+ placeholder="NIC (optional)"
+ className="h-10 px-3 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)]"
+ />
+ </div>
+ <div className="grid grid-cols-2 gap-2">
+ {(['cash', 'card'] as const).map(m => (
+ <button
+ key={m}
+ type="button"
+ onClick={() => setPaymentMethod(m)}
+ className={cn(
+ "h-10 text-[10px] font-bold uppercase rounded-none border transition-all",
+ paymentMethod === m
+ ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]"
+ : "bg-[var(--bg-app)] text-[var(--subtle)] border-[var(--line)]"
+ )}
+ >
+ {m}
+ </button>
+ ))}
  </div>
  <div className="flex items-center justify-between">
  <div>
@@ -753,7 +799,7 @@ _Please keep this message as your digital receipt._`;
  ))}
 
  <div className="bg-[var(--paper)] border border-[var(--line)] p-5 rounded-none space-y-4">
- <Label className="text-[9px] font-bold text-[var(--subtle)] ">Customer Verification Link</Label>
+ <Label className="text-[9px] font-bold text-[var(--subtle)] ">Customer Details (optional)</Label>
  <div className="relative group">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--subtle)] text-[10px] font-bold">WhatsApp Number:</span>
  <Input
@@ -764,6 +810,45 @@ _Please keep this message as your digital receipt._`;
  disabled={cartItems.length === 0}
  className="h-11 pl-32 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
  />
+ </div>
+ <div className="grid grid-cols-2 gap-3">
+ <Input
+ type="text"
+ value={customerName}
+ onChange={(e) => setCustomerName(e.target.value)}
+ placeholder="Customer name"
+ disabled={cartItems.length === 0}
+ className="h-11 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
+ />
+ <Input
+ type="text"
+ value={customerNic}
+ onChange={(e) => setCustomerNic(e.target.value)}
+ placeholder="NIC"
+ disabled={cartItems.length === 0}
+ className="h-11 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
+ />
+ </div>
+ <div className="space-y-2">
+ <Label className="text-[9px] font-bold text-[var(--subtle)] ">Payment Method</Label>
+ <div className="grid grid-cols-2 gap-2">
+ {(['cash', 'card'] as const).map(m => (
+ <button
+ key={m}
+ type="button"
+ onClick={() => setPaymentMethod(m)}
+ disabled={cartItems.length === 0}
+ className={cn(
+ "h-10 text-[10px] font-bold uppercase rounded-none border transition-all disabled:opacity-30",
+ paymentMethod === m
+ ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]"
+ : "bg-[var(--bg-app)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
+ )}
+ >
+ {m}
+ </button>
+ ))}
+ </div>
  </div>
  </div>
 

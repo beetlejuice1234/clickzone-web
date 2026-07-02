@@ -271,6 +271,10 @@ export default function SalesLog() {
  <div>
  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
  <span className="text-[10px] font-bold text-[var(--ink)] ">{sale.billId}</span>
+ <span className={cn("text-[8px] px-1.5 py-0.5 border font-medium rounded-none uppercase",
+   sale.paymentMethod === 'card' ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30" : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)]")}>
+   {sale.paymentMethod || 'cash'}
+ </span>
  {sale.returnStatus && sale.returnStatus !== 'none' && (
    <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-none uppercase">{sale.returnStatus} RETURN</span>
  )}
@@ -445,6 +449,10 @@ export default function SalesLog() {
  <div className="flex flex-col">
  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
    <span className="text-sm font-bold text-[var(--ink)]">{sale.billId}</span>
+   <span className={cn("text-[8px] px-1.5 py-0.5 border font-medium rounded-none uppercase",
+     sale.paymentMethod === 'card' ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30" : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)]")}>
+     {sale.paymentMethod || 'cash'}
+   </span>
    {sale.returnStatus && sale.returnStatus !== 'none' && (
      <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-none uppercase">{sale.returnStatus} RETURN</span>
    )}

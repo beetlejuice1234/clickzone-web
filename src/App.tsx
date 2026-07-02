@@ -9,6 +9,7 @@ import Dashboard from '@/pages/Dashboard';
 import Inventory from '@/pages/Inventory';
 import POS from '@/pages/POS';
 import SalesLog from '@/pages/SalesLog';
+import Customers from '@/pages/Customers';
 import AddUnitModal from '@/components/AddUnitModal';
 import { useMobile } from '@/hooks/useMobile';
 
@@ -16,13 +17,14 @@ import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Sun, Moon } from 'lucide-react';
 
-type Page = 'dashboard' | 'inventory' | 'pos' | 'sales';
+type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'customers';
 
 const pageToPath: Record<Page, string> = {
   dashboard: '/dashboard',
   inventory: '/inventory',
   pos: '/pos',
   sales: '/sales',
+  customers: '/customers',
 };
 
 const pathToPage: Record<string, Page> = {
@@ -30,6 +32,7 @@ const pathToPage: Record<string, Page> = {
   '/inventory': 'inventory',
   '/pos': 'pos',
   '/sales': 'sales',
+  '/customers': 'customers',
 };
 
 const pageTitles: Record<Page, string> = {
@@ -37,6 +40,7 @@ const pageTitles: Record<Page, string> = {
   inventory: 'Inventory',
   pos: 'Point of Sale',
   sales: 'Sales Log',
+  customers: 'Customers',
 };
 
 // Context handed to routed pages that need the shared "Add Stock" action (Inventory).
@@ -167,6 +171,7 @@ export default function App() {
             <Route path="/inventory" element={<InventoryRoute />} />
             <Route path="/pos" element={<POS />} />
             <Route path="/sales" element={<SalesLog />} />
+            <Route path="/customers" element={<Customers />} />
             <Route path="*" element={<Navigate to="/pos" replace />} />
           </Route>
         </Routes>

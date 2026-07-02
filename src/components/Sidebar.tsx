@@ -1,20 +1,21 @@
-import { LayoutDashboard, Package, ShoppingCart, ReceiptText, Loader2, Lock, Unlock, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, ReceiptText, Users, Loader2, Lock, Unlock, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
-type Page = 'dashboard' | 'inventory' | 'pos' | 'sales';
+type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'customers';
 
 interface SidebarProps {
  activePage: Page;
  onNavigate: (page: Page) => void;
 }
 
-const menuItems: { id: Page; label: string; icon: typeof Package }[] = [
+const menuItems: { id: Page; label: string; icon: typeof Package; ownerOnly?: boolean }[] = [
  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
  { id: 'inventory', label: 'Inventory', icon: Package },
  { id: 'pos', label: 'Point of Sale', icon: ShoppingCart },
  { id: 'sales', label: 'Sales Log', icon: ReceiptText },
+ { id: 'customers', label: 'Customers', icon: Users, ownerOnly: true },
 ];
 
 export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
@@ -35,7 +36,7 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
 
  <nav className="flex-1 px-3 py-6 space-y-1">
  <p className="px-4 mb-2 text-xs text-[var(--subtle)] font-medium">Navigation</p>
- {menuItems.map((item) => {
+ {menuItems.filter((item) => !item.ownerOnly || isAdmin).map((item) => {
  const isActive = activePage === item.id;
  return (
  <button
