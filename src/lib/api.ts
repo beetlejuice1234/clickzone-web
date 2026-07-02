@@ -148,12 +148,25 @@ export function useStores() {
 
 /* ------------------------------------------------------------------ mutations */
 
+// Lookup an IMEI/serial across ALL rows (incl. sold/soft-deleted) to decide
+// duplicate (active) vs revive (prior non-active) vs new. Owner-only RPC.
+export async function findPhoneByIdentifier(identifier: string) {
+  const { data, error } = await supabase.rpc('find_phone_by_identifier', { identifier });
+  if (error) throw new Error(error.message);
+  return data as {
+    found: boolean; active?: boolean; id?: string; status?: string;
+    is_deleted?: boolean; date_added?: string; model?: string;
+  };
+}
+
 // Owner add/edit of a phone — writes phones + phone_costs atomically via RPC.
 // New/edited stock lands in the owner's active store when one is selected.
-export async function upsertPhone(phone: Partial<PhoneUnit> & { id: string }) {
+// `revive` un-deletes an existing (sold/soft-deleted) row in place, keeping its id/history.
+export async function upsertPhone(phone: Partial<PhoneUnit> & { id: string }, opts?: { revive?: boolean }) {
   const payload: Record<string, unknown> = phoneToUpsertPayload(phone);
   const active = useStoreScope.getState().activeStoreId;
   if (active) payload.store_id = active;
+  if (opts?.revive) payload.is_deleted = false;
   const { data, error } = await supabase.rpc('upsert_phone', { payload });
   if (error) throw new Error(error.message);
   return data as { id: string };

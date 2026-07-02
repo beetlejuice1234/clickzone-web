@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import { reloadData, useAccessories, upsertPhone, addAccessory } from '@/lib/api';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { reloadData, useAccessories, upsertPhone, addAccessory, findPhoneByIdentifier } from '@/lib/api';
 import { toast } from 'sonner';
 import {
  Dialog,
@@ -7,6 +7,16 @@ import {
  DialogHeader,
  DialogTitle,
 } from '@/components/ui/dialog';
+import {
+ AlertDialog,
+ AlertDialogContent,
+ AlertDialogHeader,
+ AlertDialogFooter,
+ AlertDialogTitle,
+ AlertDialogDescription,
+ AlertDialogAction,
+ AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,6 +65,10 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
 
  const { accessories } = useAccessories();
 
+ // Revive-vs-new prompt (duplicate-IMEI/serial re-entry)
+ const [revivePrompt, setRevivePrompt] = useState<{ id: string; status: string; date: string } | null>(null);
+ const pendingPhone = useRef<(Parameters<typeof upsertPhone>[0]) | null>(null);
+
  // When SKU changes, check if it already exists
  useEffect(() => {
  const found = accessories.find(a => a.sku.toUpperCase() === accSku.trim().toUpperCase());
@@ -68,6 +82,23 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  setError('');
  onClose();
  }, [onClose]);
+
+ const resetPhoneForm = () => { setImei(''); setSerialNumber(''); setDeviceType('phone'); setCostPrice(''); setSalePrice(''); };
+
+ // Actual write: `reviveId` set => revive the existing (sold/deleted) record in place.
+ const writePhone = useCallback(async (
+ data: Parameters<typeof upsertPhone>[0],
+ opts?: { reviveId?: string },
+ ) => {
+ await upsertPhone(
+ opts?.reviveId ? { ...data, id: opts.reviveId, status: 'in-stock' } : data,
+ opts?.reviveId ? { revive: true } : undefined,
+ );
+ toast.success(opts?.reviveId ? `Revived returning stock: ${data.model ?? ''}` : `Unit added: ${data.model ?? ''}`);
+ reloadData();
+ handleClose();
+ resetPhoneForm();
+ }, [handleClose]);
 
  const handleSubmit = useCallback(async () => {
  setError('');
@@ -103,17 +134,19 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  };
 
  try {
- await upsertPhone(phoneData);
-
- toast.success(`Unit added: ${model}`);
- reloadData();
- handleClose();
- // Reset
- setImei('');
- setSerialNumber('');
- setDeviceType('phone');
- setCostPrice('');
- setSalePrice('');
+ const idf = imei.trim() || serialNumber.trim();
+ const match = await findPhoneByIdentifier(idf);
+ if (match?.found && match.active) {
+ setError('This IMEI/serial is already in ACTIVE stock — it is a duplicate.');
+ return;
+ }
+ if (match?.found && !match.active) {
+ // Prior sold/soft-deleted unit — ask revive vs create-new.
+ pendingPhone.current = phoneData;
+ setRevivePrompt({ id: match.id!, status: match.status ?? 'sold', date: match.date_added ?? '' });
+ return;
+ }
+ await writePhone(phoneData); // brand-new unit
  } catch (err) {
  setError(err instanceof Error ? err.message : 'Failed to add unit');
  }
@@ -150,6 +183,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  }, [activeTab, deviceType, imei, serialNumber, model, storage, color, condition, batteryHealth, icloudStatus, costPrice, salePrice, accName, accSku, accQty, accCost, accSale, handleClose]);
 
  return (
+ <>
  <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
  <DialogContent className="sm:max-w-xl bg-[var(--paper)] border border-[var(--line)] p-0 overflow-hidden rounded-none shadow-none">
  <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'phone' | 'accessory')} className="w-full">
@@ -328,5 +362,37 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  </Tabs>
  </DialogContent>
  </Dialog>
+
+ <AlertDialog open={!!revivePrompt} onOpenChange={(o) => { if (!o) { setRevivePrompt(null); pendingPhone.current = null; } }}>
+ <AlertDialogContent className="bg-[var(--paper)] border border-[var(--line)] rounded-none text-[var(--ink)]">
+ <AlertDialogHeader>
+ <AlertDialogTitle className="text-[var(--ink)]">Returning stock detected</AlertDialogTitle>
+ <AlertDialogDescription className="text-[var(--subtle)] text-[12px]">
+ <span className="font-mono text-[var(--ink)]">{imei.trim() || serialNumber.trim()}</span> was here before
+ ({revivePrompt?.status}{revivePrompt?.date ? ` · added ${revivePrompt.date}` : ''}).
+ Revive the original record (keeps its id/history) or create a new one?
+ </AlertDialogDescription>
+ </AlertDialogHeader>
+ <AlertDialogFooter className="gap-2">
+ <AlertDialogCancel className="rounded-none border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)]">Cancel</AlertDialogCancel>
+ <Button
+ variant="ghost"
+ className="rounded-none border border-[var(--line)] text-[var(--ink)] hover:bg-[var(--bg-app)]"
+ onClick={async () => {
+ const p = pendingPhone.current; setRevivePrompt(null); pendingPhone.current = null;
+ if (p) { try { await writePhone(p); } catch (e) { setError(e instanceof Error ? e.message : 'Failed'); } }
+ }}
+ >Create new</Button>
+ <AlertDialogAction
+ className="rounded-none bg-[var(--accent)] text-[var(--bg-app)] hover:brightness-90"
+ onClick={async () => {
+ const p = pendingPhone.current; const rid = revivePrompt?.id; setRevivePrompt(null); pendingPhone.current = null;
+ if (p && rid) { try { await writePhone(p, { reviveId: rid }); } catch (e) { setError(e instanceof Error ? e.message : 'Failed to revive'); } }
+ }}
+ >Revive existing</AlertDialogAction>
+ </AlertDialogFooter>
+ </AlertDialogContent>
+ </AlertDialog>
+ </>
  );
 }
