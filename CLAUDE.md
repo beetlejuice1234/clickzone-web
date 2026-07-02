@@ -71,9 +71,18 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
   prior sold/soft-deleted IMEI/serial, blocks active duplicates; `upsert_phone` un-deletes on revive;
   **checkout trade-in revives** a prior unit instead of duplicating. Verified 7/7 + 0 dup active
   imei/serial. (Resolves follow-up #1.)
-- ⏭️ **NEXT: Phase 8c** — Sales Log date-range filter (Today/Week/Month/Custom → gte/lte in query) +
-  Dashboard month picker + monthly aggregate (Issue #2). Then 8d–8h (see below). Small sub-sessions,
-  commit between each.
+- ✅ **Phase 8c — sales date-range filter + monthly dashboard (staging, Issue #2)** — no DB change
+  (`date` is `YYYY-MM-DD` text → lexicographic gte/lte is correct): `useSales(range?)` pushes
+  `.gte/.lte('date')` into the query; Sales Log presets Today/Week/Month/All/Custom (default This
+  Month); Dashboard month picker + monthly summary (revenue, count, owner-only profit) via a second
+  month-scoped `useSales`. Asia/Colombo date helpers in `utils.ts` (`todayColombo`/`startOfWeekColombo`/
+  `monthColombo`/`monthBounds`). Verified 9/9 (owner: month 2026-06 = 255 sales / 14,041,250 matches
+  manual sum, server range == client filter, months disjoint; staff: range works, zero cost/profit).
+- ⏭️ **NEXT: Phase 8d** — trade-in-return flow (`return_item` `trade-in-return` + `difference_direction`;
+  resolves follow-up #3). Then 8e–8h (see below). Small sub-sessions, commit between each.
+- Note: `npm run build` is red on PRE-EXISTING errors in Sidebar (legacy sync-status dead code),
+  ReturnModal/pdfBill (8d/8f), and one unused `entry` in Dashboard's chart map. The app runs via
+  `vite dev`; 8c files (`utils.ts`/`api.ts`/`SalesLog.tsx` + new Dashboard code) are type-clean.
 
 ## Phase-5 RPC follow-ups
 1. ✅ RESOLVED (Phase 8b) — checkout trade-in now revives instead of duplicating.
