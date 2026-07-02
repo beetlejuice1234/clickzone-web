@@ -1,0 +1,15 @@
+{
+  "name": "ClickZone Inventory",
+  "short_name": "CZ Stock",
+  "theme_color": "#0A0E14",
+  "background_color": "#0A0E14",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/hero-iphone.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

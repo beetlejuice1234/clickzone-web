@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-app: #000000;
+    --paper: #0a0a0a;
+    --ink: #ffffff;
+    --subtle: #a1a1a1;
+    --line: #262626;
+
+    /* Shadcn Mappings - Dark */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 9%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: #ffffff;
+    --accent-foreground: #000000;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --radius: 0rem;
+    
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+  }
+
+  .light {
+    --bg-app: #ffffff;
+    --paper: #f9f9f9;
+    --ink: #000000;
+    --subtle: #737373;
+    --line: #e5e5e5;
+
+    /* Shadcn Mappings - Light */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: #000000;
+    --accent-foreground: #ffffff;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+  }
+}
+
+body {
+  @apply bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground font-sans;
+  background-color: var(--bg-app);
+}
+
+/* Custom scrollbar for high-end feel */
+::-webkit-scrollbar {
+ width: 4px;
+ height: 4px;
+}
+::-webkit-scrollbar-track {
+ background: transparent;
+}
+::-webkit-scrollbar-thumb {
+ background: var(--line);
+ border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+ background: var(--subtle);
+}
+
+/* Zebra Striping & Density Tweaks */
+.zebra-table tr:nth-child(even) {
+ background-color: var(--paper);
+}
+
+.data-grid-tight {
+ @apply p-4;
+}
