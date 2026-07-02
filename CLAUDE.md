@@ -106,8 +106,17 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
   textarea; reprint reuses the exact bill). Cleared the `pdfBill` build errors. Verified: 5 sample
   PDFs (cash/card/trade-in/2-page overflow/notes+T&C) + a LIVE owner checkout (note persisted,
   net_payable/cost correct, reprint matches). `[8F-TEST]` sale left on staging.
-- ⏭️ **NEXT: Phase 8g** — staff lock (default staff, gate add/remove/exchange-edit; PIN override) +
-  Daily-Revenue-only staff dashboard + "Other"/Android brand in Add/Exchange model selector.
+- ✅ **Phase 8g — staff lock + staff dashboard + other-brand (staging, no DB change)**: Inventory
+  Delete (phone+accessory) now gated by `requireAdmin`; POS "+ TRADE-IN" entry gated by `requireAdmin`
+  (staff can't set exchange values without owner PIN); Edit/Add already gated. Dashboard renders a
+  **Daily-Revenue-only** view for non-owners (profit/cost/ROI/monthly/chart/history hidden). **"Other
+  (Android / specify)"** free-text model in Add/Edit/Exchange modals (model is free-text; writes
+  through `upsert_phone`/`checkout`, no schema change). Verified live: staff RLS-blocked from deleting
+  stock, other-brand model persists verbatim + sells. `[8G-TEST]` rows on staging. (Client Issue 7 +
+  "Android not available for exchange".) **`phone_swap` left unwired** — no pure device-swap UI;
+  open question for the client (trade-in + trade-in-return already cover the real workflows).
+- ⏭️ **NEXT: Phase 8h** — profit double-count check, Asia/Colombo timezone sweep, in-stock/sold counts
+  per store, and **build-green cleanup** (Sidebar/AddUnitModal/Dashboard TS errors) to unblock Phase 9.
 - Note: `npm run build` still red on PRE-EXISTING errors cleared in **8h** (app runs via `vite dev`):
   `Sidebar` (legacy sync-status dead code), `AddUnitModal` (latent 8a `status: string` typing),
   one unused `entry` in Dashboard's chart map. `pdfBill` is now type-clean.

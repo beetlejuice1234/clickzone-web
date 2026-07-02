@@ -34,6 +34,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
 
   const [imei, setImei] = useState('');
   const [model, setModel] = useState('');
+  const [modelOther, setModelOther] = useState(false); // "Other" → free-text model (Android/etc.)
   const [condition, setCondition] = useState('');
   const [batteryHealth, setBatteryHealth] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -57,8 +58,9 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
     }
     const match = phones.find(p => p.imei === imei);
     if (match) {
-      // Auto-fill model and condition
+      // Auto-fill model and condition; a non-catalog (Android/other) model switches to free-text.
       setModel(match.model);
+      setModelOther(!(MODEL_OPTIONS as readonly string[]).includes(match.model));
       if (match.condition) setCondition(match.condition);
       if (match.batteryHealth) setBatteryHealth(String(match.batteryHealth));
 
@@ -136,6 +138,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
   const handleClose = () => {
     setImei('');
     setModel('');
+    setModelOther(false);
     setCondition('');
     setBatteryHealth('');
     setCustomerName('');
@@ -183,7 +186,10 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
             {/* Model dropdown */}
             <div className="space-y-2 col-span-2">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Model *</Label>
-              <Select value={model} onValueChange={setModel}>
+              <Select
+                value={modelOther ? '__other__' : model}
+                onValueChange={(v) => { if (v === '__other__') { setModelOther(true); setModel(''); } else { setModelOther(false); setModel(v); } }}
+              >
                 <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]">
                   <SelectValue placeholder="Select model" />
                 </SelectTrigger>
@@ -191,8 +197,17 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                   {MODEL_OPTIONS.map(m => (
                     <SelectItem key={m} value={m} className="rounded-none text-[10px] font-medium">{m}</SelectItem>
                   ))}
+                  <SelectItem value="__other__" className="rounded-none text-[10px] font-medium">Other (Android / specify)…</SelectItem>
                 </SelectContent>
               </Select>
+              {modelOther && (
+                <Input
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  placeholder="e.g. Samsung Galaxy S23"
+                  className="mt-2 bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]"
+                />
+              )}
             </div>
 
             <div className="space-y-2">

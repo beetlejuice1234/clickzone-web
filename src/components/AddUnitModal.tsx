@@ -47,6 +47,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  const [imei, setImei] = useState('');
  const [serialNumber, setSerialNumber] = useState('');
  const [model, setModel] = useState('');
+ const [modelOther, setModelOther] = useState(false); // "Other" → free-text model (Android/etc.)
  const [storage, setStorage] = useState('128GB');
  const [color, setColor] = useState('Black');
  const [condition, setCondition] = useState<ConditionGrade>('a');
@@ -83,7 +84,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  onClose();
  }, [onClose]);
 
- const resetPhoneForm = () => { setImei(''); setSerialNumber(''); setDeviceType('phone'); setCostPrice(''); setSalePrice(''); };
+ const resetPhoneForm = () => { setImei(''); setSerialNumber(''); setDeviceType('phone'); setCostPrice(''); setSalePrice(''); setModel(''); setModelOther(false); };
 
  // Actual write: `reviveId` set => revive the existing (sold/deleted) record in place.
  const writePhone = useCallback(async (
@@ -246,14 +247,26 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  </div>
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Model</Label>
- <Select value={model} onValueChange={setModel}>
+ <Select
+ value={modelOther ? '__other__' : model}
+ onValueChange={(v) => { if (v === '__other__') { setModelOther(true); setModel(''); } else { setModelOther(false); setModel(v); } }}
+ >
  <SelectTrigger className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 focus:border-[var(--accent)] text-[11px] font-medium ">
  <SelectValue placeholder="Identify Model" />
  </SelectTrigger>
  <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none">
  {MODEL_OPTIONS.map(m => <SelectItem key={m} value={m} className="text-[10px] font-medium hover:bg-[var(--bg-app)]">{m}</SelectItem>)}
+ <SelectItem value="__other__" className="text-[10px] font-medium hover:bg-[var(--bg-app)]">Other (Android / specify)…</SelectItem>
  </SelectContent>
  </Select>
+ {modelOther && (
+ <Input
+ value={model}
+ onChange={(e) => setModel(e.target.value)}
+ placeholder="e.g. Samsung Galaxy S23"
+ className="h-11 mt-2 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px]"
+ />
+ )}
  </div>
  </div>
 

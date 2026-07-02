@@ -153,7 +153,10 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  });
  }, []);
 
- const handleDeletePhone = useCallback(async (id: string) => {
+ // Staff lock: deleting stock is owner-only. requireAdmin runs immediately for the owner (or a
+ // valid PIN override) and otherwise prompts for the owner PIN. RLS also blocks the write server-side.
+ const handleDeletePhone = useCallback((id: string) => {
+ requireAdmin(async () => {
  if (confirm('Are you sure you want to delete this?')) {
  try {
  await deletePhone(id);
@@ -163,9 +166,11 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  toast.error(err instanceof Error ? err.message : 'Failed to delete');
  }
  }
- }, []);
+ });
+ }, [requireAdmin]);
 
- const handleDeleteAccessory = useCallback(async (sku: string) => {
+ const handleDeleteAccessory = useCallback((sku: string) => {
+ requireAdmin(async () => {
  if (confirm('Are you sure you want to delete this?')) {
  try {
  await deleteAccessory(sku);
@@ -175,7 +180,8 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  toast.error(err instanceof Error ? err.message : 'Failed to delete');
  }
  }
- }, []);
+ });
+ }, [requireAdmin]);
 
  const allSelected = filteredPhones.length > 0 && filteredPhones.every((p) => selectedPhoneIds.has(p.id));
 

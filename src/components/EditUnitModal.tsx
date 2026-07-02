@@ -31,6 +31,9 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  const [imei, setImei] = useState(phone?.imei ?? '');
  const [serialNumber, setSerialNumber] = useState(phone?.serialNumber ?? '');
  const [model, setModel] = useState(phone?.model ?? '');
+ // Other/Android model: start in free-text mode when the current model isn't an iPhone catalog entry
+ // (so editing an Other-brand phone shows its model instead of a blank select).
+ const [modelOther, setModelOther] = useState<boolean>(!!phone && !(MODEL_OPTIONS as readonly string[]).includes(phone.model));
  const [storage, setStorage] = useState(phone?.storage ?? '');
  const [color, setColor] = useState(phone?.color ?? '');
  const [condition, setCondition] = useState<ConditionGrade>(phone?.condition ?? 'a');
@@ -139,12 +142,24 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  </div>
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Model</Label>
- <Select value={model} onValueChange={setModel}>
- <SelectTrigger className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-medium "><SelectValue /></SelectTrigger>
+ <Select
+ value={modelOther ? '__other__' : model}
+ onValueChange={(v) => { if (v === '__other__') { setModelOther(true); setModel(''); } else { setModelOther(false); setModel(v); } }}
+ >
+ <SelectTrigger className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-medium "><SelectValue placeholder="Select model" /></SelectTrigger>
  <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)]">
  {MODEL_OPTIONS.map((m) => <SelectItem key={m} value={m} className="text-[10px] font-medium ">{m}</SelectItem>)}
+ <SelectItem value="__other__" className="text-[10px] font-medium ">Other (Android / specify)…</SelectItem>
  </SelectContent>
  </Select>
+ {modelOther && (
+ <Input
+ value={model}
+ onChange={(e) => setModel(e.target.value)}
+ placeholder="e.g. Samsung Galaxy S23"
+ className="h-11 mt-2 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--success)] focus-visible:ring-0 text-[11px]"
+ />
+ )}
  </div>
  </div>
 

@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { PhoneUnit, Accessory, SaleItem, SaleRecord } from '@/types';
 import ExchangeModal, { type ExchangePayload } from '@/components/ExchangeModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CartItem {
  cartId: string;
@@ -24,6 +25,7 @@ interface CartItem {
 
 export default function POS() {
  const isMobile = useMobile();
+ const { requireAdmin } = useAuth();
  const { phones } = usePhones();
  const { accessories } = useAccessories();
  const inStockCount = useMemo(() => phones.filter(p => p.status === 'in-stock').length, [phones]);
@@ -482,7 +484,7 @@ _Please keep this message as your digital receipt._`;
  <div className="bg-[var(--paper)] border-t border-[var(--line)] p-5 shadow-2xl shrink-0 space-y-4">
    {!pendingExchange ? (
      <Button
-       onClick={() => setExchangeModalOpen(true)}
+       onClick={() => requireAdmin(() => setExchangeModalOpen(true))}
        disabled={cartItems.length === 0}
        className="w-full h-10 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-none hover:bg-[var(--line)] transition-all"
      >

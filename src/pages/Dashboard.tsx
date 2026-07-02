@@ -119,6 +119,37 @@ export default function Dashboard() {
  .slice(0, 5);
  }, [sales]);
 
+ // Staff dashboard (client issue 7.3): standard staff see ONLY Daily Revenue — no profit, cost,
+ // inventory value, ROI, monthly aggregates, weekly chart, or history. Revenue is store-scoped +
+ // cost-free at the DB (v_sales_public / Phase 7). isAdmin is fail-closed while the role loads.
+ if (!isAdmin) {
+ return (
+ <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-8 min-h-screen bg-[var(--bg-app)]">
+ <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--line)] pb-6">
+ <div>
+ <h1 className="text-3xl text-[var(--ink)]">Daily Overview</h1>
+ <p className="text-[var(--subtle)] text-sm mt-1">Point of Sale · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+ </div>
+ <div className="px-3 py-1.5 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] rounded-xl flex items-center gap-2 shadow-sm">
+ <Calendar size={14} className="text-[var(--accent)]" />
+ <span className="text-xs font-medium text-[var(--subtle)]">{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+ </div>
+ </div>
+ <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+ <div className="bg-[var(--paper)] p-8 border border-[var(--line)] relative overflow-hidden">
+ <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--accent)]" />
+ <p className="text-xs font-medium text-[var(--subtle)] mb-2">Daily Revenue</p>
+ <div className="flex items-baseline gap-1">
+ <span className="text-5xl text-[var(--accent)]">{formatLKR(stats.todayRevenue).split(' ')[1]}</span>
+ <span className="text-sm font-medium text-[var(--subtle)]">{formatLKR(stats.todayRevenue).split(' ')[0]}</span>
+ </div>
+ <p className="text-[11px] text-[var(--subtle)] mt-3">{stats.todayCount} sales today</p>
+ </div>
+ </motion.div>
+ </div>
+ );
+ }
+
  return (
  <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8 min-h-screen bg-[var(--bg-app)]">
  {/* Header */}
