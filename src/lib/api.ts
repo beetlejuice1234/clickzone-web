@@ -66,16 +66,24 @@ export function useAccessories() {
   return { accessories: data ?? [], isLoading, isError: error };
 }
 
-export function useSales() {
+// Optional date range (inclusive) pushes gte/lte on the text `date` column into the query,
+// so a filtered Sales Log / monthly Dashboard pulls only the rows it needs. Dates are
+// 'YYYY-MM-DD', so string comparison is correct. No args = all rows (unchanged behaviour).
+// The range is part of the queryKey, so each range caches independently and refetches on change.
+export function useSales(range?: { from?: string; to?: string }) {
   const { isAdmin } = useAuth();
   const activeStore = useStoreScope((s) => s.activeStoreId);
   const scoped = isAdmin ? activeStore : null;
   const view = isAdmin ? 'v_sales_profit' : 'v_sales_public';
+  const from = range?.from || null;
+  const to = range?.to || null;
   const { data, error, isLoading } = useQuery({
-    queryKey: ['sales', isAdmin ? 'full' : 'public', scoped ?? 'all'],
+    queryKey: ['sales', isAdmin ? 'full' : 'public', scoped ?? 'all', from ?? 'any', to ?? 'any'],
     queryFn: async () => {
       let q = supabase.from(view).select('*');
       if (scoped) q = q.eq('store_id', scoped);
+      if (from) q = q.gte('date', from);
+      if (to) q = q.lte('date', to);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []).map(mapSale);

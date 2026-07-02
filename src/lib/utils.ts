@@ -9,6 +9,41 @@ export function formatLKR(amount: number): string {
  return `LKR ${amount.toLocaleString('en-US')}`;
 }
 
+/* ---------------------------------------------------------------- Asia/Colombo dates
+ * Date columns are text 'YYYY-MM-DD' (validated: 0 rows off-format), so lexicographic
+ * gte/lte comparison is correct. These helpers pin "now" to Asia/Colombo to stay
+ * consistent with the RPCs; the full app-wide timezone sweep is Phase 8h.
+ * en-CA locale renders as YYYY-MM-DD. */
+export function todayColombo(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+}
+
+// Current month as 'YYYY-MM' in Asia/Colombo.
+export function monthColombo(): string {
+  return todayColombo().slice(0, 7);
+}
+
+export function startOfMonthColombo(): string {
+  return `${monthColombo()}-01`;
+}
+
+// Monday of the current week (Asia/Colombo), as 'YYYY-MM-DD'.
+export function startOfWeekColombo(): string {
+  const d = new Date(`${todayColombo()}T00:00:00Z`);
+  const dow = d.getUTCDay();        // 0=Sun .. 6=Sat
+  const offset = (dow + 6) % 7;     // days since Monday
+  d.setUTCDate(d.getUTCDate() - offset);
+  return d.toISOString().slice(0, 10);
+}
+
+// Lexicographic bounds for a whole month given 'YYYY-MM'. `-31` is a safe upper bound:
+// every real day in the month is <= 'YYYY-MM-31' and days in other months sort outside.
+export function monthBounds(ym: string): { from: string; to: string } {
+  return { from: `${ym}-01`, to: `${ym}-31` };
+}
+
 export const CONDITION_LABELS: Record<ConditionGrade, string> = {
   'sealed': 'Sealed',
   'a-plus': 'A+',

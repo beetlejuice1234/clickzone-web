@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
-import { 
- TrendingUp, 
+import { useMemo, useState } from 'react';
+import {
+ TrendingUp,
  Calendar,
  Receipt
 } from 'lucide-react';
 import { usePhones, useAccessories, useSales, useExchanges } from '@/lib/api';
-import { formatLKR, cn } from '@/lib/utils';
+import { formatLKR, cn, monthColombo, monthBounds } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -16,6 +16,20 @@ export default function Dashboard() {
  const { sales } = useSales();
  const { exchanges } = useExchanges();
  const { isAdmin } = useAuth();
+
+ // Monthly summary — a second, month-scoped query (gte/lte pushed into Supabase),
+ // fixing the "monthly sales shows the whole amount" complaint (there was no month filter).
+ const [selectedMonth, setSelectedMonth] = useState<string>(monthColombo()); // 'YYYY-MM'
+ const monthRange = useMemo(() => monthBounds(selectedMonth), [selectedMonth]);
+ const { sales: monthSales, isLoading: monthLoading } = useSales(monthRange);
+ const monthly = useMemo(() => {
+   const revenue = monthSales.reduce((sum, s) => sum + s.totalRevenue, 0);
+   const profit = monthSales.reduce((sum, s) => {
+     const cost = s.items.reduce((acc, item) => acc + item.costPrice, 0);
+     return sum + (s.totalRevenue - cost);
+   }, 0);
+   return { revenue, count: monthSales.length, profit };
+ }, [monthSales]);
 
  const stats = useMemo(() => {
   const phonesInStock = phones.filter(p => p.status === 'in-stock').length;
@@ -194,6 +208,54 @@ export default function Dashboard() {
  </div>
  </motion.div>
  </div>
+
+ {/* Monthly Summary */}
+ <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
+ className="bg-[var(--paper)] border border-[var(--line)] p-6 sm:p-8">
+ <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+ <div>
+ <p className="text-xs text-[var(--subtle)] font-medium mb-1">Monthly Summary</p>
+ <h3 className="text-2xl text-[var(--ink)]">Sales for {selectedMonth}</h3>
+ </div>
+ <div className="relative">
+ <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--accent)] pointer-events-none" size={14} />
+ <input
+ type="month"
+ value={selectedMonth}
+ max={monthColombo()}
+ onChange={e => setSelectedMonth(e.target.value || monthColombo())}
+ aria-label="Select month"
+ className="pl-10 h-11 border border-[var(--line)] bg-[var(--bg-app)] rounded-none text-[10px] font-bold text-[var(--ink)] focus:border-[var(--accent)] focus:outline-none"
+ />
+ </div>
+ </div>
+ <div className={cn("grid gap-4", isAdmin ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}>
+ <div className="bg-[var(--bg-app)] p-5 border border-[var(--line)] relative overflow-hidden">
+ <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--accent)]" />
+ <p className="text-xs font-medium text-[var(--subtle)] mb-2">Monthly Revenue</p>
+ <div className="flex items-baseline gap-1">
+ <span className="text-3xl text-[var(--accent)]">{monthLoading ? '…' : formatLKR(monthly.revenue).split(' ')[1]}</span>
+ <span className="text-xs font-medium text-[var(--subtle)]">{formatLKR(monthly.revenue).split(' ')[0]}</span>
+ </div>
+ </div>
+ <div className="bg-[var(--bg-app)] p-5 border border-[var(--line)] relative overflow-hidden">
+ <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--ink)]" />
+ <p className="text-xs font-medium text-[var(--subtle)] mb-2">Sales Count</p>
+ <span className="text-3xl text-[var(--ink)]">{monthLoading ? '…' : monthly.count}</span>
+ <p className="text-[11px] text-[var(--subtle)] mt-2">transactions this month</p>
+ </div>
+ {isAdmin && (
+ <div className="bg-[var(--bg-app)] p-5 border border-[var(--line)] relative overflow-hidden">
+ <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--success)]" />
+ <p className="text-xs font-medium text-[var(--success)] mb-2">Monthly Profit</p>
+ <div className="flex items-baseline gap-1">
+ <span className="text-3xl text-[var(--ink)]">{monthLoading ? '…' : formatLKR(monthly.profit).split(' ')[1]}</span>
+ <span className="text-xs font-medium text-[var(--success)]">{formatLKR(monthly.profit).split(' ')[0]}</span>
+ </div>
+ </div>
+ )}
+ </div>
+ </motion.div>
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
  {/* Sales Chart */}

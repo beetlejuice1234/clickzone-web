@@ -13,7 +13,7 @@ import {
 , ArrowUpDown, ArrowUp, ArrowDown} from 'lucide-react';
 import { useSales, reloadData, deleteSale } from '@/lib/api';
 import type { SaleRecord } from '@/types';
-import { formatLKR, cn } from '@/lib/utils';
+import { formatLKR, cn, todayColombo, startOfWeekColombo, monthBounds, monthColombo } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,13 +31,36 @@ import { useMobile } from '@/hooks/useMobile';
 import { downloadBillPDF } from '@/lib/pdfBill';
 import { ReturnModal } from '@/components/ReturnModal';
 
+type DatePreset = 'today' | 'week' | 'month' | 'all' | 'custom';
+const PRESET_LABELS: Record<DatePreset, string> = {
+  today: 'Today', week: 'This Week', month: 'This Month', all: 'All', custom: 'Custom',
+};
+
 export default function SalesLog() {
- const { sales, isLoading } = useSales();
  const { isAdmin } = useAuth();
  const isMobile = useMobile();
  const [search, setSearch] = useState('');
- const [dateFilter, setDateFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'returned' | 'trade-in'>('all');
+
+  // Date-range filter: presets drive the Supabase query (gte/lte on `date`, Asia/Colombo),
+  // so we only pull rows in range. Defaults to This Month.
+  const [preset, setPreset] = useState<DatePreset>('month');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+
+  const range = useMemo((): { from?: string; to?: string } => {
+    const today = todayColombo();
+    switch (preset) {
+      case 'today': return { from: today, to: today };
+      case 'week': return { from: startOfWeekColombo(), to: today };
+      case 'month': return monthBounds(monthColombo());
+      case 'custom': return { from: customFrom || undefined, to: customTo || undefined };
+      case 'all':
+      default: return {};
+    }
+  }, [preset, customFrom, customTo]);
+
+  const { sales, isLoading } = useSales(range);
   
   type SortKey = 'billId' | 'date' | 'totalRevenue' | 'customerWhatsapp';
   type SortDir = 'asc' | 'desc';
@@ -82,10 +105,6 @@ export default function SalesLog() {
    );
  }
 
- if (dateFilter) {
-   list = list.filter(sale => sale.date === dateFilter);
- }
-
  if (sort) {
    list.sort((a, b) => {
      const dir = sort.dir === 'asc' ? 1 : -1;
@@ -107,7 +126,15 @@ export default function SalesLog() {
  }
 
  return list;
- }, [sales, search, dateFilter, statusFilter, sort]);
+ }, [sales, search, statusFilter, sort]);
+
+ const resetFilters = useCallback(() => {
+   setSearch('');
+   setStatusFilter('all');
+   setPreset('month');
+   setCustomFrom('');
+   setCustomTo('');
+ }, []);
 
   const handleExport = useCallback(() => {
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -164,21 +191,38 @@ export default function SalesLog() {
  return (
  <div className="p-4 space-y-4 bg-[var(--bg-app)] min-h-screen">
  <div className="space-y-2">
- <Input 
- placeholder="Asset, ID or Whatsapp Ref..." 
+ <Input
+ placeholder="Asset, ID or Whatsapp Ref..."
  value={search} onChange={e => setSearch(e.target.value)}
  className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[10px] font-medium text-[var(--ink)] placeholder:text-[var(--subtle)]/50 focus-visible:border-[var(--accent)] focus-visible:ring-0"
  />
- <div className="flex gap-2">
- <Input 
- type="date" 
- value={dateFilter} onChange={e => setDateFilter(e.target.value)}
- className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] flex-1"
- />
- <Button variant="ghost" className="h-10 px-4 rounded-none border border-[var(--line)] text-[10px] font-bold text-[var(--accent)] " onClick={() => { setSearch(''); setDateFilter(''); }}>
- Clear
- </Button>
+ <div className="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
+   {(['today', 'week', 'month', 'all', 'custom'] as const).map(p => (
+     <button
+       key={p}
+       onClick={() => setPreset(p)}
+       className={cn(
+         "px-3 py-1.5 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+         preset === p
+           ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]"
+           : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
+       )}
+     >
+       {PRESET_LABELS[p]}
+     </button>
+   ))}
+   <Button variant="ghost" className="h-8 px-3 rounded-none border border-[var(--line)] text-[10px] font-bold text-[var(--accent)] whitespace-nowrap" onClick={resetFilters}>
+     Clear
+   </Button>
  </div>
+ {preset === 'custom' && (
+   <div className="flex gap-2">
+     <Input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+       className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] flex-1" aria-label="From date" />
+     <Input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+       className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] flex-1" aria-label="To date" />
+   </div>
+ )}
  </div>
  
  <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
@@ -324,30 +368,50 @@ export default function SalesLog() {
   ))}
 </div>
 <div className="bg-[var(--paper)] border border-[var(--line)] rounded-none shadow-none overflow-hidden relative">
- <div className="p-6 bg-[var(--bg-app)]/50 border-b border-[var(--line)] flex flex-col md:flex-row gap-6 items-center">
- <div className="relative flex-1 group">
+ <div className="p-6 bg-[var(--bg-app)]/50 border-b border-[var(--line)] flex flex-col gap-4">
+ <div className="flex flex-col md:flex-row gap-6 items-center">
+ <div className="relative flex-1 group w-full">
  <div className="absolute -top-2.5 left-4 bg-[var(--bg-app)] px-2 z-10 border-x border-[var(--line)]">
  <span className="text-[8px] font-bold text-[var(--accent)]">Filter Parameters</span>
  </div>
  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--accent)]" size={14} />
- <Input 
+ <Input
  placeholder="Query by ID, Identifier, or WhatsApp reference..."
  value={search} onChange={e => setSearch(e.target.value)}
  className="pl-10 h-11 border-[var(--line)] bg-[var(--bg-app)] rounded-none focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30"
  />
  </div>
- <div className="flex gap-4 w-full md:w-auto">
- <div className="relative w-full md:w-56 group">
- <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--accent)]" size={14} />
- <Input 
- type="date"
- value={dateFilter} onChange={e => setDateFilter(e.target.value)}
- className="pl-10 h-11 border-[var(--line)] bg-[var(--bg-app)] rounded-none w-full text-[10px] font-bold text-[var(--ink)]"
- />
- </div>
- <Button variant="ghost" className="h-11 text-[9px] font-medium rounded-none border border-[var(--line)] text-[var(--subtle)] hover:text-[var(--accent)] hover:bg-[var(--bg-app)]" onClick={() => { setSearch(''); setDateFilter(''); }}>
+ <Button variant="ghost" className="h-11 text-[9px] font-medium rounded-none border border-[var(--line)] text-[var(--subtle)] hover:text-[var(--accent)] hover:bg-[var(--bg-app)] w-full md:w-auto" onClick={resetFilters}>
  Clear Filters
  </Button>
+ </div>
+ <div className="flex flex-wrap items-center gap-3">
+ <Calendar className="text-[var(--accent)]" size={14} />
+ <div className="flex gap-2 flex-wrap">
+   {(['today', 'week', 'month', 'all', 'custom'] as const).map(p => (
+     <button
+       key={p}
+       onClick={() => setPreset(p)}
+       className={cn(
+         "px-3 py-1.5 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+         preset === p
+           ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]"
+           : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
+       )}
+     >
+       {PRESET_LABELS[p]}
+     </button>
+   ))}
+ </div>
+ {preset === 'custom' && (
+   <div className="flex items-center gap-2">
+     <Input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+       className="h-9 w-40 border-[var(--line)] bg-[var(--bg-app)] rounded-none text-[10px] font-bold text-[var(--ink)]" aria-label="From date" />
+     <span className="text-[9px] font-bold text-[var(--subtle)]">→</span>
+     <Input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+       className="h-9 w-40 border-[var(--line)] bg-[var(--bg-app)] rounded-none text-[10px] font-bold text-[var(--ink)]" aria-label="To date" />
+   </div>
+ )}
  </div>
  </div>
 
