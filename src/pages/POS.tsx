@@ -5,7 +5,7 @@ import { formatLKR, cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { shareBillPDF, downloadBillPDF } from '@/lib/pdfBill';
+import { shareBillPDF, downloadBillPDF, type BillData } from '@/lib/pdfBill';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { useMobile } from '@/hooks/useMobile';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,10 +34,12 @@ export default function POS() {
  const [customerName, setCustomerName] = useState('');
  const [customerNic, setCustomerNic] = useState('');
  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
+ const [specialNotes, setSpecialNotes] = useState('');
  const [billGenerated, setBillGenerated] = useState(false);
  const [lastBillId, setLastBillId] = useState('');
  const [notFound, setNotFound] = useState(false);
  const [lastSale, setLastSale] = useState<SaleRecord | null>(null);
+ const [lastBillData, setLastBillData] = useState<BillData | null>(null);
  const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
  const [pendingExchange, setPendingExchange] = useState<ExchangePayload | null>(null);
 
@@ -228,6 +230,7 @@ export default function POS() {
  total_revenue: netAmount,
  total_discount: totalDiscount,
  payment_method: paymentMethod,
+ notes: specialNotes || null,
  customer_whatsapp: customerWhatsapp || null,
  // Optional customer record — created/linked inside the checkout RPC (owner-only table,
  // written via SECURITY DEFINER so staff can attach without gaining read access).
@@ -273,27 +276,30 @@ export default function POS() {
     setCustomerName('');
     setCustomerNic('');
     setPaymentMethod('cash');
+    setSpecialNotes('');
     setPendingExchange(null);
 
     try {
-      // PDF
-      const finalNetAmount = sale.totalRevenue; // already has trade-in deducted
-      const pdfData = {
+      // PDF — totals mirror what the checkout RPC persisted, so the bill == the sale record.
+      // total_revenue = netAmount (gross goods); net_payable = netAmount - trade_in.
+      const tradeIn = completedExchange?.tradeInValuation ?? 0;
+      const finalNetAmount = Math.max(0, netAmount - tradeIn); // = net payable, for the WhatsApp receipt
+      const pdfData: BillData = {
         billId: sale.billId,
         date: sale.date,
         time: sale.time,
         customerWhatsapp: customerWhatsapp || '',
         saleItems: saleItems,
-        item: {
-          model: saleItems.length === 1 ? saleItems[0].name : `${saleItems.length} Items`,
-          imei: saleItems.map(i => i.identifier).join(', '),
-          condition: saleItems[0].condition || 'N/A',
-          costPrice: saleItems.reduce((a, b) => a + b.costPrice, 0),
-          finalPrice: finalNetAmount,
+        totals: {
+          subtotal: netAmount + totalDiscount,
           discount: totalDiscount,
-          tradeIn: completedExchange ? { model: completedExchange.tradeInModel, value: completedExchange.tradeInValuation } : undefined,
+          tradeIn,
+          grandTotal: finalNetAmount,
         },
+        paymentMethod,
+        specialNotes: specialNotes || undefined,
       };
+      setLastBillData(pdfData);
 
       // WhatsApp
       const phoneNum = customerWhatsapp.replace(/\D/g, '').replace(/^0+/, '');
@@ -345,7 +351,7 @@ _Please keep this message as your digital receipt._`;
       console.error("Receipt generation failed:", err);
       toast.error("Receipt generation failed, but the sale was saved successfully.");
     }
-  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, netAmount, totalDiscount, pendingExchange]);
+  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, netAmount, totalDiscount, pendingExchange]);
 
  useEffect(() => {
  if (!billGenerated) return;
@@ -354,24 +360,10 @@ _Please keep this message as your digital receipt._`;
  }, [billGenerated]);
 
  const handleReprint = useCallback(async () => {
- if (!lastSale) return;
- await downloadBillPDF({
- billId: lastSale.billId,
- date: lastSale.date,
- time: lastSale.time,
- customerWhatsapp: lastSale.customerWhatsapp || '',
- saleItems: lastSale.items,
- item: {
- model: `${lastSale.items.length} Items`,
- imei: lastSale.items.map((i: SaleItem) => i.identifier).join(', '),
- condition: lastSale.items[0]?.condition || 'N/A',
- costPrice: lastSale.items.reduce((a: number, b: SaleItem) => a + b.costPrice, 0),
- finalPrice: lastSale.totalRevenue,
- discount: lastSale.totalDiscount,
- },
- });
+ if (!lastBillData) return;
+ await downloadBillPDF(lastBillData); // identical to the bill just generated
  toast.info('PDF downloaded');
- }, [lastSale]);
+ }, [lastBillData]);
 
  if (isMobile) {
  return (
@@ -550,6 +542,13 @@ _Please keep this message as your digital receipt._`;
  </button>
  ))}
  </div>
+ <textarea
+ value={specialNotes}
+ onChange={(e) => setSpecialNotes(e.target.value)}
+ placeholder="Special notes (optional) — printed on the bill"
+ rows={2}
+ className="w-full px-3 py-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)] transition-all resize-none"
+ />
  <div className="flex items-center justify-between">
  <div>
  <p className="text-[13px] font-medium text-[var(--ink)] mb-2 block">{cartItems.length} Identified Units</p>
@@ -849,6 +848,17 @@ _Please keep this message as your digital receipt._`;
  </button>
  ))}
  </div>
+ </div>
+ <div className="space-y-2">
+ <Label className="text-[9px] font-bold text-[var(--subtle)] ">Special Notes (optional)</Label>
+ <textarea
+ value={specialNotes}
+ onChange={(e) => setSpecialNotes(e.target.value)}
+ placeholder="Printed on the bill…"
+ rows={2}
+ disabled={cartItems.length === 0}
+ className="w-full px-3 py-2 bg-[var(--bg-app)] border-[var(--line)] border rounded-none text-[11px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)] disabled:opacity-30 transition-none resize-none"
+ />
  </div>
  </div>
 

@@ -164,20 +164,24 @@ export default function SalesLog() {
  }, [isAdmin]);
 
   const handlePrint = useCallback(async (sale: SaleRecord) => {
+  // Build the bill from the PERSISTED sale values so the reprint == what's in Sales Log.
+  // total_revenue = gross goods; net_payable = total_revenue - trade_in_value (fallback for legacy rows).
+  const tradeIn = sale.tradeInValue ?? 0;
+  const grandTotal = sale.netPayable ?? (sale.totalRevenue - tradeIn);
   await downloadBillPDF({
   billId: sale.billId,
   date: sale.date,
   time: sale.time,
   customerWhatsapp: sale.customerWhatsapp || '',
   saleItems: sale.items,
-  item: {
-  model: sale.items.length === 1 ? sale.items[0].name : `${sale.items.length} Items`,
-  imei: sale.items.map((i) => i.identifier).join(', '),
-  condition: sale.items[0]?.condition || 'N/A',
-  costPrice: sale.items.reduce((a, b) => a + b.costPrice, 0),
-  finalPrice: sale.totalRevenue,
-  discount: sale.totalDiscount,
+  totals: {
+  subtotal: sale.totalRevenue + (sale.totalDiscount ?? 0),
+  discount: sale.totalDiscount ?? 0,
+  tradeIn,
+  grandTotal,
   },
+  paymentMethod: sale.paymentMethod,
+  specialNotes: sale.specialNotes,
   });
   }, []);
 

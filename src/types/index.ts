@@ -69,6 +69,7 @@ export interface SaleRecord {
  tradeInValue?: number;
  netPayable?: number;
  paymentMethod?: string; // 'cash' | 'card'
+ specialNotes?: string; // per-sale free-text note (sales.notes)
  customerId?: string;
  localUpdatedAt?: string;
  syncedAt?: string;

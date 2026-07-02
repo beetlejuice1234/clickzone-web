@@ -73,6 +73,7 @@ export function mapSale(row: Record<string, unknown>): SaleRecord {
     tradeInValue: num(row.trade_in_value, 0),
     netPayable: row.net_payable == null ? undefined : num(row.net_payable),
     paymentMethod: (row.payment_method as string) ?? 'cash',
+    specialNotes: (row.notes as string) ?? undefined,
     customerId: (row.customer_id as string) ?? undefined,
     localUpdatedAt: (row.local_updated_at as string) ?? undefined,
     syncedAt: (row.synced_at as string) ?? undefined,

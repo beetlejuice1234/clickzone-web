@@ -98,11 +98,19 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
   page (list + per-customer purchase history, `useCustomers` owner-gated, nav hidden for staff).
   Verified 10/10 (cash/card saved+shown; customer created+linked; NIC dedup=1 row/2 sales/LKR 60k;
   staff reads 0 customer rows but CAN attach at checkout). `[8E]` test phones left on staging.
-- ⏭️ **NEXT: Phase 8f** — PDF fixes (`pdfBill.ts`): render BOTH Special Notes + T&C, bill total ==
-  persisted sale values, show payment method. Then 8g–8h. Small sub-sessions, commit between each.
-- Note: `npm run build` still red on PRE-EXISTING errors (app runs via `vite dev`): `pdfBill` (→8f),
+- ✅ **Phase 8f — PDF fixes (staging)** `20260702_phase8f_sale_notes.sql`: `pdfBill.ts` now prints
+  totals **verbatim** from the persisted sale (new `totals {subtotal,discount,tradeIn,grandTotal}`,
+  no recalculation) so bill == Sales Log; real payment badge (PAID · CASH/CARD); **Special Notes +
+  T&C both render** with A5 overflow → second page; per-sale note reuses the existing `sales.notes`
+  column (checkout RPC now writes `payload.notes`; `mapSale` maps `notes`→`specialNotes`; POS notes
+  textarea; reprint reuses the exact bill). Cleared the `pdfBill` build errors. Verified: 5 sample
+  PDFs (cash/card/trade-in/2-page overflow/notes+T&C) + a LIVE owner checkout (note persisted,
+  net_payable/cost correct, reprint matches). `[8F-TEST]` sale left on staging.
+- ⏭️ **NEXT: Phase 8g** — staff lock (default staff, gate add/remove/exchange-edit; PIN override) +
+  Daily-Revenue-only staff dashboard + "Other"/Android brand in Add/Exchange model selector.
+- Note: `npm run build` still red on PRE-EXISTING errors cleared in **8h** (app runs via `vite dev`):
   `Sidebar` (legacy sync-status dead code), `AddUnitModal` (latent 8a `status: string` typing),
-  one unused `entry` in Dashboard's chart map. 8c/8d/8e files are type-clean.
+  one unused `entry` in Dashboard's chart map. `pdfBill` is now type-clean.
 
 ## Phase-5 RPC follow-ups
 1. ✅ RESOLVED (Phase 8b) — checkout trade-in now revives instead of duplicating.
