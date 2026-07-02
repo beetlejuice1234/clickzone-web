@@ -6,6 +6,10 @@ import { queryClient } from '@/lib/queryClient';
 import App from './App.tsx';
 import './index.css';
 
+// Ask the browser to keep our storage (best-effort; harmless online-first, matters if an offline
+// sales queue lands in a later phase). Does nothing on unsupported browsers.
+void navigator.storage?.persist?.();
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

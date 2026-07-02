@@ -123,8 +123,16 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
   **Phone counts**: IN STOCK/SOLD badges on Inventory (store-scoped). **Build GREEN**: Sidebar dead
   sync code removed, `AddUnitModal` `status as const`, Dashboard unused `entry` dropped — `npm run
   build` passes (`tsc -b` + `vite build`). Legacy zero-cost rows still need owner backfill (data, not math).
-- ⏭️ **NEXT: Phase 9** — PWA (vite-plugin-pwa: manifest + online-first service worker) + Vercel deploy
-  config (SPA rewrite, env vars from dashboard). Staging-backed test deploy — NOT the production cutover.
+- ✅ **Phase 9 — PWA + Vercel config (no DB change)**: `vite-plugin-pwa` wired in `vite.config.ts`
+  (manifest "ClickZone POS", standalone, black theme, icons from `public/`; `registerType: autoUpdate`,
+  auto SW registration). **Online-first SW**: precache the app shell; **Supabase = `NetworkOnly`** (auth/
+  stock never cached → no staleness). `vercel.json` = SPA rewrite + no-cache headers on sw/manifest.
+  `index.html` PWA meta; `main.tsx` `storage.persist()`. Build GREEN, emits `sw.js`/`manifest.webmanifest`;
+  runtime-verified (preview: sw/manifest/icon 200, `/inventory` → app shell). **Deploy is the owner's step**
+  (Vercel import + env vars `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` pointed at **staging**). Icons are
+  the existing square JPEGs (500²/1024²) — installable; crisp 192/512 PNGs are an optional later polish.
+- ⏭️ **NEXT: Phase 10** — verification pass (checkout race, staff-JWT RLS proof, PDF, trade-in-return math,
+  multi-store isolation, profit unit test), then **Phase 11** — backup gate + production cutover (§6).
 - Note: `npm run build` still red on PRE-EXISTING errors cleared in **8h** (app runs via `vite dev`):
   `Sidebar` (legacy sync-status dead code), `AddUnitModal` (latent 8a `status: string` typing),
   one unused `entry` in Dashboard's chart map. `pdfBill` is now type-clean.
