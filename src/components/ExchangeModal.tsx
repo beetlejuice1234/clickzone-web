@@ -174,7 +174,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
               />
               {imeiWarning && (
-                <p className={`text-[10px] font-bold px-2 py-1 rounded-xl border ${prevSoldBill ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-[var(--danger)] bg-[var(--danger)]/5 border-[var(--danger)]/20'}`}>
+                <p className={`text-[10px] font-bold px-2 py-1 rounded-xl border ${prevSoldBill ? 'text-[var(--warning)] bg-[var(--warning)]/10 border-[var(--warning)]/30' : 'text-[var(--danger)] bg-[var(--danger)]/5 border-[var(--danger)]/20'}`}>
                   {imeiWarning}
                 </p>
               )}

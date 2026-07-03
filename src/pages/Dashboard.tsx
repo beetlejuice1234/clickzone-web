@@ -121,7 +121,7 @@ export default function Dashboard() {
  <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-8 min-h-screen bg-[var(--bg-app)]">
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--line)] pb-6">
  <div>
- <h1 className="text-3xl text-[var(--ink)]">Daily Overview</h1>
+ <h1 className="font-display text-3xl font-semibold text-[var(--teal)]">Daily Overview</h1>
  <p className="text-[var(--subtle)] text-sm mt-1">Point of Sale · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
  </div>
  <div className="px-3 py-1.5 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] rounded-xl flex items-center gap-2 shadow-sm">
@@ -148,7 +148,7 @@ export default function Dashboard() {
  {/* Header */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--line)] pb-6">
  <div>
- <h1 className="text-3xl text-[var(--ink)]">
+ <h1 className="font-display text-3xl font-semibold text-[var(--teal)]">
  Inventory Executive
  </h1>
  <p className="text-[var(--subtle)] text-sm mt-1">
@@ -166,15 +166,14 @@ export default function Dashboard() {
  {/* Stats Grid */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
- <div className="bg-[var(--paper)] rounded-2xl shadow-sm p-5 border border-[var(--line)] relative overflow-hidden group">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--brand)]" />
- <p className="text-xs font-medium text-[var(--subtle)] mb-2">Daily Revenue</p>
+ <div className="bg-[var(--cream)] rounded-2xl shadow-sm p-5 relative overflow-hidden h-full">
+ <p className="text-[11px] font-semibold text-[var(--teal)]/70 mb-2 uppercase tracking-wide">Daily Revenue</p>
  <div className="flex items-baseline gap-1">
- <span className="text-3xl text-[var(--brand)]">{formatLKR(stats.todayRevenue).split(' ')[1]}</span>
- <span className="text-xs font-medium text-[var(--subtle)]">{formatLKR(stats.todayRevenue).split(' ')[0]}</span>
+ <span className="font-display text-3xl font-semibold text-[var(--teal)]">{formatLKR(stats.todayRevenue).split(' ')[1]}</span>
+ <span className="text-xs font-medium text-[var(--teal)]/60">{formatLKR(stats.todayRevenue).split(' ')[0]}</span>
  </div>
- <p className="text-[11px] text-[var(--success)] mt-2 font-medium">
- {isAdmin && <span className="mr-2 border-r border-[var(--success)]/30 pr-2">Profit: {formatLKR(stats.todayProfit)}</span>}
+ <p className="text-[11px] text-[var(--teal)]/70 mt-2 font-medium">
+ {isAdmin && <span className="mr-1.5">Profit {formatLKR(stats.todayProfit)} ·</span>}
  {stats.todayCount} Sales
  </p>
  </div>
@@ -182,7 +181,6 @@ export default function Dashboard() {
 
  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
  <div className="bg-[var(--paper)] rounded-2xl shadow-sm p-5 border border-[var(--line)] relative overflow-hidden group">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--success)]" />
  <p className="text-xs font-medium text-[var(--subtle)] mb-2">Stock Units</p>
  <div className="flex flex-col gap-0.5">
  <div className="flex items-center justify-between"><span className="text-[11px] font-bold text-[var(--subtle)]">Phones:</span><span className="text-lg font-bold text-[var(--ink)]">{stats.phonesInStock}</span></div>
@@ -198,10 +196,9 @@ export default function Dashboard() {
 
  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
  <div className="bg-[var(--paper)] rounded-2xl shadow-sm p-5 border border-[var(--line)] relative overflow-hidden group">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--ink)]" />
  <p className="text-xs font-medium text-[var(--subtle)] mb-2">Inventory Value</p>
  <div className="flex items-baseline gap-1">
- <span className="text-3xl text-[var(--ink)]">{isAdmin ? formatLKR(stats.inventoryValue).split(' ')[1] : '----'}</span>
+ <span className="font-display text-3xl font-semibold text-[var(--teal)]">{isAdmin ? formatLKR(stats.inventoryValue).split(' ')[1] : '----'}</span>
  <span className="text-xs font-medium text-[var(--subtle)]">{isAdmin ? formatLKR(stats.inventoryValue).split(' ')[0] : ''}</span>
  </div>
  <p className="text-[11px] text-[var(--subtle)] mt-2">{stats.soldPhones} Historical Units</p>
@@ -210,10 +207,9 @@ export default function Dashboard() {
 
  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
  <div className="bg-[var(--paper)] rounded-2xl shadow-sm p-5 border border-[var(--line)] relative overflow-hidden group">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--brand)]" />
  <p className="text-xs font-medium text-[var(--brand)] mb-2">Projected ROI</p>
  <div className="flex items-baseline gap-1">
- <span className="text-3xl text-[var(--ink)]">{isAdmin ? formatLKR(stats.potentialProfit).split(' ')[1] : '----'}</span>
+ <span className="font-display text-3xl font-semibold text-[var(--teal)]">{isAdmin ? formatLKR(stats.potentialProfit).split(' ')[1] : '----'}</span>
  <span className="text-xs font-medium text-[var(--brand)]">{isAdmin ? formatLKR(stats.potentialProfit).split(' ')[0] : ''}</span>
  </div>
  <p className="text-[11px] text-[var(--subtle)] mt-2">Market Analysis Active</p>
@@ -222,10 +218,9 @@ export default function Dashboard() {
 
  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
  <div className="bg-[var(--paper)] rounded-2xl shadow-sm p-5 border border-[var(--line)] relative overflow-hidden group">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--danger)]" />
  <p className="text-xs font-medium text-[var(--danger)] mb-2">Returns This Month</p>
  <div className="flex items-baseline gap-1">
- <span className="text-3xl text-[var(--ink)]">{stats.returnsThisMonthCount + stats.tradeInsThisMonth}</span>
+ <span className="font-display text-3xl font-semibold text-[var(--teal)]">{stats.returnsThisMonthCount + stats.tradeInsThisMonth}</span>
  <span className="text-xs font-medium text-[var(--danger)]">total</span>
  </div>
  <p className="text-[11px] text-[var(--subtle)] mt-2">{stats.returnsThisMonthCount} refunds · {stats.tradeInsThisMonth} trade-ins · LKR {stats.returnsThisMonthValue.toLocaleString()} refunded</p>
@@ -254,26 +249,23 @@ export default function Dashboard() {
  </div>
  </div>
  <div className={cn("grid gap-4", isAdmin ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}>
- <div className="bg-[var(--bg-app)] rounded-xl p-5 border border-[var(--line)] relative overflow-hidden">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--brand)]" />
+ <div className="bg-[var(--bg-app)] rounded-xl p-5 relative overflow-hidden">
  <p className="text-xs font-medium text-[var(--subtle)] mb-2">Monthly Revenue</p>
  <div className="flex items-baseline gap-1">
  <span className="text-3xl text-[var(--brand)]">{monthLoading ? '…' : formatLKR(monthly.revenue).split(' ')[1]}</span>
  <span className="text-xs font-medium text-[var(--subtle)]">{formatLKR(monthly.revenue).split(' ')[0]}</span>
  </div>
  </div>
- <div className="bg-[var(--bg-app)] rounded-xl p-5 border border-[var(--line)] relative overflow-hidden">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--ink)]" />
+ <div className="bg-[var(--bg-app)] rounded-xl p-5 relative overflow-hidden">
  <p className="text-xs font-medium text-[var(--subtle)] mb-2">Sales Count</p>
- <span className="text-3xl text-[var(--ink)]">{monthLoading ? '…' : monthly.count}</span>
+ <span className="font-display text-3xl font-semibold text-[var(--teal)]">{monthLoading ? '…' : monthly.count}</span>
  <p className="text-[11px] text-[var(--subtle)] mt-2">transactions this month</p>
  </div>
  {isAdmin && (
- <div className="bg-[var(--bg-app)] rounded-xl p-5 border border-[var(--line)] relative overflow-hidden">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--success)]" />
+ <div className="bg-[var(--bg-app)] rounded-xl p-5 relative overflow-hidden">
  <p className="text-xs font-medium text-[var(--success)] mb-2">Monthly Profit</p>
  <div className="flex items-baseline gap-1">
- <span className="text-3xl text-[var(--ink)]">{monthLoading ? '…' : formatLKR(monthly.profit).split(' ')[1]}</span>
+ <span className="font-display text-3xl font-semibold text-[var(--teal)]">{monthLoading ? '…' : formatLKR(monthly.profit).split(' ')[1]}</span>
  <span className="text-xs font-medium text-[var(--success)]">{formatLKR(monthly.profit).split(' ')[0]}</span>
  </div>
  </div>
@@ -311,7 +303,7 @@ export default function Dashboard() {
  />
  <Bar dataKey="revenue" radius={[0, 0, 0, 0]} barSize={36}>
  {chartData.map((_, index) => (
- <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? 'var(--brand)' : 'var(--line)'} className="transition-all hover:opacity-80" />
+ <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? 'var(--terracotta)' : 'var(--line)'} className="transition-all hover:opacity-80" />
  ))}
  </Bar>
  </BarChart>

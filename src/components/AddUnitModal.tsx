@@ -334,12 +334,12 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">SKU</Label>
  <Input value={accSku} onChange={(e) => setAccSku(e.target.value)} placeholder="e.g. CABLE-LITO-USB" className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] " />
  {accSkuInfo ? (
- <div className="bg-amber-50 border border-amber-200 px-2 py-1.5 text-[10px] font-bold text-amber-700">
+ <div className="bg-[var(--warning)]/10 border border-[var(--warning)]/30 px-2 py-1.5 text-[10px] font-bold text-[var(--warning)]">
  ✓ SKU exists: <span className="font-bold">{accSkuInfo.name}</span> · Current stock: {accSkuInfo.quantity} units
- <br/><span className="text-amber-600 font-normal">Adding will increase stock by the quantity below.</span>
+ <br/><span className="text-[var(--warning)] font-normal">Adding will increase stock by the quantity below.</span>
  </div>
  ) : accSku.trim().length > 0 ? (
- <div className="bg-blue-50 border border-blue-200 px-2 py-1.5 text-[10px] font-bold text-blue-700">
+ <div className="bg-[var(--teal)]/10 border border-[var(--teal)]/25 px-2 py-1.5 text-[10px] font-bold text-[var(--teal)]">
  New SKU — will create a new accessory entry.
  </div>
  ) : null}

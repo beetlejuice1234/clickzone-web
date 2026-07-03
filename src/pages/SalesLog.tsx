@@ -292,7 +292,7 @@ export default function SalesLog() {
    <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-xl uppercase">{sale.returnStatus} RETURN</span>
  )}
  {sale.exchangeId && (
-   <span className="text-[8px] px-1.5 py-0.5 bg-orange-500/10 text-orange-500 border border-orange-500/30 font-medium rounded-xl uppercase">TRADE-IN</span>
+   <span className="text-[8px] px-1.5 py-0.5 bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 font-medium rounded-xl uppercase">TRADE-IN</span>
  )}
  <span className="text-[8px] px-1.5 py-0.5 bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/30 font-medium rounded-xl">COMPLETED</span>
  </div>
@@ -470,7 +470,7 @@ export default function SalesLog() {
      <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-xl uppercase">{sale.returnStatus} RETURN</span>
    )}
    {sale.exchangeId && (
-     <span className="text-[8px] px-1.5 py-0.5 bg-orange-500/10 text-orange-500 border border-orange-500/30 font-medium rounded-xl uppercase">TRADE-IN</span>
+     <span className="text-[8px] px-1.5 py-0.5 bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 font-medium rounded-xl uppercase">TRADE-IN</span>
    )}
  </div>
  <div className="flex items-center gap-2 text-[9px] text-[var(--subtle)]">
@@ -506,7 +506,7 @@ export default function SalesLog() {
  <div className="flex flex-col items-end">
  <span className="text-lg font-bold text-[var(--brand)]">{formatLKR(sale.totalRevenue)}</span>
  {sale.totalDiscount > 0 && <span className="text-[8px] font-bold bg-[var(--danger)]/20 text-[var(--danger)] border border-[var(--danger)]/30 px-1.5 py-0.5 mt-1 cursor-help" title="Adjustment Applied">-[{formatLKR(sale.totalDiscount).split(' ')[1]}]</span>}
- {sale.tradeInValue && sale.tradeInValue > 0 ? <span className="text-[8px] font-bold bg-orange-500/10 text-orange-500 border border-orange-500/30 px-1.5 py-0.5 mt-1" title="Trade-in Applied">Trade-in -{formatLKR(sale.tradeInValue).split(' ')[1]}</span> : null}
+ {sale.tradeInValue && sale.tradeInValue > 0 ? <span className="text-[8px] font-bold bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 px-1.5 py-0.5 mt-1" title="Trade-in Applied">Trade-in -{formatLKR(sale.tradeInValue).split(' ')[1]}</span> : null}
  </div>
  </TableCell>
  <TableCell className="py-6 px-6 text-right relative">

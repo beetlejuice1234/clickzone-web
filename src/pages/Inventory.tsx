@@ -425,8 +425,8 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <TableCell className="py-3 px-6">
  <div className="flex items-center gap-2">
  <p className="font-bold text-[var(--ink)] text-[11px]">{phone.model}</p>
- {phone.source === 'trade-in' && <span className="bg-orange-100 text-orange-700 border border-orange-300 text-[9px] font-bold px-1.5 py-0.5 rounded-xl">TRADE-IN</span>}
- {phone.source === 'returned' && <span className="bg-sky-100 text-sky-700 border border-sky-300 text-[9px] font-bold px-1.5 py-0.5 rounded-xl">RETURNED</span>}
+ {phone.source === 'trade-in' && <span className="bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 text-[9px] font-bold px-1.5 py-0.5 rounded-xl">TRADE-IN</span>}
+ {phone.source === 'returned' && <span className="bg-[var(--teal)]/10 text-[var(--teal)] border border-[var(--teal)]/25 text-[9px] font-bold px-1.5 py-0.5 rounded-xl">RETURNED</span>}
  </div>
  <p className="text-[9px] text-[var(--subtle)] mt-0.5 ">{phone.storage} · {phone.color}</p>
  </TableCell>
