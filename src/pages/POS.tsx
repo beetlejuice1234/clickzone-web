@@ -388,16 +388,16 @@ _Please keep this message as your digital receipt._`;
  return (
  <div className="flex flex-col h-[calc(100vh-7.5rem)] px-4 py-4 gap-4 bg-[var(--bg-app)]">
  {/* Scanner Input */}
- <div className="bg-[var(--paper)] rounded-none p-4 shadow-xl border border-[var(--line)] shrink-0">
+ <div className="bg-[var(--paper)] rounded-xl p-4 shadow-xl border border-[var(--line)] shrink-0">
  <div className="relative">
- <Scan size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
+ <Scan size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--brand)]" />
  <input
  type="text"
  value={imeiQuery}
  onChange={(e) => setImeiQuery(e.target.value)}
  onKeyDown={(e) => e.key === 'Enter' && handleLookup(e.currentTarget.value)}
  placeholder="IMEI or SKU..."
- className="w-full h-10 pl-9 pr-4 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-medium text-[var(--ink)] placeholder:text-[var(--subtle)]/50 focus:outline-none focus:border-[var(--accent)] transition-all"
+ className="w-full h-10 pl-9 pr-4 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-medium text-[var(--ink)] placeholder:text-[var(--subtle)]/50 focus:outline-none focus:border-[var(--brand)] transition-all"
  autoComplete="off"
  />
  </div>
@@ -408,7 +408,7 @@ _Please keep this message as your digital receipt._`;
  <span className="text-[9px] text-[var(--subtle)] ">{inStockCount} Units Available</span>
  <button
  onClick={() => handleLookup(imeiQuery)}
- className="h-8 px-4 bg-[var(--accent)] text-[var(--bg-app)] text-[9px] font-medium rounded-none active:scale-95 transition-transform"
+ className="h-8 px-4 bg-[var(--brand)] text-[var(--bg-app)] text-[9px] font-medium rounded-xl active:scale-95 transition-transform"
  >
  Find
  </button>
@@ -419,7 +419,7 @@ _Please keep this message as your digital receipt._`;
  <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
  {cartItems.length === 0 ? (
  <div className="flex flex-col items-center justify-center h-full text-center opacity-30">
- <div className="w-14 h-14 bg-[var(--paper)] border border-[var(--line)] rounded-none flex items-center justify-center mb-3">
+ <div className="w-14 h-14 bg-[var(--paper)] border border-[var(--line)] rounded-xl flex items-center justify-center mb-3">
  <ShoppingCart size={24} className="text-[var(--subtle)]" />
  </div>
  <p className="text-[10px] font-bold text-[var(--subtle)] font-medium">Cart is empty</p>
@@ -436,9 +436,9 @@ _Please keep this message as your digital receipt._`;
  initial={{ opacity: 0, scale: 0.98 }}
  animate={{ opacity: 1, scale: 1 }}
  exit={{ opacity: 0, x: -20 }}
- className="bg-[var(--paper)] rounded-none p-4 border border-[var(--line)] relative overflow-hidden"
+ className="bg-[var(--paper)] rounded-xl p-4 border border-[var(--line)] relative overflow-hidden"
  >
- <div className="absolute top-0 left-0 w-[2px] h-full bg-[var(--accent)]" />
+ <div className="absolute top-0 left-0 w-[2px] h-full bg-[var(--brand)]" />
  <div className="flex items-start justify-between gap-2 mb-3 pl-1">
  <div className="flex items-center gap-3 flex-1 min-w-0">
  <div className="min-w-0">
@@ -446,13 +446,13 @@ _Please keep this message as your digital receipt._`;
  <p className="text-[9px] text-[var(--subtle)] ">{sub}</p>
  </div>
  </div>
- <button onClick={() => handleRemoveCartItem(item.cartId)} className="w-6 h-6 flex items-center justify-center rounded-none bg-[var(--bg-app)] text-[var(--danger)] active:scale-90 transition-transform shrink-0">
+ <button onClick={() => handleRemoveCartItem(item.cartId)} className="w-6 h-6 flex items-center justify-center rounded-xl bg-[var(--bg-app)] text-[var(--danger)] active:scale-90 transition-transform shrink-0">
  <X size={12} />
  </button>
  </div>
  <div className="grid grid-cols-2 gap-3 pl-1">
  {item.type === 'accessory' && (
-   <div className="col-span-2 flex items-center justify-between bg-[var(--bg-app)] border border-[var(--line)] p-2 rounded-none">
+   <div className="col-span-2 flex items-center justify-between bg-[var(--bg-app)] border border-[var(--line)] p-2 rounded-xl">
      <span className="text-[8px] font-bold text-[var(--subtle)] ">QUANTITY</span>
      <div className="flex items-center gap-3">
        <button 
@@ -477,7 +477,7 @@ _Please keep this message as your digital receipt._`;
  type="number"
  value={item.finalPrice}
  onChange={(e) => updateCartItem(item.cartId, 'finalPrice', e.target.value)}
- className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] focus:outline-none focus:border-[var(--accent)]"
+ className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] focus:outline-none focus:border-[var(--brand)]"
  />
  </div>
  <div>
@@ -486,7 +486,7 @@ _Please keep this message as your digital receipt._`;
  type="number"
  value={item.discount}
  onChange={(e) => updateCartItem(item.cartId, 'discount', e.target.value)}
- className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--danger)] focus:outline-none focus:border-[var(--accent)]"
+ className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--danger)] focus:outline-none focus:border-[var(--brand)]"
  />
  </div>
  </div>
@@ -503,14 +503,14 @@ _Please keep this message as your digital receipt._`;
      <Button
        onClick={() => requireAdmin(() => setExchangeModalOpen(true))}
        disabled={cartItems.length === 0}
-       className="w-full h-10 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-none hover:bg-[var(--line)] transition-all"
+       className="w-full h-10 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl hover:bg-[var(--line)] transition-all"
      >
        ＋ TRADE-IN
      </Button>
    ) : (
-     <div className="w-full bg-[var(--accent)]/10 border border-[var(--accent)]/30 p-3 flex items-center justify-between rounded-none">
+     <div className="w-full bg-[var(--brand)]/10 border border-[var(--brand)]/30 p-3 flex items-center justify-between rounded-xl">
        <div>
-         <p className="text-[10px] font-bold text-[var(--accent)] uppercase">Trade-In Active</p>
+         <p className="text-[10px] font-bold text-[var(--brand)] uppercase">Trade-In Active</p>
          <p className="text-[11px] font-bold text-[var(--ink)] mt-0.5">{pendingExchange.tradeInModel} · LKR {pendingExchange.tradeInValuation.toLocaleString()}</p>
        </div>
        <button onClick={() => setPendingExchange(null)} className="text-[var(--subtle)] hover:text-[var(--danger)]">
@@ -525,7 +525,7 @@ _Please keep this message as your digital receipt._`;
  value={customerWhatsapp}
  onChange={(e) => setCustomerWhatsapp(e.target.value)}
  placeholder="94..."
- className="w-full h-10 pl-20 px-4 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)] transition-all"
+ className="w-full h-10 pl-20 px-4 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)] transition-all"
  />
  </div>
  <div className="grid grid-cols-2 gap-2">
@@ -534,14 +534,14 @@ _Please keep this message as your digital receipt._`;
  value={customerName}
  onChange={(e) => setCustomerName(e.target.value)}
  placeholder="Name (optional)"
- className="h-10 px-3 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)]"
+ className="h-10 px-3 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)]"
  />
  <input
  type="text"
  value={customerNic}
  onChange={(e) => setCustomerNic(e.target.value)}
  placeholder="NIC (optional)"
- className="h-10 px-3 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)]"
+ className="h-10 px-3 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)]"
  />
  </div>
  <div className="grid grid-cols-2 gap-2">
@@ -551,9 +551,9 @@ _Please keep this message as your digital receipt._`;
  type="button"
  onClick={() => setPaymentMethod(m)}
  className={cn(
- "h-10 text-[10px] font-bold uppercase rounded-none border transition-all",
+ "h-10 text-[10px] font-bold uppercase rounded-xl border transition-all",
  paymentMethod === m
- ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]"
+ ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]"
  : "bg-[var(--bg-app)] text-[var(--subtle)] border-[var(--line)]"
  )}
  >
@@ -566,21 +566,21 @@ _Please keep this message as your digital receipt._`;
  onChange={(e) => setSpecialNotes(e.target.value)}
  placeholder="Special notes (optional) — printed on the bill"
  rows={2}
- className="w-full px-3 py-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)] transition-all resize-none"
+ className="w-full px-3 py-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)] transition-all resize-none"
  />
  <div className="flex items-center justify-between">
  <div>
  <p className="text-[13px] font-medium text-[var(--ink)] mb-2 block">{cartItems.length} Identified Units</p>
- <p className="text-2xl font-bold text-[var(--accent)]">{formatLKR(netAmount - (pendingExchange?.tradeInValuation ?? 0))}</p>
+ <p className="text-2xl font-bold text-[var(--brand)]">{formatLKR(netAmount - (pendingExchange?.tradeInValuation ?? 0))}</p>
  </div>
  <button
  id="pos-complete-sale-btn"
  onClick={handleGenerateBill}
  disabled={cartItems.length === 0}
  className={cn(
- "h-12 px-6 rounded-none text-[10px] font-bold font-medium flex items-center gap-2 transition-all active:scale-95 shadow-lg",
+ "h-12 px-6 rounded-xl text-[10px] font-bold font-medium flex items-center gap-2 transition-all active:scale-95 shadow-lg",
  cartItems.length > 0
- ? "bg-[var(--accent)] text-[var(--bg-app)] shadow-[0_0_20px_rgba(37,99,235,0.2)]"
+ ? "bg-[var(--terracotta)] text-white shadow-lg shadow-[var(--terracotta)]/25"
  : "bg-[var(--bg-app)] text-[var(--subtle)] cursor-not-allowed opacity-50"
  )}
  >
@@ -590,7 +590,7 @@ _Please keep this message as your digital receipt._`;
  </div>
  {billGenerated && lastBillId && (
  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
- className="bg-[var(--success)]/10 border border-[var(--success)]/30 rounded-none p-3 flex items-center justify-between">
+ className="bg-[var(--success)]/10 border border-[var(--success)]/30 rounded-xl p-3 flex items-center justify-between">
  <div className="flex items-center gap-2">
  <CheckCircle2 size={14} className="text-[var(--success)]" />
  <div>
@@ -598,7 +598,7 @@ _Please keep this message as your digital receipt._`;
  <p className="text-[9px] text-[var(--ink)]/60 ">{lastBillId}</p>
  </div>
  </div>
- <button onClick={handleReprint} className="h-7 px-3 text-[9px] font-bold bg-[var(--success)]/20 text-[var(--success)] border border-[var(--success)]/30 rounded-none active:scale-90 transition-transform ">
+ <button onClick={handleReprint} className="h-7 px-3 text-[9px] font-bold bg-[var(--success)]/20 text-[var(--success)] border border-[var(--success)]/30 rounded-xl active:scale-90 transition-transform ">
  Print PDF
  </button>
  </motion.div>
@@ -616,12 +616,12 @@ _Please keep this message as your digital receipt._`;
  <div className="absolute top-0 left-0 w-full h-[1px] bg-[var(--line)]" />
  <div className="flex items-start justify-between mb-8 shrink-0 relative z-10">
  <div>
- <p className=" text-[9px] font-bold text-[var(--accent)] mb-1 ">Sales Management</p>
+ <p className=" text-[9px] font-bold text-[var(--brand)] mb-1 ">Sales Management</p>
  <h2 className="text-2xl font-bold text-[var(--ink)] ">Point Of Sale</h2>
  </div>
  <div className="text-right">
- <span className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--bg-app)] border border-[var(--line)] rounded-none">
- <div className="w-1.5 h-1.5 bg-[var(--success)] rounded-none animate-pulse shadow-[0_0_8px_var(--success)]" />
+ <span className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl">
+ <div className="w-1.5 h-1.5 bg-[var(--success)] rounded-xl animate-pulse shadow-[0_0_8px_var(--success)]" />
  <p className="text-[9px] font-bold text-[var(--ink)] ">System Ready</p>
  </span>
  <p className="text-[9px] text-[var(--subtle)] mt-2 ">{inStockCount} Units in Stock</p>
@@ -633,7 +633,7 @@ _Please keep this message as your digital receipt._`;
  <div className="absolute -top-2 left-4 bg-[var(--paper)] px-2 z-10">
  <span className="text-[8px] font-bold text-[var(--subtle)] ">Item Search</span>
  </div>
- <Scan size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
+ <Scan size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--brand)]" />
  <Input
  id="pos-search-input"
  value={imeiQuery}
@@ -642,7 +642,7 @@ _Please keep this message as your digital receipt._`;
  if (e.key === 'Enter') handleLookup(e.currentTarget.value);
  }}
  placeholder="IMEI / SKU..."
- className="h-12 pl-12 pr-12 text-[11px] font-bold bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus-visible:border-[var(--accent)] focus-visible:ring-0 transition-none"
+ className="h-12 pl-12 pr-12 text-[11px] font-bold bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus-visible:border-[var(--brand)] focus-visible:ring-0 transition-none"
  />
  {imeiQuery && (
  <button
@@ -656,8 +656,8 @@ _Please keep this message as your digital receipt._`;
 
  {notFound && (
  <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
- className="bg-[var(--danger)]/5 border border-[var(--danger)]/20 p-3 flex items-center gap-3 rounded-none">
- <div className="w-1.5 h-1.5 bg-[var(--danger)] rounded-none animate-pulse" />
+ className="bg-[var(--danger)]/5 border border-[var(--danger)]/20 p-3 flex items-center gap-3 rounded-xl">
+ <div className="w-1.5 h-1.5 bg-[var(--danger)] rounded-xl animate-pulse" />
  <p className="text-[9px] font-bold text-[var(--danger)] font-medium ">No item found matching this ID</p>
  </motion.div>
  )}
@@ -681,7 +681,7 @@ _Please keep this message as your digital receipt._`;
  >
  <div className="flex items-center gap-5 min-w-0">
  <div className={cn("w-12 h-12 border flex items-center justify-center shrink-0", 
- item.type === 'phone' ? 'border-[var(--accent)] bg-[var(--accent)]/5 text-[var(--accent)]' : 'border-[var(--subtle)] bg-[var(--paper)] text-[var(--subtle)]')}>
+ item.type === 'phone' ? 'border-[var(--brand)] bg-[var(--brand)]/5 text-[var(--brand)]' : 'border-[var(--subtle)] bg-[var(--paper)] text-[var(--subtle)]')}>
  {item.type === 'phone' ? <Smartphone size={20} /> : <Package size={20} />}
  </div>
  <div className="flex-1 min-w-0">
@@ -715,18 +715,18 @@ _Please keep this message as your digital receipt._`;
 
  {billGenerated && lastSale && (
  <div className="mt-8 pt-8 border-t border-[var(--line)] space-y-4 shrink-0 relative z-10">
- <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/30 p-5 rounded-none flex items-center justify-between">
+ <div className="bg-[var(--brand)]/10 border border-[var(--brand)]/30 p-5 rounded-xl flex items-center justify-between">
  <div>
- <p className="text-[9px] font-bold text-[var(--accent)] font-medium mb-1 ">Sequence Committed</p>
+ <p className="text-[9px] font-bold text-[var(--brand)] font-medium mb-1 ">Sequence Committed</p>
  <p className="text-lg font-bold text-[var(--ink)]">{lastBillId}</p>
  </div>
- <div className="w-10 h-10 bg-[var(--bg-app)] border border-[var(--line)] rounded-none flex items-center justify-center">
+ <div className="w-10 h-10 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl flex items-center justify-center">
  <CheckCircle2 size={24} className="text-[var(--success)]" />
  </div>
  </div>
  <button
  onClick={handleReprint}
- className="w-full h-11 flex items-center justify-center gap-3 bg-[var(--line)] border border-[var(--line)] text-[var(--accent)] text-[10px] font-bold font-medium hover:bg-[var(--accent)] hover:text-[var(--bg-app)] transition-all rounded-none shadow-xl"
+ className="w-full h-11 flex items-center justify-center gap-3 bg-[var(--line)] border border-[var(--line)] text-[var(--brand)] text-[10px] font-bold font-medium hover:bg-[var(--brand)] hover:text-[var(--bg-app)] transition-all rounded-xl shadow-xl"
  >
  <FileDown size={14} />
  Generate Ledger Archive PDF
@@ -744,7 +744,7 @@ _Please keep this message as your digital receipt._`;
  <h2 className="text-3xl font-bold text-[var(--ink)] ">Checkout</h2>
  </div>
  <div className="text-right">
- <p className="text-[10px] font-bold text-[var(--accent)] ">{cartItems.length} Items in Cart</p>
+ <p className="text-[10px] font-bold text-[var(--brand)] ">{cartItems.length} Items in Cart</p>
  </div>
  </div>
 
@@ -753,7 +753,7 @@ _Please keep this message as your digital receipt._`;
  <div key={item.cartId} className="bg-[var(--paper)] border border-[var(--line)] p-5 relative group overflow-hidden">
  <div className="flex items-center justify-between mb-4 border-b border-[var(--line)] pb-3">
  <div className="flex items-center gap-2">
- <span className="text-[9px] font-bold text-[var(--accent)] bg-[var(--bg-app)] px-2 py-0.5 border border-[var(--accent)]">Entry {String(idx + 1).padStart(2, '0')}</span>
+ <span className="text-[9px] font-bold text-[var(--brand)] bg-[var(--bg-app)] px-2 py-0.5 border border-[var(--brand)]">Entry {String(idx + 1).padStart(2, '0')}</span>
  <p className="text-[11px] font-bold text-[var(--ink)] truncate max-w-[180px]">
  {item.type === 'phone' ? (item.itemRef as PhoneUnit).model : (item.itemRef as Accessory).name}
  </p>
@@ -768,7 +768,7 @@ _Please keep this message as your digital receipt._`;
  </div>
  <div className="grid grid-cols-2 gap-4">
  {item.type === 'accessory' && (
-   <div className="col-span-2 flex items-center justify-between bg-[var(--bg-app)] border border-[var(--line)] p-2 rounded-none mb-1">
+   <div className="col-span-2 flex items-center justify-between bg-[var(--bg-app)] border border-[var(--line)] p-2 rounded-xl mb-1">
      <span className="text-[8px] font-bold text-[var(--subtle)] ">QUANTITY</span>
      <div className="flex items-center gap-3">
        <button 
@@ -796,7 +796,7 @@ _Please keep this message as your digital receipt._`;
  type="number"
  value={item.finalPrice}
  onChange={(e) => updateCartItem(item.cartId, 'finalPrice', e.target.value)}
- className="h-9 pl-10 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] transition-none"
+ className="h-9 pl-10 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] transition-none"
  />
  </div>
  </div>
@@ -816,7 +816,7 @@ _Please keep this message as your digital receipt._`;
  </div>
  ))}
 
- <div className="bg-[var(--paper)] border border-[var(--line)] p-5 rounded-none space-y-4">
+ <div className="bg-[var(--paper)] border border-[var(--line)] p-5 rounded-xl space-y-4">
  <Label className="text-[9px] font-bold text-[var(--subtle)] ">Customer Details (optional)</Label>
  <div className="relative group">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--subtle)] text-[10px] font-bold">WhatsApp Number:</span>
@@ -826,7 +826,7 @@ _Please keep this message as your digital receipt._`;
  onChange={(e) => setCustomerWhatsapp(e.target.value)}
  placeholder="94..."
  disabled={cartItems.length === 0}
- className="h-11 pl-32 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
+ className="h-11 pl-32 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
  />
  </div>
  <div className="grid grid-cols-2 gap-3">
@@ -836,7 +836,7 @@ _Please keep this message as your digital receipt._`;
  onChange={(e) => setCustomerName(e.target.value)}
  placeholder="Customer name"
  disabled={cartItems.length === 0}
- className="h-11 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
+ className="h-11 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
  />
  <Input
  type="text"
@@ -844,7 +844,7 @@ _Please keep this message as your digital receipt._`;
  onChange={(e) => setCustomerNic(e.target.value)}
  placeholder="NIC"
  disabled={cartItems.length === 0}
- className="h-11 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
+ className="h-11 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
  />
  </div>
  <div className="space-y-2">
@@ -857,9 +857,9 @@ _Please keep this message as your digital receipt._`;
  onClick={() => setPaymentMethod(m)}
  disabled={cartItems.length === 0}
  className={cn(
- "h-10 text-[10px] font-bold uppercase rounded-none border transition-all disabled:opacity-30",
+ "h-10 text-[10px] font-bold uppercase rounded-xl border transition-all disabled:opacity-30",
  paymentMethod === m
- ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]"
+ ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]"
  : "bg-[var(--bg-app)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
  )}
  >
@@ -876,7 +876,7 @@ _Please keep this message as your digital receipt._`;
  placeholder="Printed on the bill…"
  rows={2}
  disabled={cartItems.length === 0}
- className="w-full px-3 py-2 bg-[var(--bg-app)] border-[var(--line)] border rounded-none text-[11px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--accent)] disabled:opacity-30 transition-none resize-none"
+ className="w-full px-3 py-2 bg-[var(--bg-app)] border-[var(--line)] border rounded-xl text-[11px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)] disabled:opacity-30 transition-none resize-none"
  />
  </div>
  </div>
@@ -888,14 +888,14 @@ _Please keep this message as your digital receipt._`;
        <Button
          onClick={() => setExchangeModalOpen(true)}
          disabled={cartItems.length === 0}
-         className="w-full h-10 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-none hover:bg-[var(--line)] transition-all"
+         className="w-full h-10 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl hover:bg-[var(--line)] transition-all"
        >
          ＋ TRADE-IN
        </Button>
      ) : (
-       <div className="w-full bg-[var(--accent)]/10 border border-[var(--accent)]/30 p-3 flex items-center justify-between rounded-none">
+       <div className="w-full bg-[var(--brand)]/10 border border-[var(--brand)]/30 p-3 flex items-center justify-between rounded-xl">
          <div>
-           <p className="text-[10px] font-bold text-[var(--accent)] uppercase">Trade-In Active</p>
+           <p className="text-[10px] font-bold text-[var(--brand)] uppercase">Trade-In Active</p>
            <p className="text-[11px] font-bold text-[var(--ink)] mt-0.5">{pendingExchange.tradeInModel} · LKR {pendingExchange.tradeInValuation.toLocaleString()}</p>
          </div>
          <button onClick={() => setPendingExchange(null)} className="text-[var(--subtle)] hover:text-[var(--danger)]">
@@ -922,10 +922,10 @@ _Please keep this message as your digital receipt._`;
  )}
  <div className="flex items-end justify-between pt-4 border-t border-[var(--line)] px-2">
  <div>
- <p className="text-[9px] font-bold text-[var(--accent)] mb-1 ">{pendingExchange ? 'NET PAYABLE' : 'TOTAL PAYABLE'}</p>
+ <p className="text-[9px] font-bold text-[var(--brand)] mb-1 ">{pendingExchange ? 'NET PAYABLE' : 'TOTAL PAYABLE'}</p>
  <p className="text-5xl font-bold text-[var(--ink)] ">{formatLKR(Math.max(0, netAmount - (pendingExchange?.tradeInValuation ?? 0))).split(' ')[1]}</p>
  </div>
- <span className="text-xl font-bold text-[var(--accent)] pb-1 ">{formatLKR(Math.max(0, netAmount - (pendingExchange?.tradeInValuation ?? 0))).split(' ')[0]}</span>
+ <span className="text-xl font-bold text-[var(--brand)] pb-1 ">{formatLKR(Math.max(0, netAmount - (pendingExchange?.tradeInValuation ?? 0))).split(' ')[0]}</span>
  </div>
  </div>
  )}
@@ -937,9 +937,9 @@ _Please keep this message as your digital receipt._`;
  onClick={handleGenerateBill}
  disabled={cartItems.length === 0 || cartItems.some(i => !i.finalPrice)}
  className={cn(
- 'w-full h-14 text-[11px] font-bold rounded-none',
+ 'w-full h-14 text-[11px] font-bold rounded-xl',
  cartItems.length > 0 && cartItems.every(i => i.finalPrice)
- ? 'bg-[var(--accent)] text-[var(--bg-app)] hover:bg-[var(--ink)] hover:text-[var(--bg-app)]'
+ ? 'bg-[var(--terracotta)] text-white hover:bg-[var(--terracotta-hover)]'
  : 'bg-[var(--paper)] text-[var(--subtle)] border border-[var(--line)] cursor-not-allowed opacity-50'
  )}
  >

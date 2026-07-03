@@ -1,99 +1,83 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * ClickZone — warm "Teal / Cream / Terracotta" theme (redesign).
+ * Deep Teal #013E37 = structure (sidebar, headers, secondary buttons, key numbers)
+ * Cream #FFEFB3     = highlights, active nav, badges, hero KPI card
+ * Terracotta #D9724E = primary CTAs ONLY
+ * Paper #FBF8F0 = app bg · White #FFFFFF = cards · Ink #0E2A26 = text · Muted #5F6F6B = labels
+ * Both :root and .light are the SAME warm theme — the app is single-theme now.
+ */
 @layer base {
-  :root {
-    --bg-app: #000000;
-    --paper: #0a0a0a;
-    --ink: #ffffff;
-    --subtle: #a1a1a1;
-    --line: #262626;
+  :root, .light {
+    /* Brand tokens (hex — used directly by components as var(--x)) */
+    --bg-app: #FBF8F0;            /* Paper — app background */
+    --paper: #FFFFFF;            /* White — cards / surfaces */
+    --ink: #0E2A26;             /* text */
+    --subtle: #5F6F6B;          /* muted labels */
+    --line: #E7E1D0;            /* soft borders */
 
-    /* Shadcn Mappings - Dark */
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 9%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: #ffffff;
-    --accent-foreground: #000000;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --radius: 0rem;
-    
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-  }
+    --brand: #013E37;           /* Deep Teal — structure, secondary buttons, key numbers */
+    --brand-foreground: #FFEFB3; /* Cream on teal */
+    --teal: #013E37;
+    --cream: #FFEFB3;
+    --cream-soft: #FFF7D6;      /* softer cream tint for large fills */
+    --terracotta: #D9724E;      /* primary CTA */
+    --terracotta-hover: #C55F3B;
 
-  .light {
-    --bg-app: #ffffff;
-    --paper: #f9f9f9;
-    --ink: #000000;
-    --subtle: #737373;
-    --line: #e5e5e5;
+    --success: #2E7D5B;
+    --warning: #C99A2E;
+    --danger: #C0492F;
 
-    /* Shadcn Mappings - Light */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    /* shadcn/ui mappings (HSL) — warm light */
+    --background: 45 56% 96%;
+    --foreground: 171 50% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 171 50% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: #000000;
-    --accent-foreground: #ffffff;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --popover-foreground: 171 50% 11%;
+    --primary: 173 97% 12%;                /* teal solid (default Button) */
+    --primary-foreground: 48 100% 85%;     /* cream */
+    --secondary: 44 40% 92%;
+    --secondary-foreground: 171 50% 11%;
+    --muted: 44 40% 92%;
+    --muted-foreground: 166 8% 40%;
+    --brand: 48 100% 90%;                 /* cream tint for menu/hover highlights */
+    --brand-foreground: 171 50% 11%;
+    --destructive: 11 61% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 44 32% 86%;
+    --input: 44 32% 86%;
+    --ring: 173 97% 12%;
+    --radius: 0.75rem;                      /* 12px rounded cards */
   }
 }
 
 body {
-  @apply bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground font-sans;
+  @apply antialiased font-sans;
   background-color: var(--bg-app);
+  color: var(--ink);
+}
+::selection { background: var(--terracotta); color: #ffffff; }
+
+/* Display face for headings/brand — used sparingly for the premium feel. */
+.font-display {
+  font-family: 'Fraunces', Georgia, serif;
 }
 
-/* Custom scrollbar for high-end feel */
-::-webkit-scrollbar {
- width: 4px;
- height: 4px;
-}
-::-webkit-scrollbar-track {
- background: transparent;
-}
-::-webkit-scrollbar-thumb {
- background: var(--line);
- border-radius: 0;
-}
-::-webkit-scrollbar-thumb:hover {
- background: var(--subtle);
-}
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--subtle); }
 
-/* Zebra Striping & Density Tweaks */
-.zebra-table tr:nth-child(even) {
- background-color: var(--paper);
-}
+/* Zebra striping for dense tables */
+.zebra-table tr:nth-child(even) { background-color: #FCFAF4; }
 
-.data-grid-tight {
- @apply p-4;
-}
+.data-grid-tight { @apply p-4; }
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

@@ -22,7 +22,7 @@ export default function MobileNav({ activePage, onNavigate }: MobileNavProps) {
  const { isAdmin } = useAuth();
  const items = navItems.filter((item) => !item.ownerOnly || isAdmin);
  return (
- <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-app)] border-t border-[var(--line)] px-2 pb-safe">
+ <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--paper)] border-t border-[var(--line)] px-2 pb-safe shadow-[0_-4px_20px_rgba(1,62,55,0.06)]">
  <div className="flex items-end justify-around">
  {items.map((item) => {
  const isActive = activePage === item.id;
@@ -31,21 +31,21 @@ export default function MobileNav({ activePage, onNavigate }: MobileNavProps) {
  key={item.id}
  onClick={() => onNavigate(item.id)}
  className={cn(
- 'flex flex-col items-center gap-0.5 px-4 py-3 rounded-none transition-none relative min-w-[64px]',
- isActive ? 'text-[var(--ink)]' : 'text-[var(--subtle)] active:scale-90'
+ 'flex flex-col items-center gap-1 px-4 py-2.5 my-1.5 rounded-xl transition-all relative min-w-[60px]',
+ isActive ? 'text-[var(--teal)]' : 'text-[var(--subtle)] active:scale-90'
  )}
  >
  {isActive && (
  <motion.div
  layoutId="mobile-nav-pill"
- className="absolute inset-0 bg-[var(--paper)] border-t-2 border-[var(--accent)]"
+ className="absolute inset-0 bg-[var(--cream)] rounded-xl"
  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
  />
  )}
  <span className="relative z-10">
- <item.icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
+ <item.icon size={21} strokeWidth={isActive ? 2.4 : 1.8} />
  </span>
- <span className={cn('relative z-10 text-[10px] font-semibold tracking-wide', isActive ? 'text-[var(--ink)]' : 'text-[var(--subtle)]')}>
+ <span className={cn('relative z-10 text-[10px] font-semibold tracking-wide', isActive ? 'text-[var(--teal)]' : 'text-[var(--subtle)]')}>
  {item.label}
  </span>
  </button>

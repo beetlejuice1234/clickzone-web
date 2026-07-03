@@ -61,19 +61,19 @@ export default function Customers() {
           <h1 className="text-3xl font-bold text-[var(--ink)]">Customers</h1>
           <p className="text-[var(--subtle)] text-[9px] mt-1.5">Owner-only records · {customers.length} total</p>
         </div>
-        <Users className="text-[var(--accent)]" size={22} />
+        <Users className="text-[var(--brand)]" size={22} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* List */}
         <div className="bg-[var(--paper)] border border-[var(--line)]">
           <div className="p-4 border-b border-[var(--line)] relative">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--accent)]" size={14} />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--brand)]" size={14} />
             <Input
               placeholder="Search name, NIC, or WhatsApp..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-8 h-10 border-[var(--line)] bg-[var(--bg-app)] rounded-none text-[10px] font-bold text-[var(--ink)]"
+              className="pl-8 h-10 border-[var(--line)] bg-[var(--bg-app)] rounded-xl text-[10px] font-bold text-[var(--ink)]"
             />
           </div>
           <div className="max-h-[60vh] overflow-y-auto">
@@ -103,7 +103,7 @@ export default function Customers() {
                       {c.nic ? `NIC ${c.nic}` : ''}{c.nic && c.whatsapp ? ' · ' : ''}{c.whatsapp || ''}
                     </p>
                   </div>
-                  <span className="text-[8px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-1.5 py-0.5 rounded-none shrink-0">
+                  <span className="text-[8px] font-bold text-[var(--brand)] bg-[var(--brand)]/10 border border-[var(--brand)]/30 px-1.5 py-0.5 rounded-xl shrink-0">
                     {count} {count === 1 ? 'sale' : 'sales'}
                   </span>
                 </button>
@@ -125,10 +125,10 @@ export default function Customers() {
                 <h2 className="text-2xl font-bold text-[var(--ink)]">{selected.name || 'Unnamed'}</h2>
                 <div className="flex flex-wrap gap-4 mt-3">
                   {selected.nic && (
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--subtle)]"><IdCard size={12} className="text-[var(--accent)]" /> {selected.nic}</span>
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--subtle)]"><IdCard size={12} className="text-[var(--brand)]" /> {selected.nic}</span>
                   )}
                   {selected.whatsapp && (
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--subtle)]"><Phone size={12} className="text-[var(--accent)]" /> {selected.whatsapp}</span>
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--subtle)]"><Phone size={12} className="text-[var(--brand)]" /> {selected.whatsapp}</span>
                   )}
                 </div>
               </div>
@@ -140,7 +140,7 @@ export default function Customers() {
                 </div>
                 <div className="bg-[var(--bg-app)] border border-[var(--line)] p-4">
                   <p className="text-[9px] font-bold text-[var(--subtle)] mb-1">Total Spent</p>
-                  <p className="text-2xl font-bold text-[var(--accent)]">{formatLKR(selectedTotal)}</p>
+                  <p className="text-2xl font-bold text-[var(--brand)]">{formatLKR(selectedTotal)}</p>
                 </div>
               </div>
 
@@ -154,11 +154,11 @@ export default function Customers() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-bold text-[var(--ink)]">{s.billId}</span>
-                          <span className="text-[8px] px-1 py-0.5 border border-[var(--line)] text-[var(--subtle)] rounded-none uppercase">{s.paymentMethod || 'cash'}</span>
+                          <span className="text-[8px] px-1 py-0.5 border border-[var(--line)] text-[var(--subtle)] rounded-xl uppercase">{s.paymentMethod || 'cash'}</span>
                         </div>
                         <p className="text-[9px] text-[var(--subtle)] mt-0.5 truncate">{s.date} · {s.items.map(i => i.name).join(', ')}</p>
                       </div>
-                      <span className="text-[11px] font-bold text-[var(--accent)] shrink-0">{formatLKR(s.totalRevenue)}</span>
+                      <span className="text-[11px] font-bold text-[var(--brand)] shrink-0">{formatLKR(s.totalRevenue)}</span>
                     </div>
                   ))}
                 </div>

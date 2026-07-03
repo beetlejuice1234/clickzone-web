@@ -31,43 +31,44 @@ export default function LoginScreen() {
         transition={{ duration: 0.25, ease: 'easeOut' }}
         className="w-full max-w-sm"
       >
-        <div className="flex flex-col items-center gap-3 mb-10">
-          <img src="/logo.jpeg" alt="ClickZone" className="h-14 w-auto object-contain" />
+        <div className="flex flex-col items-center gap-4 mb-8">
+          <div className="h-14 w-14 rounded-2xl bg-[var(--teal)] flex items-center justify-center shadow-sm">
+            <span className="font-display text-2xl font-semibold text-[var(--cream)]">CZ</span>
+          </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">ClickZone POS</h1>
-            <p className="text-[10px] text-[var(--subtle)] tracking-widest mt-1">MANAGEMENT ACCESS</p>
+            <h1 className="font-display text-3xl font-semibold text-[var(--teal)] tracking-tight">ClickZone POS</h1>
+            <p className="text-[10px] text-[var(--subtle)] tracking-[0.2em] mt-1.5 uppercase">Management Access</p>
           </div>
         </div>
 
-        <div className="bg-[var(--paper)] border border-[var(--line)] p-8 relative">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--accent)]/30 to-transparent" />
+        <div className="bg-[var(--paper)] border border-[var(--line)] rounded-2xl p-8 shadow-[0_10px_40px_rgba(1,62,55,0.08)]">
           <form onSubmit={submit} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[9px] font-bold text-[var(--subtle)] tracking-widest">EMAIL</label>
+              <label className="text-[10px] font-semibold text-[var(--subtle)] tracking-wide uppercase">Email</label>
               <Input
                 type="email" autoComplete="username" placeholder="you@clickzone.test" value={email}
                 onChange={e => setEmail(e.target.value)} autoFocus
-                className="h-11 rounded-none border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0"
+                className="h-11 rounded-xl border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)] focus-visible:border-[var(--teal)] focus-visible:ring-0"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[9px] font-bold text-[var(--subtle)] tracking-widest">PASSWORD</label>
+              <label className="text-[10px] font-semibold text-[var(--subtle)] tracking-wide uppercase">Password</label>
               <Input
                 type="password" autoComplete="current-password" placeholder="••••••••" value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="h-11 rounded-none border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0"
+                className="h-11 rounded-xl border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)] focus-visible:border-[var(--teal)] focus-visible:ring-0"
               />
             </div>
             <Button
               type="submit" disabled={busy}
-              className="w-full bg-[var(--accent)] hover:brightness-90 text-[var(--bg-app)] h-11 text-[10px] font-bold tracking-widest rounded-none active:scale-[0.99] transition-all"
+              className="w-full bg-[var(--terracotta)] hover:bg-[var(--terracotta-hover)] text-white h-11 text-[10px] font-bold tracking-widest rounded-xl active:scale-[0.99] transition-all shadow-sm"
             >
               {busy ? 'SIGNING IN…' : 'SIGN IN'}
             </Button>
           </form>
         </div>
 
-        <p className="text-center text-[9px] text-[var(--subtle)] opacity-60 mt-6 tracking-wider">
+        <p className="text-center text-[10px] text-[var(--subtle)] opacity-70 mt-6 tracking-wider">
           ClickZone Mobiles · Kandy
         </p>
       </motion.div>

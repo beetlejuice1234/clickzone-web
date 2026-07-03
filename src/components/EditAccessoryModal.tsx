@@ -57,7 +57,7 @@ export default function EditAccessoryModal({ open, accessory, onClose }: EditAcc
 
  return (
  <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
- <DialogContent className="sm:max-w-md bg-[var(--paper)] border border-[var(--line)] p-0 overflow-hidden rounded-none shadow-none">
+ <DialogContent className="sm:max-w-md bg-[var(--paper)] border border-[var(--line)] p-0 overflow-hidden rounded-xl shadow-none">
  <div className="bg-[var(--bg-app)] px-8 pt-8 pb-6 border-b border-[var(--line)]">
  <DialogHeader>
  <DialogTitle className="text-3xl text-[var(--ink)]">Edit Accessory</DialogTitle>
@@ -67,8 +67,8 @@ export default function EditAccessoryModal({ open, accessory, onClose }: EditAcc
 
  <div className="p-8">
  {error && (
- <div className="mb-6 p-4 bg-[var(--danger)]/5 border border-[var(--danger)]/20 rounded-none text-[10px] font-bold text-[var(--danger)] flex items-center gap-3 animate-shake">
- <div className="w-1.5 h-1.5 rounded-none bg-[var(--danger)] animate-pulse" />
+ <div className="mb-6 p-4 bg-[var(--danger)]/5 border border-[var(--danger)]/20 rounded-xl text-[10px] font-bold text-[var(--danger)] flex items-center gap-3 animate-shake">
+ <div className="w-1.5 h-1.5 rounded-xl bg-[var(--danger)] animate-pulse" />
  {error}
  </div>
  )}
@@ -80,27 +80,27 @@ export default function EditAccessoryModal({ open, accessory, onClose }: EditAcc
  </div>
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Name</Label>
- <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-medium " />
+ <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-medium " />
  </div>
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Quantity</Label>
- <Input type="number" min="0" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold" />
+ <Input type="number" min="0" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold" />
  </div>
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Cost Price</Label>
- <Input type="number" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold" />
+ <Input type="number" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold" />
  </div>
  <div className="space-y-2">
- <Label className="text-[9px] font-bold text-[var(--accent)] ">Sale Price</Label>
- <Input type="number" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--accent)]/40 text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold" />
+ <Label className="text-[9px] font-bold text-[var(--brand)] ">Sale Price</Label>
+ <Input type="number" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--brand)]/40 text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold" />
  </div>
  </div>
  </div>
 
  <div className="flex justify-end gap-4 pt-8 border-t border-[var(--line)] mt-10">
- <Button variant="ghost" onClick={handleClose} className="rounded-none h-12 px-8 text-[11px] font-bold text-[var(--subtle)] hover:text-[var(--ink)] hover:bg-[var(--bg-app)] transition-all">Cancel</Button>
- <Button onClick={handleSubmit} className="bg-[var(--accent)] hover:brightness-90 text-[var(--bg-app)] rounded-none h-12 px-10 text-[11px] font-medium transition-all active:scale-95">
+ <Button variant="ghost" onClick={handleClose} className="rounded-xl h-12 px-8 text-[11px] font-bold text-[var(--subtle)] hover:text-[var(--ink)] hover:bg-[var(--bg-app)] transition-all">Cancel</Button>
+ <Button onClick={handleSubmit} className="bg-[var(--terracotta)] hover:bg-[var(--terracotta-hover)] text-white rounded-xl h-12 px-10 text-[11px] font-medium transition-all active:scale-95">
  Save Changes
  </Button>
  </div>

@@ -154,7 +154,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && handleClose()}>
-      <DialogContent className="sm:max-w-[620px] bg-[var(--paper)] border-[var(--line)] rounded-none text-[var(--ink)] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[620px] bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold uppercase tracking-widest text-[var(--ink)]">Add Trade-In</DialogTitle>
           <DialogDescription className="text-[10px] uppercase text-[var(--subtle)] tracking-widest font-bold">
@@ -171,10 +171,10 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 value={imei}
                 onChange={(e) => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
                 placeholder="15-digit IMEI (auto-fills if found in system)"
-                className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]"
+                className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
               />
               {imeiWarning && (
-                <p className={`text-[10px] font-bold px-2 py-1 rounded-none border ${prevSoldBill ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-[var(--danger)] bg-[var(--danger)]/5 border-[var(--danger)]/20'}`}>
+                <p className={`text-[10px] font-bold px-2 py-1 rounded-xl border ${prevSoldBill ? 'text-[var(--warning)] bg-[var(--warning)]/10 border-[var(--warning)]/30' : 'text-[var(--danger)] bg-[var(--danger)]/5 border-[var(--danger)]/20'}`}>
                   {imeiWarning}
                 </p>
               )}
@@ -190,14 +190,14 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 value={modelOther ? '__other__' : model}
                 onValueChange={(v) => { if (v === '__other__') { setModelOther(true); setModel(''); } else { setModelOther(false); setModel(v); } }}
               >
-                <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]">
+                <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]">
                   <SelectValue placeholder="Select model" />
                 </SelectTrigger>
-                <SelectContent className="bg-[var(--paper)] border-[var(--line)] rounded-none text-[var(--ink)] max-h-60">
+                <SelectContent className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-60">
                   {MODEL_OPTIONS.map(m => (
-                    <SelectItem key={m} value={m} className="rounded-none text-[10px] font-medium">{m}</SelectItem>
+                    <SelectItem key={m} value={m} className="rounded-xl text-[10px] font-medium">{m}</SelectItem>
                   ))}
-                  <SelectItem value="__other__" className="rounded-none text-[10px] font-medium">Other (Android / specify)…</SelectItem>
+                  <SelectItem value="__other__" className="rounded-xl text-[10px] font-medium">Other (Android / specify)…</SelectItem>
                 </SelectContent>
               </Select>
               {modelOther && (
@@ -205,7 +205,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
                   placeholder="e.g. Samsung Galaxy S23"
-                  className="mt-2 bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]"
+                  className="mt-2 bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
                 />
               )}
             </div>
@@ -213,15 +213,15 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Condition *</Label>
               <Select value={condition} onValueChange={setCondition}>
-                <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]">
+                <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]">
                   <SelectValue placeholder="Select condition" />
                 </SelectTrigger>
-                <SelectContent className="bg-[var(--paper)] border-[var(--line)] rounded-none text-[var(--ink)]">
-                  <SelectItem value="excellent" className="rounded-none">Excellent</SelectItem>
-                  <SelectItem value="good" className="rounded-none">Good</SelectItem>
-                  <SelectItem value="fair" className="rounded-none">Fair</SelectItem>
-                  <SelectItem value="poor" className="rounded-none">Poor</SelectItem>
-                  <SelectItem value="parts-only" className="rounded-none">Parts Only</SelectItem>
+                <SelectContent className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)]">
+                  <SelectItem value="excellent" className="rounded-xl">Excellent</SelectItem>
+                  <SelectItem value="good" className="rounded-xl">Good</SelectItem>
+                  <SelectItem value="fair" className="rounded-xl">Fair</SelectItem>
+                  <SelectItem value="poor" className="rounded-xl">Poor</SelectItem>
+                  <SelectItem value="parts-only" className="rounded-xl">Parts Only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -234,7 +234,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 value={batteryHealth}
                 onChange={(e) => setBatteryHealth(e.target.value)}
                 placeholder="%"
-                className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]"
+                className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
               />
             </div>
 
@@ -244,7 +244,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="John Doe"
-                className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]"
+                className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
               />
             </div>
             <div className="space-y-2">
@@ -255,7 +255,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 value={customerNic}
                 onChange={(e) => setCustomerNic(e.target.value)}
                 placeholder="NIC Number"
-                className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]"
+                className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
               />
             </div>
 
@@ -265,7 +265,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 value={customerWhatsapp}
                 onChange={(e) => setCustomerWhatsapp(e.target.value)}
                 placeholder="Optional"
-                className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]"
+                className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
               />
             </div>
             <div className="space-y-2">
@@ -276,7 +276,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 value={valuation}
                 onChange={(e) => setValuation(e.target.value)}
                 placeholder="0"
-                className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]"
+                className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
               />
             </div>
             <div className="space-y-2">
@@ -287,7 +287,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 value={targetSalePrice}
                 onChange={(e) => setTargetSalePrice(e.target.value)}
                 placeholder="What you plan to sell it for"
-                className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)]"
+                className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
               />
               {targetSalePrice && numValuation > 0 && (
                 <p className="text-[9px] text-[var(--success)] font-bold">
@@ -303,7 +303,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any additional details..."
-              className="bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[var(--ink)] min-h-[60px]"
+              className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)] min-h-[60px]"
             />
           </div>
 
@@ -320,7 +320,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
             <div className="border-t border-[var(--line)] my-1"></div>
             <div className="flex justify-between font-bold">
               <span className="text-[var(--ink)] text-[11px]">Net Payable:</span>
-              <span className={`text-sm ${netPayable < 0 ? 'text-[var(--danger)]' : 'text-[var(--accent)]'}`}>
+              <span className={`text-sm ${netPayable < 0 ? 'text-[var(--danger)]' : 'text-[var(--brand)]'}`}>
                 {formatLKR(Math.max(0, netPayable))}
               </span>
             </div>
@@ -336,13 +336,13 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
               type="button"
               variant="outline"
               onClick={handleClose}
-              className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none hover:bg-[var(--bg-app)]"
+              className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl hover:bg-[var(--bg-app)]"
             >
               CANCEL
             </Button>
             <Button
               type="submit"
-              className="bg-[var(--accent)] text-[var(--paper)] rounded-none hover:opacity-90"
+              className="bg-[var(--terracotta)] text-white rounded-xl hover:bg-[var(--terracotta-hover)]"
             >
               CONFIRM EXCHANGE
             </Button>

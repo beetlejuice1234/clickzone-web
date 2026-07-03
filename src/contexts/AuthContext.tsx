@@ -145,11 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       <Dialog open={pinOpen} onOpenChange={setPinOpen}>
         <DialogContent className="sm:max-w-xs bg-[var(--paper)] rounded-xl border border-[var(--line)] p-8 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--accent)]/30 to-transparent" />
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--brand)]/30 to-transparent" />
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-[var(--ink)] font-bold text-xl ">
               <div className="w-8 h-8 rounded-xl bg-[var(--bg-app)] border border-[var(--line)] flex items-center justify-center">
-                <Lock size={16} className="text-[var(--accent)]" />
+                <Lock size={16} className="text-[var(--brand)]" />
               </div>
               Owner Override
             </DialogTitle>
@@ -158,14 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           <form onSubmit={submitPin} className="space-y-8">
             <div className="relative group">
               <div className="absolute -top-2 left-4 bg-[var(--paper)] px-2 z-10 border-x border-[var(--line)]">
-                <span className="text-[8px] font-bold text-[var(--subtle)] group-focus-within:text-[var(--accent)]">Override PIN</span>
+                <span className="text-[8px] font-bold text-[var(--subtle)] group-focus-within:text-[var(--brand)]">Override PIN</span>
               </div>
               <Input
                 type="password" placeholder="****" value={pin} onChange={e => setPin(e.target.value)} autoFocus
-                className="text-center text-4xl h-16 rounded-xl border-[var(--line)] focus-visible:border-[var(--accent)] focus-visible:ring-0 bg-[var(--bg-app)] text-[var(--accent)] transition-all font-bold"
+                className="text-center text-4xl h-16 rounded-xl border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 bg-[var(--bg-app)] text-[var(--brand)] transition-all font-bold"
               />
             </div>
-            <Button type="submit" disabled={submitting} className="w-full bg-[var(--accent)] hover:brightness-90 text-[var(--bg-app)] h-12 text-[10px] font-medium rounded-full shadow-xl shadow-[var(--accent)]/10 transition-all active:scale-95">
+            <Button type="submit" disabled={submitting} className="w-full bg-[var(--terracotta)] hover:bg-[var(--terracotta-hover)] text-white h-12 text-[10px] font-medium rounded-xl shadow-sm transition-all active:scale-95">
               {submitting ? 'Verifying…' : 'Verify Override'}
             </Button>
           </form>

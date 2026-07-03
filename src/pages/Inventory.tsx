@@ -35,7 +35,7 @@ function SkeletonRows({ cols, rows = 5 }: { cols: number; rows?: number }) {
  <TableRow key={i} className="border-[var(--line)]">
  {Array.from({ length: cols }).map((_, j) => (
  <TableCell key={j} className="py-4 px-4 bg-[var(--paper)]">
- <div className="h-4 bg-[var(--line)] rounded-none animate-pulse" style={{ width: `${50 + Math.random() * 40}%` }} />
+ <div className="h-4 bg-[var(--line)] rounded-xl animate-pulse" style={{ width: `${50 + Math.random() * 40}%` }} />
  </TableCell>
  ))}
  </TableRow>
@@ -149,7 +149,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
 
  const renderSortIcon = useCallback((column: SortKey) => {
  if (sort?.key !== column) return <ArrowUpDown size={12} className="text-[var(--subtle)]" />;
- return sort.dir === 'asc' ? <ArrowUp size={12} className="text-[var(--accent)]" /> : <ArrowDown size={12} className="text-[var(--accent)]" />;
+ return sort.dir === 'asc' ? <ArrowUp size={12} className="text-[var(--brand)]" /> : <ArrowDown size={12} className="text-[var(--brand)]" />;
  }, [sort]);
 
  const handleSelectPhone = useCallback((id: string, checked: boolean) => {
@@ -203,11 +203,11 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  placeholder="Lookup..." 
  value={searchStr}
  onChange={e => setSearchStr(e.target.value)}
- className="pl-9 h-10 bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none placeholder:text-[var(--subtle)]/50"
+ className="pl-9 h-10 bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl placeholder:text-[var(--subtle)]/50"
  />
  </div>
  <Button 
- className="h-10 w-10 rounded-none bg-[var(--accent)] text-[var(--bg-app)] p-0 active:scale-95 transition-transform"
+ className="h-10 w-10 rounded-xl bg-[var(--brand)] text-[var(--bg-app)] p-0 active:scale-95 transition-transform"
  onClick={onAddStock}
  >
  <Plus size={18} />
@@ -215,16 +215,16 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  </div>
 
  <div className="flex items-center gap-2">
- <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--success)]/30 bg-[var(--success)]/10 text-[var(--success)] rounded-none">IN STOCK · {phoneStock.inStock}</span>
- <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--line)] bg-[var(--paper)] text-[var(--subtle)] rounded-none">SOLD · {phoneStock.sold}</span>
+ <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--success)]/30 bg-[var(--success)]/10 text-[var(--success)] rounded-xl">IN STOCK · {phoneStock.inStock}</span>
+ <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--line)] bg-[var(--paper)] text-[var(--subtle)] rounded-xl">SOLD · {phoneStock.sold}</span>
  </div>
 
  <Tabs defaultValue="phones">
- <TabsList className="w-full mb-4 bg-[var(--paper)] border border-[var(--line)] rounded-none p-1">
- <TabsTrigger value="phones" className="flex-1 rounded-none text-[10px] font-bold data-[state=active]:bg-[var(--accent)] data-[state=active]:text-[var(--bg-app)] gap-1.5">
+ <TabsList className="w-full mb-4 bg-[var(--paper)] border border-[var(--line)] rounded-xl p-1">
+ <TabsTrigger value="phones" className="flex-1 rounded-xl text-[10px] font-bold data-[state=active]:bg-[var(--brand)] data-[state=active]:text-[var(--bg-app)] gap-1.5">
  Phones ({filteredPhones.length})
  </TabsTrigger>
- <TabsTrigger value="accessories" className="flex-1 rounded-none text-[10px] font-bold data-[state=active]:bg-[var(--accent)] data-[state=active]:text-[var(--bg-app)] gap-1.5">
+ <TabsTrigger value="accessories" className="flex-1 rounded-xl text-[10px] font-bold data-[state=active]:bg-[var(--brand)] data-[state=active]:text-[var(--bg-app)] gap-1.5">
  Accessories ({filteredAccessories.length})
  </TabsTrigger>
  </TabsList>
@@ -236,9 +236,9 @@ export default function Inventory({ onAddStock }: InventoryProps) {
        key={filter}
        onClick={() => setPhoneFilter(filter)}
        className={cn(
-         "px-3 py-1 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+         "px-3 py-1 text-[10px] font-bold uppercase rounded-xl border transition-all whitespace-nowrap",
          phoneFilter === filter 
-           ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]" 
+           ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]" 
            : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
        )}
      >
@@ -248,7 +248,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  </div>
  {isLoading ? (
  <div className="space-y-3">
- {[1, 2, 3].map(i => <div key={i} className="h-16 bg-[var(--paper)] border border-[var(--line)] rounded-none animate-pulse" />)}
+ {[1, 2, 3].map(i => <div key={i} className="h-16 bg-[var(--paper)] border border-[var(--line)] rounded-xl animate-pulse" />)}
  </div>
  ) : filteredPhones.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-16 text-center opacity-40">
@@ -259,22 +259,22 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <motion.div className="space-y-2" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.04 } } }}>
  {filteredPhones.map(phone => (
  <motion.div key={phone.id} variants={{ hidden: { opacity: 0, y: 5 }, show: { opacity: 1, y: 0 } }}
- className="bg-[var(--paper)] rounded-none p-4 border border-[var(--line)] flex items-center gap-3">
+ className="bg-[var(--paper)] rounded-xl p-4 border border-[var(--line)] flex items-center gap-3">
  <div className="flex-1 min-w-0">
  <p className="text-xs font-bold text-[var(--ink)] truncate ">{phone.model}</p>
  <p className="text-[9px] text-[var(--subtle)] ">{phone.storage} · {phone.color}</p>
  </div>
  <div className="text-right shrink-0">
- <p className="text-xs font-bold text-[var(--accent)]">{isAdmin ? formatLKR(phone.costPrice).split(' ')[1] : '---'}</p>
+ <p className="text-xs font-bold text-[var(--brand)]">{isAdmin ? formatLKR(phone.costPrice).split(' ')[1] : '---'}</p>
  </div>
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button className="h-7 w-7 flex items-center justify-center rounded-none bg-[var(--line)] text-[var(--subtle)] border border-[var(--line)] hover:bg-[var(--accent)] hover:text-[var(--bg-app)] transition-colors">
+ <Button className="h-7 w-7 flex items-center justify-center rounded-xl bg-[var(--line)] text-[var(--subtle)] border border-[var(--line)] hover:bg-[var(--brand)] hover:text-[var(--bg-app)] transition-colors">
  <MoreHorizontal size={14} />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none">
- <DropdownMenuItem onClick={() => requireAdmin(() => { setEditPhone(phone); setEditPhoneOpen(true); })} className="text-[10px] font-bold focus:bg-[var(--accent)] focus:text-[var(--bg-app)]"><Pencil size={12} className="mr-2" /> Edit</DropdownMenuItem>
+ <DropdownMenuContent align="end" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
+ <DropdownMenuItem onClick={() => requireAdmin(() => { setEditPhone(phone); setEditPhoneOpen(true); })} className="text-[10px] font-bold focus:bg-[var(--brand)] focus:text-[var(--bg-app)]"><Pencil size={12} className="mr-2" /> Edit</DropdownMenuItem>
  <DropdownMenuItem onClick={() => handleDeletePhone(phone.id)} className="text-[10px] font-bold text-[var(--danger)] focus:bg-[var(--danger)] focus:text-white"><Trash2 size={12} className="mr-2" /> Delete</DropdownMenuItem>
  </DropdownMenuContent>
  </DropdownMenu>
@@ -291,9 +291,9 @@ export default function Inventory({ onAddStock }: InventoryProps) {
        key={filter}
        onClick={() => setAccFilter(filter)}
        className={cn(
-         "px-3 py-1 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+         "px-3 py-1 text-[10px] font-bold uppercase rounded-xl border transition-all whitespace-nowrap",
          accFilter === filter 
-           ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]" 
+           ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]" 
            : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
        )}
      >
@@ -303,7 +303,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  </div>
  {isLoading ? (
  <div className="space-y-3">
- {[1, 2, 3].map(i => <div key={i} className="h-16 bg-[var(--paper)] border border-[var(--line)] rounded-none animate-pulse" />)}
+ {[1, 2, 3].map(i => <div key={i} className="h-16 bg-[var(--paper)] border border-[var(--line)] rounded-xl animate-pulse" />)}
  </div>
  ) : filteredAccessories.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-16 text-center opacity-40">
@@ -314,13 +314,13 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <motion.div className="space-y-2" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.04 } } }}>
  {filteredAccessories.map(acc => (
  <motion.div key={acc.sku} variants={{ hidden: { opacity: 0, y: 5 }, show: { opacity: 1, y: 0 } }}
- className="bg-[var(--paper)] rounded-none p-4 border border-[var(--line)] flex items-center gap-3">
+ className="bg-[var(--paper)] rounded-xl p-4 border border-[var(--line)] flex items-center gap-3">
  <div className="flex-1 min-w-0">
  <p className="text-xs font-bold text-[var(--ink)] truncate ">{acc.name}</p>
  <p className="text-[9px] text-[var(--subtle)]">{acc.sku}</p>
  </div>
  <div className="text-right shrink-0">
- <p className="text-[11px] font-bold text-[var(--accent)]">{formatLKR(acc.salePrice)}</p>
+ <p className="text-[11px] font-bold text-[var(--brand)]">{formatLKR(acc.salePrice)}</p>
  </div>
  </motion.div>
  ))}
@@ -335,28 +335,28 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <div>
  <h1 className="text-2xl font-bold text-[var(--ink)] ">Inventory</h1>
  <div className="flex items-center gap-2 mt-1.5">
- <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--success)]/30 bg-[var(--success)]/10 text-[var(--success)] rounded-none">IN STOCK · {phoneStock.inStock}</span>
- <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--line)] bg-[var(--paper)] text-[var(--subtle)] rounded-none">SOLD · {phoneStock.sold}</span>
+ <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--success)]/30 bg-[var(--success)]/10 text-[var(--success)] rounded-xl">IN STOCK · {phoneStock.inStock}</span>
+ <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--line)] bg-[var(--paper)] text-[var(--subtle)] rounded-xl">SOLD · {phoneStock.sold}</span>
  </div>
  </div>
  
  <div className="relative group">
- <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--subtle)] group-focus-within:text-[var(--accent)] transition-colors" />
+ <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--subtle)] group-focus-within:text-[var(--brand)] transition-colors" />
  <Input
  placeholder="Search Inventory..."
  value={searchStr}
  onChange={e => setSearchStr(e.target.value)}
- className="pl-9 w-64 h-9 bg-[var(--paper)] border-[var(--line)] rounded-none text-[10px] font-medium text-[var(--ink)] placeholder:text-[var(--subtle)]/50 focus-visible:border-[var(--accent)] focus-visible:ring-0"
+ className="pl-9 w-64 h-9 bg-[var(--paper)] border-[var(--line)] rounded-xl text-[10px] font-medium text-[var(--ink)] placeholder:text-[var(--subtle)]/50 focus-visible:border-[var(--brand)] focus-visible:ring-0"
  />
  </div>
  </div>
 
  <Tabs defaultValue="phones" className="w-full">
- <TabsList className="bg-[var(--bg-app)] p-0 rounded-none w-fit h-auto border-b border-[var(--line)]">
- <TabsTrigger value="phones" className="px-8 py-2.5 rounded-none text-[10px] font-bold font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--accent)] data-[state=active]:border-t data-[state=active]:border-x data-[state=active]:border-[var(--line)] border-transparent">
+ <TabsList className="bg-[var(--bg-app)] p-0 rounded-xl w-fit h-auto border-b border-[var(--line)]">
+ <TabsTrigger value="phones" className="px-8 py-2.5 rounded-xl text-[10px] font-bold font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--brand)] data-[state=active]:border-t data-[state=active]:border-x data-[state=active]:border-[var(--line)] border-transparent">
  Phones
  </TabsTrigger>
- <TabsTrigger value="accessories" className="px-8 py-2.5 rounded-none text-[10px] font-bold font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--accent)] data-[state=active]:border-t data-[state=active]:border-x data-[state=active]:border-[var(--line)] border-transparent">
+ <TabsTrigger value="accessories" className="px-8 py-2.5 rounded-xl text-[10px] font-bold font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--brand)] data-[state=active]:border-t data-[state=active]:border-x data-[state=active]:border-[var(--line)] border-transparent">
  Accessories
  </TabsTrigger>
  </TabsList>
@@ -368,9 +368,9 @@ export default function Inventory({ onAddStock }: InventoryProps) {
         key={filter}
         onClick={() => setPhoneFilter(filter)}
         className={cn(
-          "px-3 py-1 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+          "px-3 py-1 text-[10px] font-bold uppercase rounded-xl border transition-all whitespace-nowrap",
           phoneFilter === filter 
-            ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]" 
+            ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]" 
             : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
         )}
       >
@@ -378,7 +378,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
       </button>
     ))}
   </div>
- <div className="bg-[var(--paper)] border border-[var(--line)] rounded-none shadow-none overflow-hidden">
+ <div className="bg-[var(--paper)] border border-[var(--line)] rounded-xl shadow-none overflow-hidden">
  <Table>
  <TableHeader>
  <TableRow className="bg-[var(--bg-app)] hover:bg-[var(--bg-app)] border-b border-[var(--line)]">
@@ -386,24 +386,24 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <Checkbox checked={allSelected} onCheckedChange={(c) => {
  if (c) setSelectedPhoneIds(new Set(filteredPhones.map(p => p.id)));
  else setSelectedPhoneIds(new Set());
- }} className="rounded-none border-[var(--line)] data-[state=checked]:bg-[var(--accent)] data-[state=checked]:border-[var(--accent)]" />
+ }} className="rounded-xl border-[var(--line)] data-[state=checked]:bg-[var(--brand)] data-[state=checked]:border-[var(--brand)]" />
  </TableHead>
- <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('model')}>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('model')}>
  <div className="flex items-center gap-2 text-inherit transition-colors">Model {renderSortIcon('model')}</div>
  </TableHead>
- <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('imei')}>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('imei')}>
  <div className="flex items-center gap-2 text-inherit transition-colors">IMEI {renderSortIcon('imei')}</div>
  </TableHead>
- <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('condition')}>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('condition')}>
  <div className="flex items-center gap-2 text-inherit transition-colors">Condition {renderSortIcon('condition')}</div>
  </TableHead>
  {isAdmin && (
- <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('costPrice')}>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('costPrice')}>
  <div className="flex items-center gap-2 text-inherit transition-colors">Cost Price {renderSortIcon('costPrice')}</div>
  </TableHead>
  )}
  <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium">Sell Price</TableHead>
- <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('status')}>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('status')}>
  <div className="flex items-center gap-2 text-inherit transition-colors">Status {renderSortIcon('status')}</div>
  </TableHead>
  <TableHead className="py-3 px-6 text-right text-[9px] font-bold text-[var(--subtle)] font-medium">Actions</TableHead>
@@ -420,13 +420,13 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  ) : filteredPhones.map((phone) => (
  <TableRow key={phone.id} className="border-b border-[var(--line)]/50 transition-all hover:border-l-2 hover:border-l-[var(--success)]">
  <TableCell className="py-3 px-6">
- <Checkbox checked={selectedPhoneIds.has(phone.id)} onCheckedChange={(c) => handleSelectPhone(phone.id, c as boolean)} className="rounded-none border-[var(--line)] data-[state=checked]:bg-[var(--accent)]" />
+ <Checkbox checked={selectedPhoneIds.has(phone.id)} onCheckedChange={(c) => handleSelectPhone(phone.id, c as boolean)} className="rounded-xl border-[var(--line)] data-[state=checked]:bg-[var(--brand)]" />
  </TableCell>
  <TableCell className="py-3 px-6">
  <div className="flex items-center gap-2">
  <p className="font-bold text-[var(--ink)] text-[11px]">{phone.model}</p>
- {phone.source === 'trade-in' && <span className="bg-orange-100 text-orange-700 border border-orange-300 text-[9px] font-bold px-1.5 py-0.5 rounded-none">TRADE-IN</span>}
- {phone.source === 'returned' && <span className="bg-sky-100 text-sky-700 border border-sky-300 text-[9px] font-bold px-1.5 py-0.5 rounded-none">RETURNED</span>}
+ {phone.source === 'trade-in' && <span className="bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 text-[9px] font-bold px-1.5 py-0.5 rounded-xl">TRADE-IN</span>}
+ {phone.source === 'returned' && <span className="bg-[var(--teal)]/10 text-[var(--teal)] border border-[var(--teal)]/25 text-[9px] font-bold px-1.5 py-0.5 rounded-xl">RETURNED</span>}
  </div>
  <p className="text-[9px] text-[var(--subtle)] mt-0.5 ">{phone.storage} · {phone.color}</p>
  </TableCell>
@@ -434,23 +434,23 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <div className="flex items-center gap-2">
  <span>{phone.imei ? `#${phone.imei}` : phone.serialNumber ? `SN ${phone.serialNumber}` : '—'}</span>
  {phone.deviceType && phone.deviceType !== 'phone' && (
- <span className="bg-[var(--paper)] text-[var(--accent)] border border-[var(--line)] text-[8px] font-bold px-1.5 py-0.5 rounded-none uppercase">{phone.deviceType}</span>
+ <span className="bg-[var(--paper)] text-[var(--brand)] border border-[var(--line)] text-[8px] font-bold px-1.5 py-0.5 rounded-xl uppercase">{phone.deviceType}</span>
  )}
  </div>
  </TableCell>
  <TableCell className="py-3 px-6">
- <span className={cn("inline-block px-2 py-0.5 text-[8px] font-bold border rounded-none ", 
+ <span className={cn("inline-block px-2 py-0.5 text-[8px] font-bold border rounded-xl ", 
  phone.condition === 'sealed' ? 'bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20' : 
- phone.condition === 'a-plus' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20' : 'bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)]'
+ phone.condition === 'a-plus' ? 'bg-[var(--brand)]/10 text-[var(--brand)] border-[var(--brand)]/20' : 'bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)]'
  )}>
  {phone.condition === 'sealed' ? 'Sealed' : phone.condition === 'a-plus' ? 'Grade A+' : phone.condition}
  </span>
  </TableCell>
  {isAdmin && <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{formatLKR(phone.costPrice).split(' ')[1]}</TableCell>}
- <TableCell className="py-3 px-6 text-[10px] font-bold text-[var(--accent)]">{formatLKR(phone.targetSalePrice).split(' ')[1]}</TableCell>
+ <TableCell className="py-3 px-6 text-[10px] font-bold text-[var(--brand)]">{formatLKR(phone.targetSalePrice).split(' ')[1]}</TableCell>
  <TableCell className="py-3 px-6">
  <div className="flex items-center gap-2">
- <div className={cn("w-1.5 h-1.5 rounded-none shadow-[0_0_8px_currentColor]", 
+ <div className={cn("w-1.5 h-1.5 rounded-xl shadow-[0_0_8px_currentColor]", 
  phone.status === 'in-stock' ? 'text-[var(--success)] bg-[var(--success)]' : 
  phone.status === 'sold' ? 'text-[var(--danger)] bg-[var(--danger)]' : 'text-[var(--warning)] bg-[var(--warning)]'
  )} />
@@ -460,12 +460,12 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <TableCell className="py-3 px-6 text-right">
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none bg-[var(--line)] border border-[var(--line)] hover:bg-[var(--accent)] hover:text-[var(--bg-app)] transition-colors">
+ <Button variant="ghost" size="icon" className="h-7 w-7 rounded-xl bg-[var(--line)] border border-[var(--line)] hover:bg-[var(--brand)] hover:text-[var(--bg-app)] transition-colors">
  <MoreHorizontal className="h-3.5 w-3.5" />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none p-1">
- <DropdownMenuItem className="text-[9px] font-bold focus:bg-[var(--accent)] focus:text-[var(--bg-app)]" onClick={() => requireAdmin(() => { setEditPhone(phone); setEditPhoneOpen(true); })}><Pencil className="mr-2 h-3 w-3" /> Edit</DropdownMenuItem>
+ <DropdownMenuContent align="end" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl p-1">
+ <DropdownMenuItem className="text-[9px] font-bold focus:bg-[var(--brand)] focus:text-[var(--bg-app)]" onClick={() => requireAdmin(() => { setEditPhone(phone); setEditPhoneOpen(true); })}><Pencil className="mr-2 h-3 w-3" /> Edit</DropdownMenuItem>
  <DropdownMenuItem className="text-[9px] font-bold text-[var(--danger)] focus:bg-[var(--danger)] focus:text-white" onClick={() => handleDeletePhone(phone.id)}><Trash2 className="mr-2 h-3 w-3" /> Delete</DropdownMenuItem>
  </DropdownMenuContent>
  </DropdownMenu>
@@ -484,9 +484,9 @@ export default function Inventory({ onAddStock }: InventoryProps) {
         key={filter}
         onClick={() => setAccFilter(filter)}
         className={cn(
-          "px-3 py-1 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+          "px-3 py-1 text-[10px] font-bold uppercase rounded-xl border transition-all whitespace-nowrap",
           accFilter === filter 
-            ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]" 
+            ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]" 
             : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
         )}
       >
@@ -494,17 +494,17 @@ export default function Inventory({ onAddStock }: InventoryProps) {
       </button>
     ))}
   </div>
-  <div className="bg-[var(--paper)] border border-[var(--line)] rounded-none shadow-none overflow-hidden">
+  <div className="bg-[var(--paper)] border border-[var(--line)] rounded-xl shadow-none overflow-hidden">
  <Table>
  <TableHeader>
  <TableRow className="bg-[var(--bg-app)] hover:bg-[var(--bg-app)] border-b border-[var(--line)]">
- <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('name')}>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('name')}>
  <div className="flex items-center gap-2 transition-colors">Name {renderSortIcon('name')}</div>
  </TableHead>
- <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('sku')}>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('sku')}>
  <div className="flex items-center gap-2 transition-colors">SKU {renderSortIcon('sku')}</div>
  </TableHead>
- <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('quantity')}>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('quantity')}>
  <div className="flex items-center gap-2 transition-colors">Quantity {renderSortIcon('quantity')}</div>
  </TableHead>
  {isAdmin && <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium">Cost Price</TableHead>}
@@ -529,20 +529,20 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <span className={cn("text-[11px] font-bold ", acc.quantity <= 5 ? 'text-[var(--danger)]' : 'text-[var(--success)]')}>
  {acc.quantity.toString().padStart(2, '0')}
  </span>
- {acc.quantity <= 5 && <span className="text-[8px] font-bold bg-[var(--danger)] text-white px-1.5 py-0.5 rounded-none">CRITICAL STOCK</span>}
+ {acc.quantity <= 5 && <span className="text-[8px] font-bold bg-[var(--danger)] text-white px-1.5 py-0.5 rounded-xl">CRITICAL STOCK</span>}
  </div>
  </TableCell>
  {isAdmin && <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{formatLKR(acc.costPrice).split(' ')[1]}</TableCell>}
- <TableCell className="py-3 px-6 text-[10px] font-bold text-[var(--accent)]">{formatLKR(acc.salePrice).split(' ')[1]}</TableCell>
+ <TableCell className="py-3 px-6 text-[10px] font-bold text-[var(--brand)]">{formatLKR(acc.salePrice).split(' ')[1]}</TableCell>
  <TableCell className="py-3 px-6 text-right">
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none bg-[var(--line)] border border-[var(--line)] hover:bg-[var(--accent)] hover:text-[var(--bg-app)] transition-colors">
+ <Button variant="ghost" size="icon" className="h-7 w-7 rounded-xl bg-[var(--line)] border border-[var(--line)] hover:bg-[var(--brand)] hover:text-[var(--bg-app)] transition-colors">
  <MoreHorizontal className="h-3.5 w-3.5" />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none p-1">
- <DropdownMenuItem className="text-[9px] font-bold focus:bg-[var(--accent)] focus:text-[var(--bg-app)]" onClick={() => requireAdmin(() => { setEditAccessory(acc); setEditAccessoryOpen(true); })}><Pencil className="mr-2 h-3 w-3" /> Edit</DropdownMenuItem>
+ <DropdownMenuContent align="end" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl p-1">
+ <DropdownMenuItem className="text-[9px] font-bold focus:bg-[var(--brand)] focus:text-[var(--bg-app)]" onClick={() => requireAdmin(() => { setEditAccessory(acc); setEditAccessoryOpen(true); })}><Pencil className="mr-2 h-3 w-3" /> Edit</DropdownMenuItem>
  <DropdownMenuItem className="text-[9px] font-bold text-[var(--danger)] focus:bg-[var(--danger)] focus:text-white" onClick={() => handleDeleteAccessory(acc.sku)}><Trash2 className="mr-2 h-3 w-3" /> Delete</DropdownMenuItem>
  </DropdownMenuContent>
  </DropdownMenu>

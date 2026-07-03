@@ -13,9 +13,8 @@ import Customers from '@/pages/Customers';
 import AddUnitModal from '@/components/AddUnitModal';
 import { useMobile } from '@/hooks/useMobile';
 
-import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { Sun, Moon } from 'lucide-react';
 
 type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'customers';
 
@@ -52,7 +51,6 @@ export function useLayoutContext() {
 function Layout() {
   const isMobile = useMobile();
   const { requireAdmin } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -96,25 +94,19 @@ function Layout() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.15 }}
-                className="text-xl font-bold text-[var(--ink)]"
+                className="font-display text-xl font-semibold text-[var(--teal)]"
               >
                 {pageTitles[activePage]}
               </motion.h1>
             </AnimatePresence>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={toggleTheme}
-              className="h-9 w-9 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] flex items-center justify-center active:scale-95 transition-all"
-            >
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
             {activePage === 'inventory' && (
               <button
                 onClick={onAddStock}
-                className="h-9 w-9 bg-[var(--accent)] rounded-none flex items-center justify-center active:scale-95 transition-transform"
+                className="h-9 w-9 rounded-xl bg-[var(--teal)] flex items-center justify-center active:scale-95 transition-transform shadow-sm"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--bg-app)" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cream)" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
               </button>
             )}
           </div>

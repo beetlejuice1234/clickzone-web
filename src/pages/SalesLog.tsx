@@ -76,7 +76,7 @@ export default function SalesLog() {
 
   const renderSortIcon = useCallback((column: SortKey) => {
     if (sort?.key !== column) return <ArrowUpDown size={12} className="text-[var(--subtle)] inline-block ml-1" />;
-    return sort.dir === 'asc' ? <ArrowUp size={12} className="text-[var(--accent)] inline-block ml-1" /> : <ArrowDown size={12} className="text-[var(--accent)] inline-block ml-1" />;
+    return sort.dir === 'asc' ? <ArrowUp size={12} className="text-[var(--brand)] inline-block ml-1" /> : <ArrowDown size={12} className="text-[var(--brand)] inline-block ml-1" />;
   }, [sort]);
 
  const [returnModalOpen, setReturnModalOpen] = useState(false);
@@ -207,7 +207,7 @@ export default function SalesLog() {
  <Input
  placeholder="Asset, ID or Whatsapp Ref..."
  value={search} onChange={e => setSearch(e.target.value)}
- className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[10px] font-medium text-[var(--ink)] placeholder:text-[var(--subtle)]/50 focus-visible:border-[var(--accent)] focus-visible:ring-0"
+ className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[10px] font-medium text-[var(--ink)] placeholder:text-[var(--subtle)]/50 focus-visible:border-[var(--brand)] focus-visible:ring-0"
  />
  <div className="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
    {(['today', 'week', 'month', 'all', 'custom'] as const).map(p => (
@@ -215,25 +215,25 @@ export default function SalesLog() {
        key={p}
        onClick={() => setPreset(p)}
        className={cn(
-         "px-3 py-1.5 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+         "px-3 py-1.5 text-[10px] font-bold uppercase rounded-xl border transition-all whitespace-nowrap",
          preset === p
-           ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]"
+           ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]"
            : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
        )}
      >
        {PRESET_LABELS[p]}
      </button>
    ))}
-   <Button variant="ghost" className="h-8 px-3 rounded-none border border-[var(--line)] text-[10px] font-bold text-[var(--accent)] whitespace-nowrap" onClick={resetFilters}>
+   <Button variant="ghost" className="h-8 px-3 rounded-xl border border-[var(--line)] text-[10px] font-bold text-[var(--brand)] whitespace-nowrap" onClick={resetFilters}>
      Clear
    </Button>
  </div>
  {preset === 'custom' && (
    <div className="flex gap-2">
      <Input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-       className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] flex-1" aria-label="From date" />
+       className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] flex-1" aria-label="From date" />
      <Input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-       className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-none text-[10px] font-bold text-[var(--ink)] flex-1" aria-label="To date" />
+       className="h-10 bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] flex-1" aria-label="To date" />
    </div>
  )}
  </div>
@@ -244,9 +244,9 @@ export default function SalesLog() {
        key={filter}
        onClick={() => setStatusFilter(filter)}
        className={cn(
-         "px-3 py-1 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+         "px-3 py-1 text-[10px] font-bold uppercase rounded-xl border transition-all whitespace-nowrap",
          statusFilter === filter 
-           ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]" 
+           ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]" 
            : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
        )}
      >
@@ -255,13 +255,13 @@ export default function SalesLog() {
    ))}
  </div>
 
- <div className="bg-[var(--paper)] border border-[var(--line)] rounded-none p-5 text-white shadow-none relative overflow-hidden">
- <div className="absolute top-0 left-0 w-[2px] h-full bg-[var(--accent)]" />
+ <div className="bg-[var(--paper)] border border-[var(--line)] rounded-xl p-5 text-white shadow-none relative overflow-hidden">
+ <div className="absolute top-0 left-0 w-[2px] h-full bg-[var(--brand)]" />
  <p className="text-[9px] font-bold text-[var(--subtle)] mb-1 ">Total Revenue</p>
- <p className="text-3xl font-bold text-[var(--accent)]">{formatLKR(totalRevenue)}</p>
+ <p className="text-3xl font-bold text-[var(--brand)]">{formatLKR(totalRevenue)}</p>
  {isAdmin && <p className="text-[10px] font-medium text-[var(--success)] mt-1">Profit: {formatLKR(totalProfit)}</p>}
  <div className="flex items-center gap-2 mt-3 text-[var(--success)] text-[9px] font-medium ">
- <div className="w-1.5 h-1.5 rounded-none bg-[var(--success)] animate-pulse" />
+ <div className="w-1.5 h-1.5 rounded-xl bg-[var(--success)] animate-pulse" />
  {filteredSales.length} Transactions Exported
  </div>
  </div>
@@ -269,7 +269,7 @@ export default function SalesLog() {
  <div className="space-y-2.5">
  {isLoading ? (
  <div className="space-y-2">
- {[1, 2, 3].map(i => <div key={i} className="h-24 bg-[var(--paper)] border border-[var(--line)] rounded-none animate-pulse" />)}
+ {[1, 2, 3].map(i => <div key={i} className="h-24 bg-[var(--paper)] border border-[var(--line)] rounded-xl animate-pulse" />)}
  </div>
  ) : filteredSales.length === 0 ? (
  <div className="text-center py-20 text-[var(--subtle)]">
@@ -279,22 +279,22 @@ export default function SalesLog() {
  ) : (
  filteredSales.map(sale => (
  <motion.div key={sale.id} layout initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
- className="bg-[var(--paper)] rounded-none p-5 border border-[var(--line)] space-y-4">
+ className="bg-[var(--paper)] rounded-xl p-5 border border-[var(--line)] space-y-4">
  <div className="flex items-start justify-between">
  <div>
  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
  <span className="text-[10px] font-bold text-[var(--ink)] ">{sale.billId}</span>
- <span className={cn("text-[8px] px-1.5 py-0.5 border font-medium rounded-none uppercase",
-   sale.paymentMethod === 'card' ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30" : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)]")}>
+ <span className={cn("text-[8px] px-1.5 py-0.5 border font-medium rounded-xl uppercase",
+   sale.paymentMethod === 'card' ? "bg-[var(--brand)]/10 text-[var(--brand)] border-[var(--brand)]/30" : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)]")}>
    {sale.paymentMethod || 'cash'}
  </span>
  {sale.returnStatus && sale.returnStatus !== 'none' && (
-   <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-none uppercase">{sale.returnStatus} RETURN</span>
+   <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-xl uppercase">{sale.returnStatus} RETURN</span>
  )}
  {sale.exchangeId && (
-   <span className="text-[8px] px-1.5 py-0.5 bg-orange-500/10 text-orange-500 border border-orange-500/30 font-medium rounded-none uppercase">TRADE-IN</span>
+   <span className="text-[8px] px-1.5 py-0.5 bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 font-medium rounded-xl uppercase">TRADE-IN</span>
  )}
- <span className="text-[8px] px-1.5 py-0.5 bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/30 font-medium rounded-none">COMPLETED</span>
+ <span className="text-[8px] px-1.5 py-0.5 bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/30 font-medium rounded-xl">COMPLETED</span>
  </div>
  <div className="flex items-center gap-1.5">
  <Clock size={10} className="text-[var(--subtle)]" />
@@ -303,13 +303,13 @@ export default function SalesLog() {
  </div>
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <Button className="h-8 w-8 flex items-center justify-center rounded-none bg-[var(--bg-app)] border border-[var(--line)] text-[var(--subtle)]">
+ <Button className="h-8 w-8 flex items-center justify-center rounded-xl bg-[var(--bg-app)] border border-[var(--line)] text-[var(--subtle)]">
  <MoreVertical size={14} />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent align="end" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none">
- <DropdownMenuItem onClick={() => handlePrint(sale)} className="text-[10px] font-medium hover:bg-[var(--bg-app)] py-2"><Printer className="mr-2 h-3.5 w-3.5 text-[var(--accent)]" /> Archive Reprint</DropdownMenuItem>
- <DropdownMenuItem onClick={() => openReturnModal(sale)} className="text-[10px] font-medium hover:bg-[var(--bg-app)] py-2"><RotateCcw className="mr-2 h-3.5 w-3.5 text-[var(--accent)]" /> Process Return</DropdownMenuItem>
+ <DropdownMenuContent align="end" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
+ <DropdownMenuItem onClick={() => handlePrint(sale)} className="text-[10px] font-medium hover:bg-[var(--bg-app)] py-2"><Printer className="mr-2 h-3.5 w-3.5 text-[var(--brand)]" /> Archive Reprint</DropdownMenuItem>
+ <DropdownMenuItem onClick={() => openReturnModal(sale)} className="text-[10px] font-medium hover:bg-[var(--bg-app)] py-2"><RotateCcw className="mr-2 h-3.5 w-3.5 text-[var(--brand)]" /> Process Return</DropdownMenuItem>
  {isAdmin && (
  <>
  <DropdownMenuSeparator className="bg-[var(--line)]" />
@@ -334,12 +334,12 @@ export default function SalesLog() {
 
  <div className="flex items-center justify-between pt-1">
  <div className="flex items-center gap-2">
- <div className="w-6 h-6 rounded-none bg-[var(--bg-app)] border border-[var(--line)] flex items-center justify-center">
- <User size={12} className="text-[var(--accent)]" />
+ <div className="w-6 h-6 rounded-xl bg-[var(--bg-app)] border border-[var(--line)] flex items-center justify-center">
+ <User size={12} className="text-[var(--brand)]" />
  </div>
  <span className="text-[11px] font-medium text-[var(--ink)]">{sale.customerWhatsapp || 'Walk-in Registry'}</span>
  </div>
- <p className="text-sm font-bold text-[var(--accent)]">{formatLKR(sale.totalRevenue)}</p>
+ <p className="text-sm font-bold text-[var(--brand)]">{formatLKR(sale.totalRevenue)}</p>
  </div>
  </motion.div>
  ))
@@ -359,10 +359,10 @@ export default function SalesLog() {
  <div className="flex items-center gap-8">
  <div className="text-right">
  <p className="text-[9px] font-bold text-[var(--subtle)] mb-1">Total Revenue</p>
- <p className="text-3xl font-bold text-[var(--accent)]">{formatLKR(totalRevenue)}</p>
+ <p className="text-3xl font-bold text-[var(--brand)]">{formatLKR(totalRevenue)}</p>
  {isAdmin && <p className="text-[10px] font-medium text-[var(--success)] mt-1">Profit: {formatLKR(totalProfit)}</p>}
  </div>
- <Button variant="outline" onClick={handleExport} className="rounded-none border-[var(--accent)] border-2 h-11 px-8 font-bold text-[10px] bg-transparent text-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg-app)] transition-all shadow-none">
+ <Button variant="outline" onClick={handleExport} className="rounded-xl border-[var(--brand)] border-2 h-11 px-8 font-bold text-[10px] bg-transparent text-[var(--brand)] hover:bg-[var(--brand)] hover:text-[var(--bg-app)] transition-all shadow-none">
  <Download size={14} className="mr-2" /> Data Export
  </Button>
  </div>
@@ -374,9 +374,9 @@ export default function SalesLog() {
       key={filter}
       onClick={() => setStatusFilter(filter)}
       className={cn(
-        "px-3 py-1 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+        "px-3 py-1 text-[10px] font-bold uppercase rounded-xl border transition-all whitespace-nowrap",
         statusFilter === filter 
-          ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]" 
+          ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]" 
           : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
       )}
     >
@@ -384,35 +384,35 @@ export default function SalesLog() {
     </button>
   ))}
 </div>
-<div className="bg-[var(--paper)] border border-[var(--line)] rounded-none shadow-none overflow-hidden relative">
+<div className="bg-[var(--paper)] border border-[var(--line)] rounded-xl shadow-none overflow-hidden relative">
  <div className="p-6 bg-[var(--bg-app)]/50 border-b border-[var(--line)] flex flex-col gap-4">
  <div className="flex flex-col md:flex-row gap-6 items-center">
  <div className="relative flex-1 group w-full">
  <div className="absolute -top-2.5 left-4 bg-[var(--bg-app)] px-2 z-10 border-x border-[var(--line)]">
- <span className="text-[8px] font-bold text-[var(--accent)]">Filter Parameters</span>
+ <span className="text-[8px] font-bold text-[var(--brand)]">Filter Parameters</span>
  </div>
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--accent)]" size={14} />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--brand)]" size={14} />
  <Input
  placeholder="Query by ID, Identifier, or WhatsApp reference..."
  value={search} onChange={e => setSearch(e.target.value)}
- className="pl-10 h-11 border-[var(--line)] bg-[var(--bg-app)] rounded-none focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30"
+ className="pl-10 h-11 border-[var(--line)] bg-[var(--bg-app)] rounded-xl focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30"
  />
  </div>
- <Button variant="ghost" className="h-11 text-[9px] font-medium rounded-none border border-[var(--line)] text-[var(--subtle)] hover:text-[var(--accent)] hover:bg-[var(--bg-app)] w-full md:w-auto" onClick={resetFilters}>
+ <Button variant="ghost" className="h-11 text-[9px] font-medium rounded-xl border border-[var(--line)] text-[var(--subtle)] hover:text-[var(--brand)] hover:bg-[var(--bg-app)] w-full md:w-auto" onClick={resetFilters}>
  Clear Filters
  </Button>
  </div>
  <div className="flex flex-wrap items-center gap-3">
- <Calendar className="text-[var(--accent)]" size={14} />
+ <Calendar className="text-[var(--brand)]" size={14} />
  <div className="flex gap-2 flex-wrap">
    {(['today', 'week', 'month', 'all', 'custom'] as const).map(p => (
      <button
        key={p}
        onClick={() => setPreset(p)}
        className={cn(
-         "px-3 py-1.5 text-[10px] font-bold uppercase rounded-none border transition-all whitespace-nowrap",
+         "px-3 py-1.5 text-[10px] font-bold uppercase rounded-xl border transition-all whitespace-nowrap",
          preset === p
-           ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]"
+           ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]"
            : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
        )}
      >
@@ -423,10 +423,10 @@ export default function SalesLog() {
  {preset === 'custom' && (
    <div className="flex items-center gap-2">
      <Input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-       className="h-9 w-40 border-[var(--line)] bg-[var(--bg-app)] rounded-none text-[10px] font-bold text-[var(--ink)]" aria-label="From date" />
+       className="h-9 w-40 border-[var(--line)] bg-[var(--bg-app)] rounded-xl text-[10px] font-bold text-[var(--ink)]" aria-label="From date" />
      <span className="text-[9px] font-bold text-[var(--subtle)]">→</span>
      <Input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-       className="h-9 w-40 border-[var(--line)] bg-[var(--bg-app)] rounded-none text-[10px] font-bold text-[var(--ink)]" aria-label="To date" />
+       className="h-9 w-40 border-[var(--line)] bg-[var(--bg-app)] rounded-xl text-[10px] font-bold text-[var(--ink)]" aria-label="To date" />
    </div>
  )}
  </div>
@@ -435,10 +435,10 @@ export default function SalesLog() {
  <Table>
  <TableHeader>
  <TableRow className="bg-[var(--bg-app)]/80 hover:bg-[var(--bg-app)] border-b border-[var(--line)]">
- <TableHead className="py-5 px-6 text-[9px] font-bold text-[var(--subtle)] cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('date')}>Record {renderSortIcon('date')}</TableHead>
- <TableHead className="py-5 px-6 text-[9px] font-bold text-[var(--subtle)] cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('customerWhatsapp')}>Customer {renderSortIcon('customerWhatsapp')}</TableHead>
+ <TableHead className="py-5 px-6 text-[9px] font-bold text-[var(--subtle)] cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('date')}>Record {renderSortIcon('date')}</TableHead>
+ <TableHead className="py-5 px-6 text-[9px] font-bold text-[var(--subtle)] cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('customerWhatsapp')}>Customer {renderSortIcon('customerWhatsapp')}</TableHead>
  <TableHead className="py-5 px-6 text-[9px] font-bold text-[var(--subtle)]">Items</TableHead>
- <TableHead className="py-5 px-6 text-[9px] font-bold text-[var(--subtle)] text-right cursor-pointer group hover:text-[var(--accent)]" onClick={() => handleSort('totalRevenue')}>Price {renderSortIcon('totalRevenue')}</TableHead>
+ <TableHead className="py-5 px-6 text-[9px] font-bold text-[var(--subtle)] text-right cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('totalRevenue')}>Price {renderSortIcon('totalRevenue')}</TableHead>
  <TableHead className="py-5 px-6 text-[9px] font-bold text-[var(--subtle)] text-right">Actions</TableHead>
  </TableRow>
  </TableHeader>
@@ -446,7 +446,7 @@ export default function SalesLog() {
  {isLoading ? (
  [1, 2, 3].map(i => (
  <TableRow key={i}>
- <TableCell colSpan={5} className="py-8 px-6"><div className="h-10 bg-[var(--bg-app)] border border-[var(--line)] animate-pulse rounded-none w-full" /></TableCell>
+ <TableCell colSpan={5} className="py-8 px-6"><div className="h-10 bg-[var(--bg-app)] border border-[var(--line)] animate-pulse rounded-xl w-full" /></TableCell>
  </TableRow>
  ))
  ) : filteredSales.length === 0 ? (
@@ -462,63 +462,63 @@ export default function SalesLog() {
  <div className="flex flex-col">
  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
    <span className="text-sm font-bold text-[var(--ink)]">{sale.billId}</span>
-   <span className={cn("text-[8px] px-1.5 py-0.5 border font-medium rounded-none uppercase",
-     sale.paymentMethod === 'card' ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30" : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)]")}>
+   <span className={cn("text-[8px] px-1.5 py-0.5 border font-medium rounded-xl uppercase",
+     sale.paymentMethod === 'card' ? "bg-[var(--brand)]/10 text-[var(--brand)] border-[var(--brand)]/30" : "bg-[var(--paper)] text-[var(--subtle)] border-[var(--line)]")}>
      {sale.paymentMethod || 'cash'}
    </span>
    {sale.returnStatus && sale.returnStatus !== 'none' && (
-     <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-none uppercase">{sale.returnStatus} RETURN</span>
+     <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-xl uppercase">{sale.returnStatus} RETURN</span>
    )}
    {sale.exchangeId && (
-     <span className="text-[8px] px-1.5 py-0.5 bg-orange-500/10 text-orange-500 border border-orange-500/30 font-medium rounded-none uppercase">TRADE-IN</span>
+     <span className="text-[8px] px-1.5 py-0.5 bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 font-medium rounded-xl uppercase">TRADE-IN</span>
    )}
  </div>
  <div className="flex items-center gap-2 text-[9px] text-[var(--subtle)]">
- <Clock size={10} className="text-[var(--accent)]" /> {sale.date} <span className="opacity-30 self-center">|</span> {sale.time}
+ <Clock size={10} className="text-[var(--brand)]" /> {sale.date} <span className="opacity-30 self-center">|</span> {sale.time}
  </div>
  </div>
  </TableCell>
  <TableCell className="py-6 px-6">
  <div className="flex items-center gap-4">
- <div className="w-9 h-9 bg-[var(--bg-app)] border border-[var(--line)] flex items-center justify-center rounded-none">
- <User size={16} className="text-[var(--accent)]" />
+ <div className="w-9 h-9 bg-[var(--bg-app)] border border-[var(--line)] flex items-center justify-center rounded-xl">
+ <User size={16} className="text-[var(--brand)]" />
  </div>
  <div>
  <p className="text-[10px] font-bold text-[var(--ink)]">{sale.customerWhatsapp || 'Walk-in Registry'}</p>
- {sale.customerWhatsapp && <span className="text-[8px] font-bold bg-[var(--success)]/20 text-[var(--success)] px-1.5 py-0.5 rounded-none mt-1 inline-block">SECURED</span>}
+ {sale.customerWhatsapp && <span className="text-[8px] font-bold bg-[var(--success)]/20 text-[var(--success)] px-1.5 py-0.5 rounded-xl mt-1 inline-block">SECURED</span>}
  </div>
  </div>
  </TableCell>
  <TableCell className="py-6 px-6 min-w-[320px]">
  <div className="space-y-2">
  {sale.items.map((item, idx) => (
- <div key={idx} className="flex items-center justify-between py-2 border-b border-[var(--line)]/30 last:border-0 hover:bg-[var(--bg-app)] transition-colors px-1 rounded-none">
+ <div key={idx} className="flex items-center justify-between py-2 border-b border-[var(--line)]/30 last:border-0 hover:bg-[var(--bg-app)] transition-colors px-1 rounded-xl">
  <div className="flex items-center gap-3">
  <span className="text-[10px] font-bold text-[var(--ink)]">{item.name}</span>
  <span className="text-[9px] text-[var(--subtle)] opacity-60">ID: {item.identifier}</span>
  </div>
- <span className="text-[10px] font-bold text-[var(--accent)] opacity-80">{formatLKR(item.finalPrice).split(' ')[1]}</span>
+ <span className="text-[10px] font-bold text-[var(--brand)] opacity-80">{formatLKR(item.finalPrice).split(' ')[1]}</span>
  </div>
  ))}
  </div>
  </TableCell>
  <TableCell className="py-6 px-6 text-right">
  <div className="flex flex-col items-end">
- <span className="text-lg font-bold text-[var(--accent)]">{formatLKR(sale.totalRevenue)}</span>
+ <span className="text-lg font-bold text-[var(--brand)]">{formatLKR(sale.totalRevenue)}</span>
  {sale.totalDiscount > 0 && <span className="text-[8px] font-bold bg-[var(--danger)]/20 text-[var(--danger)] border border-[var(--danger)]/30 px-1.5 py-0.5 mt-1 cursor-help" title="Adjustment Applied">-[{formatLKR(sale.totalDiscount).split(' ')[1]}]</span>}
- {sale.tradeInValue && sale.tradeInValue > 0 ? <span className="text-[8px] font-bold bg-orange-500/10 text-orange-500 border border-orange-500/30 px-1.5 py-0.5 mt-1" title="Trade-in Applied">Trade-in -{formatLKR(sale.tradeInValue).split(' ')[1]}</span> : null}
+ {sale.tradeInValue && sale.tradeInValue > 0 ? <span className="text-[8px] font-bold bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 px-1.5 py-0.5 mt-1" title="Trade-in Applied">Trade-in -{formatLKR(sale.tradeInValue).split(' ')[1]}</span> : null}
  </div>
  </TableCell>
  <TableCell className="py-6 px-6 text-right relative">
  <div className="flex items-center justify-end gap-2">
- <Button variant="ghost" size="icon" onClick={() => handlePrint(sale)} className="hover:bg-[var(--accent)] hover:text-[var(--bg-app)] rounded-none h-9 w-9 border border-[var(--line)] transition-all bg-[var(--line)] text-[var(--accent)] shadow-none" title="Print PDF">
+ <Button variant="ghost" size="icon" onClick={() => handlePrint(sale)} className="hover:bg-[var(--brand)] hover:text-[var(--bg-app)] rounded-xl h-9 w-9 border border-[var(--line)] transition-all bg-[var(--line)] text-[var(--brand)] shadow-none" title="Print PDF">
  <Printer size={16} />
  </Button>
- <Button variant="ghost" size="icon" onClick={() => openReturnModal(sale)} className="hover:bg-[var(--accent)] hover:text-[var(--bg-app)] rounded-none h-9 w-9 border border-[var(--line)] transition-all bg-[var(--line)] text-[var(--accent)] shadow-none" title="Process Return">
+ <Button variant="ghost" size="icon" onClick={() => openReturnModal(sale)} className="hover:bg-[var(--brand)] hover:text-[var(--bg-app)] rounded-xl h-9 w-9 border border-[var(--line)] transition-all bg-[var(--line)] text-[var(--brand)] shadow-none" title="Process Return">
  <RotateCcw size={16} />
  </Button>
  {isAdmin && (
- <Button variant="ghost" size="icon" onClick={() => handleDelete(sale.id)} className="hover:bg-[var(--danger)] hover:text-white rounded-none h-9 w-9 text-[var(--danger)] bg-[var(--line)] border border-[var(--line)] transition-all shadow-none" title="Purge Entry">
+ <Button variant="ghost" size="icon" onClick={() => handleDelete(sale.id)} className="hover:bg-[var(--danger)] hover:text-white rounded-xl h-9 w-9 text-[var(--danger)] bg-[var(--line)] border border-[var(--line)] transition-all shadow-none" title="Purge Entry">
  <Trash2 size={16} />
  </Button>
  )}
