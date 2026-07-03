@@ -5,7 +5,7 @@ import { formatLKR, cn, todayColombo } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { shareBillPDF, downloadBillPDF, type BillData } from '@/lib/pdfBill';
+import { shareBillPDF, downloadBillPDF, openBillPDF, type BillData } from '@/lib/pdfBill';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { useMobile } from '@/hooks/useMobile';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -176,7 +176,11 @@ export default function POS() {
 
  const handleGenerateBill = useCallback(async () => {
  if (cartItems.length === 0) return;
- 
+
+ // Desktop: pre-open a tab NOW (inside the click gesture) so the popup blocker doesn't kill it after
+ // the checkout await — we navigate it to the bill PDF below. Mobile uses the share sheet instead.
+ const billWin = isMobile ? null : window.open('', '_blank');
+
  const now = new Date();
  const dateStr = todayColombo(); // Asia/Colombo, matches what the checkout RPC persists
  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Colombo' });
@@ -261,6 +265,7 @@ export default function POS() {
  sale.billId = billId;
  reloadData();
  } catch (e) {
+ billWin?.close(); // checkout failed — don't leave a blank tab open
  toast.error(e instanceof Error ? e.message : 'Checkout failed. Please try again.');
  return;
  }
@@ -345,15 +350,21 @@ _Please keep this message as your digital receipt._`;
         window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(message)}`, '_blank');
       }
 
-      const shared = await shareBillPDF(pdfData);
-      if (!shared) {
-        await downloadBillPDF(pdfData);
+      // Deliver the bill: mobile shares (WhatsApp etc.), desktop opens the pre-opened tab.
+      // Both fall back to a download if the browser can't share or blocked the tab.
+      if (isMobile) {
+        const shared = await shareBillPDF(pdfData);
+        if (!shared) await downloadBillPDF(pdfData);
+      } else {
+        const opened = await openBillPDF(pdfData, billWin);
+        if (!opened) await downloadBillPDF(pdfData);
       }
     } catch (err) {
+      billWin?.close(); // receipt build failed before we could show it — clean up the blank tab
       console.error("Receipt generation failed:", err);
       toast.error("Receipt generation failed, but the sale was saved successfully.");
     }
-  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, netAmount, totalDiscount, pendingExchange]);
+  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, netAmount, totalDiscount, pendingExchange, isMobile]);
 
  useEffect(() => {
  if (!billGenerated) return;
@@ -363,9 +374,15 @@ _Please keep this message as your digital receipt._`;
 
  const handleReprint = useCallback(async () => {
  if (!lastBillData) return;
- await downloadBillPDF(lastBillData); // identical to the bill just generated
- toast.info('PDF downloaded');
- }, [lastBillData]);
+ const win = isMobile ? null : window.open('', '_blank'); // pre-open in the click gesture (desktop)
+ if (isMobile) {
+ const shared = await shareBillPDF(lastBillData);
+ if (!shared) await downloadBillPDF(lastBillData);
+ } else {
+ const opened = await openBillPDF(lastBillData, win);
+ if (!opened) await downloadBillPDF(lastBillData);
+ }
+ }, [lastBillData, isMobile]);
 
  if (isMobile) {
  return (

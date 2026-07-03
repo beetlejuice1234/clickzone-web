@@ -348,12 +348,26 @@ export async function shareBillPDF(data: BillData): Promise<boolean> {
   const doc = await generateBill(data);
   const pdfBlob = doc.output('blob');
   const file = new File([pdfBlob], `ClickZone-Invoice-${data.billId}.pdf`, { type: 'application/pdf' });
+  // Only attempt Web Share when this device can actually share the file, so we degrade cleanly
+  // (e.g. desktop) instead of popping an empty OS share sheet.
+  if (typeof navigator.canShare === 'function' && !navigator.canShare({ files: [file] })) return false;
   try {
     await navigator.share({ files: [file], title: 'ClickZone Invoice' });
     return true;
   } catch {
     return false;
   }
+}
+
+// Open the bill in a browser tab (desktop: view + Ctrl+P to print). Because the caller runs after an
+// await (checkout / logo fetch), the tab must be PRE-OPENED in the click gesture and passed in as `win`,
+// otherwise the popup blocker kills it. Returns false if no tab could be shown (caller should download).
+export async function openBillPDF(data: BillData, win?: Window | null): Promise<boolean> {
+  const doc = await generateBill(data);
+  const url = doc.output('bloburl') as unknown as string;
+  if (win && !win.closed) { win.location.href = url; return true; }
+  const opened = window.open(url, '_blank');
+  return !!opened;
 }
 
 export async function downloadBillPDF(data: BillData): Promise<void> {

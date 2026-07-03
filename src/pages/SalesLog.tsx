@@ -28,7 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { useMobile } from '@/hooks/useMobile';
-import { downloadBillPDF } from '@/lib/pdfBill';
+import { downloadBillPDF, shareBillPDF, openBillPDF, type BillData } from '@/lib/pdfBill';
 import { ReturnModal } from '@/components/ReturnModal';
 
 type DatePreset = 'today' | 'week' | 'month' | 'all' | 'custom';
@@ -168,7 +168,7 @@ export default function SalesLog() {
   // total_revenue = gross goods; net_payable = total_revenue - trade_in_value (fallback for legacy rows).
   const tradeIn = sale.tradeInValue ?? 0;
   const grandTotal = sale.netPayable ?? (sale.totalRevenue - tradeIn);
-  await downloadBillPDF({
+  const billData: BillData = {
   billId: sale.billId,
   date: sale.date,
   time: sale.time,
@@ -182,8 +182,17 @@ export default function SalesLog() {
   },
   paymentMethod: sale.paymentMethod,
   specialNotes: sale.specialNotes,
-  });
-  }, []);
+  };
+  // Mobile shares; desktop opens the bill in a pre-opened tab (view + Ctrl+P). Both fall back to download.
+  const win = isMobile ? null : window.open('', '_blank');
+  if (isMobile) {
+  const shared = await shareBillPDF(billData);
+  if (!shared) await downloadBillPDF(billData);
+  } else {
+  const opened = await openBillPDF(billData, win);
+  if (!opened) await downloadBillPDF(billData);
+  }
+  }, [isMobile]);
 
  const totalRevenue = useMemo(() => filteredSales.reduce((sum, s) => sum + s.totalRevenue, 0), [filteredSales]);
  const totalProfit = useMemo(() => filteredSales.reduce((sum, s) => {
