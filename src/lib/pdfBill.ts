@@ -90,8 +90,10 @@ function drawSidebar(doc: jsPDF, logo: string | null): void {
   doc.setFontSize(48);
   doc.text('INVOICE', 18, PH / 2 + 40, { angle: 90 });
 
-  doc.setFontSize(10);
-  doc.text('♛', SW / 2, PH - 18, { align: 'center' });
+  // (No crown glyph — the built-in PDF fonts don't have ♛, it renders as garbage. A thin rule reads clean.)
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.3);
+  doc.line(SW / 2 - 4, PH - 18, SW / 2 + 4, PH - 18);
   doc.setFont('courier', 'normal');
   doc.setFontSize(7);
   doc.text('CLICK\nZONE', SW / 2, PH - 12, { align: 'center' });
@@ -340,6 +342,13 @@ async function generateBill(data: BillData): Promise<jsPDF> {
   doc.text('CLICKZONE · KANDY', CONTENT_X, fy + 4);
   doc.text(`REF · ${data.billId}`, PW / 2 + SW / 2, fy + 4, { align: 'center' });
   doc.text('POWERED BY POS', META_X, fy + 4, { align: 'right' });
+
+  // Hidden easter egg — invisible to the eye (PDF text rendering mode 3 = not drawn), but it's
+  // embedded in every bill. Select-all or search the PDF to find it. ♛ SevIT was here.
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(4);
+  doc.text('crafted in the shadows by SevIT - royalty in every connection - you found the hidden mark',
+    CONTENT_X, PH - 1.5, { renderingMode: 'invisible' });
 
   return doc;
 }
