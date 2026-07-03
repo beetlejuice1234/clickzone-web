@@ -1,0 +1,8 @@
+# Treat binary assets as binary — never apply line-ending (CRLF) conversion, which would corrupt them.
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ico  binary
+*.woff binary
+*.woff2 binary

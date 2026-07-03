@@ -133,8 +133,15 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
   proper **PNGs** (192, 512-any, 512-maskable padded) generated from `pwa-icon-1024.jpg` via `sharp`
   (`scripts/gen-icons.mjs`) — Chrome install prompt works. (Fixed after the first deploy showed no
   install: JPEG 500²/1024² icons don't satisfy Chrome's PNG 192/512 requirement.)
-- ⏭️ **NEXT: Phase 10** — verification pass (checkout race, staff-JWT RLS proof, PDF, trade-in-return math,
-  multi-store isolation, profit unit test), then **Phase 11** — backup gate + production cutover (§6).
+- ✅ **Phase 10 — full verification pass (staging, no code change)**: all 6 GO — staff-JWT RLS (staff gets
+  0 cost/profit/customer rows, writes 403/0; owner sees data), checkout race (1 wins, no double-sell),
+  profit = revenue−COGS with no trade-in double-count (plain/trade-in/trade-in-return), trade-in-return
+  50k→45k (delta 5k store-credit, profit 7k follows the device), PDF (T&C+notes render, 2-page overflow,
+  **bill == real persisted sale** 150k/40k/110k), multi-store isolation + `daily_revenue` force-scoped.
+  Report + sample bills: `docs/phase10-verification.md`, `docs/phase10-bills/`. `[PH10-*]` test rows on staging.
+- ⏭️ **NEXT: Phase 11** — backup gate (Free→Pro or nightly dump) + production cutover (§6). Pre-cutover
+  must-do: **zero-cost backfill** (`docs/zero-cost-backfill.csv`), real accounts + real override PIN, no
+  staging test-user seed on prod. Open: `phone_swap` unwired (confirm with client or remove at cleanup).
 - Note: `npm run build` still red on PRE-EXISTING errors cleared in **8h** (app runs via `vite dev`):
   `Sidebar` (legacy sync-status dead code), `AddUnitModal` (latent 8a `status: string` typing),
   one unused `entry` in Dashboard's chart map. `pdfBill` is now type-clean.
