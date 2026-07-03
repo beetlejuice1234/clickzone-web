@@ -40,14 +40,14 @@ export default function LoginScreen() {
         </div>
 
         <div className="bg-[var(--paper)] border border-[var(--line)] p-8 relative">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--accent)]/30 to-transparent" />
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--brand)]/30 to-transparent" />
           <form onSubmit={submit} className="space-y-5">
             <div className="space-y-2">
               <label className="text-[9px] font-bold text-[var(--subtle)] tracking-widest">EMAIL</label>
               <Input
                 type="email" autoComplete="username" placeholder="you@clickzone.test" value={email}
                 onChange={e => setEmail(e.target.value)} autoFocus
-                className="h-11 rounded-none border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0"
+                className="h-11 rounded-xl border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0"
               />
             </div>
             <div className="space-y-2">
@@ -55,12 +55,12 @@ export default function LoginScreen() {
               <Input
                 type="password" autoComplete="current-password" placeholder="••••••••" value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="h-11 rounded-none border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0"
+                className="h-11 rounded-xl border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0"
               />
             </div>
             <Button
               type="submit" disabled={busy}
-              className="w-full bg-[var(--accent)] hover:brightness-90 text-[var(--bg-app)] h-11 text-[10px] font-bold tracking-widest rounded-none active:scale-[0.99] transition-all"
+              className="w-full bg-[var(--brand)] hover:brightness-90 text-[var(--bg-app)] h-11 text-[10px] font-bold tracking-widest rounded-xl active:scale-[0.99] transition-all"
             >
               {busy ? 'SIGNING IN…' : 'SIGN IN'}
             </Button>

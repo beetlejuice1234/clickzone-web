@@ -31,14 +31,14 @@ export default function MobileNav({ activePage, onNavigate }: MobileNavProps) {
  key={item.id}
  onClick={() => onNavigate(item.id)}
  className={cn(
- 'flex flex-col items-center gap-0.5 px-4 py-3 rounded-none transition-none relative min-w-[64px]',
+ 'flex flex-col items-center gap-0.5 px-4 py-3 rounded-xl transition-none relative min-w-[64px]',
  isActive ? 'text-[var(--ink)]' : 'text-[var(--subtle)] active:scale-90'
  )}
  >
  {isActive && (
  <motion.div
  layoutId="mobile-nav-pill"
- className="absolute inset-0 bg-[var(--paper)] border-t-2 border-[var(--accent)]"
+ className="absolute inset-0 bg-[var(--paper)] border-t-2 border-[var(--brand)]"
  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
  />
  )}

@@ -112,7 +112,7 @@ function Layout() {
             {activePage === 'inventory' && (
               <button
                 onClick={onAddStock}
-                className="h-9 w-9 bg-[var(--accent)] rounded-none flex items-center justify-center active:scale-95 transition-transform"
+                className="h-9 w-9 bg-[var(--brand)] rounded-xl flex items-center justify-center active:scale-95 transition-transform"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--bg-app)" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
               </button>

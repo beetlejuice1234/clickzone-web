@@ -67,12 +67,12 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
  >
  {theme === 'dark' ? (
  <>
- <Sun size={14} className="text-[var(--accent)]" />
+ <Sun size={14} className="text-[var(--brand)]" />
  <span>LIGHT MODE</span>
  </>
  ) : (
  <>
- <Moon size={14} className="text-[var(--accent)]" />
+ <Moon size={14} className="text-[var(--brand)]" />
  <span>DARK MODE</span>
  </>
  )}

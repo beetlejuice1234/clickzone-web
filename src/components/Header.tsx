@@ -24,7 +24,7 @@ export default function Header({
  return (
  <header className="h-16 bg-[var(--bg-app)] border-b border-[var(--line)] flex items-center justify-between px-8 sticky top-0 z-30">
  <div className="flex items-center gap-8">
- <h1 className="text-2xl font-bold text-[var(--accent)]">
+ <h1 className="text-2xl font-bold text-[var(--brand)]">
  {title}
  </h1>
  </div>
@@ -37,7 +37,7 @@ export default function Header({
  <select
  value={activeStoreId ?? '__all__'}
  onChange={(e) => setActiveStore(e.target.value === '__all__' ? null : e.target.value)}
- className="h-9 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] text-[11px] font-medium px-2 pr-3 focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+ className="h-9 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] text-[11px] font-medium px-2 pr-3 focus:outline-none focus:border-[var(--brand)] cursor-pointer"
  aria-label="Active store"
  >
  <option value="__all__">All Stores</option>
@@ -58,7 +58,7 @@ export default function Header({
   {showAddButton && (
  <button
  onClick={onAddNew}
- className="h-9 px-5 bg-[var(--accent)] text-[var(--bg-app)] text-[11px] font-medium flex items-center gap-2 hover:bg-[var(--ink)]"
+ className="h-9 px-5 bg-[var(--brand)] text-[var(--bg-app)] text-[11px] font-medium flex items-center gap-2 hover:bg-[var(--ink)]"
  >
  <Plus size={16} />
  Add Stock

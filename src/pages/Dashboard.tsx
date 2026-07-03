@@ -125,16 +125,16 @@ export default function Dashboard() {
  <p className="text-[var(--subtle)] text-sm mt-1">Point of Sale · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
  </div>
  <div className="px-3 py-1.5 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] rounded-xl flex items-center gap-2 shadow-sm">
- <Calendar size={14} className="text-[var(--accent)]" />
+ <Calendar size={14} className="text-[var(--brand)]" />
  <span className="text-xs font-medium text-[var(--subtle)]">{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
  </div>
  </div>
  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
  <div className="bg-[var(--paper)] p-8 border border-[var(--line)] relative overflow-hidden">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--accent)]" />
+ <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--brand)]" />
  <p className="text-xs font-medium text-[var(--subtle)] mb-2">Daily Revenue</p>
  <div className="flex items-baseline gap-1">
- <span className="text-5xl text-[var(--accent)]">{formatLKR(stats.todayRevenue).split(' ')[1]}</span>
+ <span className="text-5xl text-[var(--brand)]">{formatLKR(stats.todayRevenue).split(' ')[1]}</span>
  <span className="text-sm font-medium text-[var(--subtle)]">{formatLKR(stats.todayRevenue).split(' ')[0]}</span>
  </div>
  <p className="text-[11px] text-[var(--subtle)] mt-3">{stats.todayCount} sales today</p>
@@ -158,7 +158,7 @@ export default function Dashboard() {
  </div>
  <div className="flex items-center gap-3">
  <div className="px-3 py-1.5 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] rounded-xl flex items-center gap-2 shadow-sm">
- <Calendar size={14} className="text-[var(--accent)]" />
+ <Calendar size={14} className="text-[var(--brand)]" />
  <span className="text-xs font-medium text-[var(--subtle)]">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
  </div>
  </div>
@@ -168,10 +168,10 @@ export default function Dashboard() {
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
  <div className="bg-[var(--paper)] p-5 border border-[var(--line)] relative overflow-hidden group">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--accent)]" />
+ <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--brand)]" />
  <p className="text-xs font-medium text-[var(--subtle)] mb-2">Daily Revenue</p>
  <div className="flex items-baseline gap-1">
- <span className="text-3xl text-[var(--accent)]">{formatLKR(stats.todayRevenue).split(' ')[1]}</span>
+ <span className="text-3xl text-[var(--brand)]">{formatLKR(stats.todayRevenue).split(' ')[1]}</span>
  <span className="text-xs font-medium text-[var(--subtle)]">{formatLKR(stats.todayRevenue).split(' ')[0]}</span>
  </div>
  <p className="text-[11px] text-[var(--success)] mt-2 font-medium">
@@ -211,11 +211,11 @@ export default function Dashboard() {
 
  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
  <div className="bg-[var(--paper)] p-5 border border-[var(--line)] relative overflow-hidden group">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--accent)]" />
- <p className="text-xs font-medium text-[var(--accent)] mb-2">Projected ROI</p>
+ <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--brand)]" />
+ <p className="text-xs font-medium text-[var(--brand)] mb-2">Projected ROI</p>
  <div className="flex items-baseline gap-1">
  <span className="text-3xl text-[var(--ink)]">{isAdmin ? formatLKR(stats.potentialProfit).split(' ')[1] : '----'}</span>
- <span className="text-xs font-medium text-[var(--accent)]">{isAdmin ? formatLKR(stats.potentialProfit).split(' ')[0] : ''}</span>
+ <span className="text-xs font-medium text-[var(--brand)]">{isAdmin ? formatLKR(stats.potentialProfit).split(' ')[0] : ''}</span>
  </div>
  <p className="text-[11px] text-[var(--subtle)] mt-2">Market Analysis Active</p>
  </div>
@@ -243,23 +243,23 @@ export default function Dashboard() {
  <h3 className="text-2xl text-[var(--ink)]">Sales for {selectedMonth}</h3>
  </div>
  <div className="relative">
- <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--accent)] pointer-events-none" size={14} />
+ <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--brand)] pointer-events-none" size={14} />
  <input
  type="month"
  value={selectedMonth}
  max={monthColombo()}
  onChange={e => setSelectedMonth(e.target.value || monthColombo())}
  aria-label="Select month"
- className="pl-10 h-11 border border-[var(--line)] bg-[var(--bg-app)] rounded-none text-[10px] font-bold text-[var(--ink)] focus:border-[var(--accent)] focus:outline-none"
+ className="pl-10 h-11 border border-[var(--line)] bg-[var(--bg-app)] rounded-xl text-[10px] font-bold text-[var(--ink)] focus:border-[var(--brand)] focus:outline-none"
  />
  </div>
  </div>
  <div className={cn("grid gap-4", isAdmin ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}>
  <div className="bg-[var(--bg-app)] p-5 border border-[var(--line)] relative overflow-hidden">
- <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--accent)]" />
+ <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--brand)]" />
  <p className="text-xs font-medium text-[var(--subtle)] mb-2">Monthly Revenue</p>
  <div className="flex items-baseline gap-1">
- <span className="text-3xl text-[var(--accent)]">{monthLoading ? '…' : formatLKR(monthly.revenue).split(' ')[1]}</span>
+ <span className="text-3xl text-[var(--brand)]">{monthLoading ? '…' : formatLKR(monthly.revenue).split(' ')[1]}</span>
  <span className="text-xs font-medium text-[var(--subtle)]">{formatLKR(monthly.revenue).split(' ')[0]}</span>
  </div>
  </div>
@@ -303,7 +303,7 @@ export default function Dashboard() {
  return (
  <div className="bg-[var(--bg-app)] text-[var(--ink)] p-3 border border-[var(--line)]">
  <p className="text-[9px] font-bold text-[var(--subtle)] mb-1">{payload[0].payload.date}</p>
- <p className="text-xs font-bold text-[var(--accent)]">{formatLKR(payload[0].value as number)}</p>
+ <p className="text-xs font-bold text-[var(--brand)]">{formatLKR(payload[0].value as number)}</p>
  </div>
  );
  }
@@ -312,7 +312,7 @@ export default function Dashboard() {
  />
  <Bar dataKey="revenue" radius={[0, 0, 0, 0]} barSize={36}>
  {chartData.map((_, index) => (
- <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? 'var(--accent)' : 'var(--line)'} className="transition-all hover:opacity-80" />
+ <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? 'var(--brand)' : 'var(--line)'} className="transition-all hover:opacity-80" />
  ))}
  </Bar>
  </BarChart>
@@ -341,7 +341,7 @@ export default function Dashboard() {
  </div>
  </div>
  <div className="text-right shrink-0">
- <p className="text-[11px] font-bold text-[var(--accent)]">{formatLKR(sale.totalRevenue)}</p>
+ <p className="text-[11px] font-bold text-[var(--brand)]">{formatLKR(sale.totalRevenue)}</p>
  <span className="text-[8px] font-bold text-[var(--success)] ">VERIFIED</span>
  </div>
  </div>

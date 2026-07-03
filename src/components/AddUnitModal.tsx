@@ -186,18 +186,18 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  return (
  <>
  <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
- <DialogContent className="sm:max-w-xl bg-[var(--paper)] border border-[var(--line)] p-0 overflow-hidden rounded-none shadow-none">
+ <DialogContent className="sm:max-w-xl bg-[var(--paper)] border border-[var(--line)] p-0 overflow-hidden rounded-xl shadow-none">
  <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'phone' | 'accessory')} className="w-full">
  <div className="bg-[var(--bg-app)] px-8 pt-8 pb-6 border-b border-[var(--line)]">
  <DialogHeader className="mb-6">
  <DialogTitle className="text-3xl text-[var(--ink)]">Add Stock</DialogTitle>
  <p className="text-sm text-[var(--subtle)] mt-1.5">Add new phones or accessories to inventory</p>
  </DialogHeader>
- <TabsList className="grid grid-cols-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-none p-1">
- <TabsTrigger value="phone" className="rounded-none flex items-center gap-3 text-[10px] font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--accent)] data-[state=active]:border-[var(--line)] transition-all">
+ <TabsList className="grid grid-cols-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl p-1">
+ <TabsTrigger value="phone" className="rounded-xl flex items-center gap-3 text-[10px] font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--brand)] data-[state=active]:border-[var(--line)] transition-all">
  <Smartphone size={14} /> Phone
  </TabsTrigger>
- <TabsTrigger value="accessory" className="rounded-none flex items-center gap-3 text-[10px] font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--accent)] data-[state=active]:border-[var(--line)] transition-all">
+ <TabsTrigger value="accessory" className="rounded-xl flex items-center gap-3 text-[10px] font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--brand)] data-[state=active]:border-[var(--line)] transition-all">
  <Package size={14} /> Accessory
  </TabsTrigger>
  </TabsList>
@@ -205,8 +205,8 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
 
  <div className="p-8">
  {error && (
- <div className="mb-6 p-4 bg-[var(--danger)]/5 border border-[var(--danger)]/20 rounded-none text-[10px] font-bold text-[var(--danger)] flex items-center gap-3 animate-shake">
- <div className="w-1.5 h-1.5 rounded-none bg-[var(--danger)] animate-pulse" />
+ <div className="mb-6 p-4 bg-[var(--danger)]/5 border border-[var(--danger)]/20 rounded-xl text-[10px] font-bold text-[var(--danger)] flex items-center gap-3 animate-shake">
+ <div className="w-1.5 h-1.5 rounded-xl bg-[var(--danger)] animate-pulse" />
  {error}
  </div>
  )}
@@ -216,8 +216,8 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Device Type</Label>
  <Select value={deviceType} onValueChange={(v) => setDeviceType(v as 'phone'|'tablet'|'watch')}>
- <SelectTrigger className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 focus:border-[var(--accent)] text-[11px] font-medium"><SelectValue /></SelectTrigger>
- <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none">
+ <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 focus:border-[var(--brand)] text-[11px] font-medium"><SelectValue /></SelectTrigger>
+ <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
  <SelectItem value="phone" className="text-[10px] font-medium">Phone</SelectItem>
  <SelectItem value="tablet" className="text-[10px] font-medium">Tablet (iPad)</SelectItem>
  <SelectItem value="watch" className="text-[10px] font-medium">Watch</SelectItem>
@@ -225,24 +225,24 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  </Select>
  </div>
  <div className="space-y-2">
- <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Serial Number {deviceType !== 'phone' && <span className="text-[var(--accent)]">*</span>}</Label>
+ <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Serial Number {deviceType !== 'phone' && <span className="text-[var(--brand)]">*</span>}</Label>
  <Input
  value={serialNumber}
  onChange={(e) => setSerialNumber(e.target.value.trim())}
  disabled={deviceType === 'phone'}
  placeholder={deviceType === 'phone' ? 'For tablets/watches' : 'Serial (no IMEI)'}
- className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] disabled:opacity-40"
+ className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] disabled:opacity-40"
  />
  </div>
  </div>
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2 relative group">
- <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">IMEI Number {deviceType === 'phone' && <span className="text-[var(--accent)]">*</span>}</Label>
+ <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">IMEI Number {deviceType === 'phone' && <span className="text-[var(--brand)]">*</span>}</Label>
  <Input
  value={imei}
  onChange={(e) => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
  placeholder={deviceType === 'phone' ? '15-digit hardware ID' : 'Optional for tablet/watch'}
- className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] "
+ className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] "
  />
  </div>
  <div className="space-y-2">
@@ -251,10 +251,10 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  value={modelOther ? '__other__' : model}
  onValueChange={(v) => { if (v === '__other__') { setModelOther(true); setModel(''); } else { setModelOther(false); setModel(v); } }}
  >
- <SelectTrigger className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 focus:border-[var(--accent)] text-[11px] font-medium ">
+ <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 focus:border-[var(--brand)] text-[11px] font-medium ">
  <SelectValue placeholder="Identify Model" />
  </SelectTrigger>
- <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none">
+ <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
  {MODEL_OPTIONS.map(m => <SelectItem key={m} value={m} className="text-[10px] font-medium hover:bg-[var(--bg-app)]">{m}</SelectItem>)}
  <SelectItem value="__other__" className="text-[10px] font-medium hover:bg-[var(--bg-app)]">Other (Android / specify)…</SelectItem>
  </SelectContent>
@@ -264,7 +264,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  value={model}
  onChange={(e) => setModel(e.target.value)}
  placeholder="e.g. Samsung Galaxy S23"
- className="h-11 mt-2 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px]"
+ className="h-11 mt-2 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px]"
  />
  )}
  </div>
@@ -274,8 +274,8 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Storage</Label>
  <Select value={storage} onValueChange={setStorage}>
- <SelectTrigger className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-bold"><SelectValue /></SelectTrigger>
- <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none">
+ <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-bold"><SelectValue /></SelectTrigger>
+ <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
  {STORAGE_OPTIONS.map(s => <SelectItem key={s} value={s} className="text-[10px] font-bold">{s}</SelectItem>)}
  </SelectContent>
  </Select>
@@ -283,8 +283,8 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Color</Label>
  <Select value={color} onValueChange={setColor}>
- <SelectTrigger className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-bold"><SelectValue /></SelectTrigger>
- <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none">
+ <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-bold"><SelectValue /></SelectTrigger>
+ <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
  {COLOR_OPTIONS.map(c => <SelectItem key={c} value={c} className="text-[10px] font-medium">{c}</SelectItem>)}
  </SelectContent>
  </Select>
@@ -292,8 +292,8 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Grade</Label>
  <Select value={condition} onValueChange={(v) => setCondition(v as ConditionGrade)}>
- <SelectTrigger className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-medium "><SelectValue /></SelectTrigger>
- <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none">
+ <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-medium "><SelectValue /></SelectTrigger>
+ <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
  {CONDITION_OPTIONS.map(c => <SelectItem key={c} value={c} className="text-[10px] font-medium">{CONDITION_LABELS[c]}</SelectItem>)}
  </SelectContent>
  </Select>
@@ -303,15 +303,15 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <div className="grid grid-cols-4 gap-6">
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Battery %</Label>
- <Input type="number" value={batteryHealth} onChange={(e) => setBatteryHealth(e.target.value)} className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold" />
+ <Input type="number" value={batteryHealth} onChange={(e) => setBatteryHealth(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold" />
  </div>
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">iCloud Status</Label>
  <Select value={icloudStatus} onValueChange={(v) => setIcloudStatus(v as 'clean'|'locked')}>
- <SelectTrigger className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 focus:border-[var(--accent)] text-[11px] font-medium ">
+ <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 focus:border-[var(--brand)] text-[11px] font-medium ">
  <SelectValue />
  </SelectTrigger>
- <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-none">
+ <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
  <SelectItem value="clean" className="text-[10px] font-medium">Clean</SelectItem>
  <SelectItem value="locked" className="text-[10px] font-medium text-[var(--danger)]">Locked</SelectItem>
  </SelectContent>
@@ -319,11 +319,11 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  </div>
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Cost Price</Label>
- <Input type="number" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} placeholder="0" className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]" />
+ <Input type="number" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} placeholder="0" className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]" />
  </div>
  <div className="space-y-2">
- <Label className="text-[9px] font-bold text-[var(--accent)] ">Valuation</Label>
- <Input type="number" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} placeholder="0" className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--accent)]/40 focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]" />
+ <Label className="text-[9px] font-bold text-[var(--brand)] ">Valuation</Label>
+ <Input type="number" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} placeholder="0" className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--brand)]/40 focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]" />
  </div>
  </div>
  </TabsContent>
@@ -332,7 +332,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">SKU</Label>
- <Input value={accSku} onChange={(e) => setAccSku(e.target.value)} placeholder="e.g. CABLE-LITO-USB" className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] " />
+ <Input value={accSku} onChange={(e) => setAccSku(e.target.value)} placeholder="e.g. CABLE-LITO-USB" className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] " />
  {accSkuInfo ? (
  <div className="bg-amber-50 border border-amber-200 px-2 py-1.5 text-[10px] font-bold text-amber-700">
  ✓ SKU exists: <span className="font-bold">{accSkuInfo.name}</span> · Current stock: {accSkuInfo.quantity} units
@@ -346,28 +346,28 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  </div>
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Name</Label>
- <Input value={accName} onChange={(e) => setAccName(e.target.value)} placeholder="e.g. LITO USB-C Cable" className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-medium " />
+ <Input value={accName} onChange={(e) => setAccName(e.target.value)} placeholder="e.g. LITO USB-C Cable" className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-medium " />
  </div>
  </div>
  <div className="grid grid-cols-3 gap-6">
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Quantity</Label>
- <Input type="number" value={accQty} onChange={(e) => setAccQty(e.target.value)} className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold" />
+ <Input type="number" value={accQty} onChange={(e) => setAccQty(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold" />
  </div>
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Cost (Unit)</Label>
- <Input type="number" value={accCost} onChange={(e) => setAccCost(e.target.value)} className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold" />
+ <Input type="number" value={accCost} onChange={(e) => setAccCost(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold" />
  </div>
  <div className="space-y-2">
- <Label className="text-[9px] font-bold text-[var(--accent)] ">Valuation</Label>
- <Input type="number" value={accSale} onChange={(e) => setAccSale(e.target.value)} className="h-11 rounded-none bg-[var(--bg-app)] border-[var(--accent)]/40 focus-visible:border-[var(--accent)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]" />
+ <Label className="text-[9px] font-bold text-[var(--brand)] ">Valuation</Label>
+ <Input type="number" value={accSale} onChange={(e) => setAccSale(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--brand)]/40 focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]" />
  </div>
  </div>
  </TabsContent>
 
  <div className="flex justify-end gap-4 pt-8 border-t border-[var(--line)] mt-10">
- <Button variant="ghost" onClick={handleClose} className="rounded-none h-12 px-8 text-[11px] font-bold text-[var(--subtle)] hover:text-[var(--ink)] hover:bg-[var(--bg-app)] transition-all">Cancel</Button>
- <Button onClick={handleSubmit} className="bg-[var(--accent)] text-[var(--bg-app)] rounded-none h-12 px-10 text-[11px] font-medium transition-all active:scale-95 hover:brightness-90">
+ <Button variant="ghost" onClick={handleClose} className="rounded-xl h-12 px-8 text-[11px] font-bold text-[var(--subtle)] hover:text-[var(--ink)] hover:bg-[var(--bg-app)] transition-all">Cancel</Button>
+ <Button onClick={handleSubmit} className="bg-[var(--brand)] text-[var(--bg-app)] rounded-xl h-12 px-10 text-[11px] font-medium transition-all active:scale-95 hover:brightness-90">
  Add Item
  </Button>
  </div>
@@ -377,7 +377,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  </Dialog>
 
  <AlertDialog open={!!revivePrompt} onOpenChange={(o) => { if (!o) { setRevivePrompt(null); pendingPhone.current = null; } }}>
- <AlertDialogContent className="bg-[var(--paper)] border border-[var(--line)] rounded-none text-[var(--ink)]">
+ <AlertDialogContent className="bg-[var(--paper)] border border-[var(--line)] rounded-xl text-[var(--ink)]">
  <AlertDialogHeader>
  <AlertDialogTitle className="text-[var(--ink)]">Returning stock detected</AlertDialogTitle>
  <AlertDialogDescription className="text-[var(--subtle)] text-[12px]">
@@ -387,17 +387,17 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  </AlertDialogDescription>
  </AlertDialogHeader>
  <AlertDialogFooter className="gap-2">
- <AlertDialogCancel className="rounded-none border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)]">Cancel</AlertDialogCancel>
+ <AlertDialogCancel className="rounded-xl border-[var(--line)] bg-[var(--bg-app)] text-[var(--ink)]">Cancel</AlertDialogCancel>
  <Button
  variant="ghost"
- className="rounded-none border border-[var(--line)] text-[var(--ink)] hover:bg-[var(--bg-app)]"
+ className="rounded-xl border border-[var(--line)] text-[var(--ink)] hover:bg-[var(--bg-app)]"
  onClick={async () => {
  const p = pendingPhone.current; setRevivePrompt(null); pendingPhone.current = null;
  if (p) { try { await writePhone(p); } catch (e) { setError(e instanceof Error ? e.message : 'Failed'); } }
  }}
  >Create new</Button>
  <AlertDialogAction
- className="rounded-none bg-[var(--accent)] text-[var(--bg-app)] hover:brightness-90"
+ className="rounded-xl bg-[var(--brand)] text-[var(--bg-app)] hover:brightness-90"
  onClick={async () => {
  const p = pendingPhone.current; const rid = revivePrompt?.id; setRevivePrompt(null); pendingPhone.current = null;
  if (p && rid) { try { await writePhone(p, { reviveId: rid }); } catch (e) { setError(e instanceof Error ? e.message : 'Failed to revive'); } }

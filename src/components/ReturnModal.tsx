@@ -182,9 +182,9 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
               key={m}
               onClick={() => setMode(m)}
               className={cn(
-                "px-3 py-2 text-[10px] font-bold uppercase rounded-none border transition-all",
+                "px-3 py-2 text-[10px] font-bold uppercase rounded-xl border transition-all",
                 mode === m
-                  ? "bg-[var(--accent)] text-[var(--bg-app)] border-[var(--accent)]"
+                  ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]"
                   : "bg-[var(--bg-app)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
               )}
             >
@@ -356,7 +356,7 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
           <Button
             onClick={mode === 'exchange' ? submitExchange : submitRefund}
             disabled={isSubmitting}
-            className="bg-[var(--accent)] text-white text-[10px] font-bold"
+            className="bg-[var(--brand)] text-white text-[10px] font-bold"
           >
             {isSubmitting ? "Processing..." : mode === 'exchange' ? "Confirm Exchange" : "Confirm Refund"}
           </Button>
