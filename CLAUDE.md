@@ -130,7 +130,9 @@ jspdf(+autotable), sonner, xlsx. PWA (`vite-plugin-pwa`) installed but NOT wired
   `index.html` PWA meta; `main.tsx` `storage.persist()`. Build GREEN, emits `sw.js`/`manifest.webmanifest`;
   runtime-verified (preview: sw/manifest/icon 200, `/inventory` → app shell). **Deploy is the owner's step**
   (Vercel import + env vars `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` pointed at **staging**). Icons are
-  the existing square JPEGs (500²/1024²) — installable; crisp 192/512 PNGs are an optional later polish.
+  proper **PNGs** (192, 512-any, 512-maskable padded) generated from `pwa-icon-1024.jpg` via `sharp`
+  (`scripts/gen-icons.mjs`) — Chrome install prompt works. (Fixed after the first deploy showed no
+  install: JPEG 500²/1024² icons don't satisfy Chrome's PNG 192/512 requirement.)
 - ⏭️ **NEXT: Phase 10** — verification pass (checkout race, staff-JWT RLS proof, PDF, trade-in-return math,
   multi-store isolation, profit unit test), then **Phase 11** — backup gate + production cutover (§6).
 - Note: `npm run build` still red on PRE-EXISTING errors cleared in **8h** (app runs via `vite dev`):

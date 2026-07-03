@@ -14,7 +14,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',   // new deploy -> SW updates itself; users always get the latest
       injectRegister: 'auto',       // auto-injects the SW registration (no manual code needed)
-      includeAssets: ['logo.jpeg', 'pwa-icon-1024.jpg'],
+      includeAssets: ['logo.jpeg', 'apple-touch-icon-180.png'],
       manifest: {
         name: 'ClickZone POS',
         short_name: 'ClickZone',
@@ -26,9 +26,9 @@ export default defineConfig({
         background_color: '#000000', // matches the app's default dark theme (--bg-app)
         theme_color: '#000000',
         icons: [
-          { src: 'logo.jpeg', sizes: '500x500', type: 'image/jpeg', purpose: 'any' },
-          { src: 'pwa-icon-1024.jpg', sizes: '1024x1024', type: 'image/jpeg', purpose: 'any' },
-          { src: 'pwa-icon-1024.jpg', sizes: '1024x1024', type: 'image/jpeg', purpose: 'maskable' },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
