@@ -257,7 +257,8 @@ async function generateBill(data: BillData): Promise<jsPDF> {
   y += 5;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
-  doc.text('TOTAL DUE', totalsX, y);
+  // Label on the far left so the large right-aligned amount never collides with it (any amount size).
+  doc.text('TOTAL DUE', CONTENT_X, y);
   doc.setFont('times', 'bold');
   doc.setFontSize(13);
   doc.text(`LKR ${money2(data.totals.grandTotal)}`, META_X, y, { align: 'right' });
