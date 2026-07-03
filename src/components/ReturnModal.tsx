@@ -356,7 +356,7 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
           <Button
             onClick={mode === 'exchange' ? submitExchange : submitRefund}
             disabled={isSubmitting}
-            className="bg-[var(--brand)] text-white text-[10px] font-bold"
+            className="bg-[var(--terracotta)] hover:bg-[var(--terracotta-hover)] text-white text-[10px] font-bold"
           >
             {isSubmitting ? "Processing..." : mode === 'exchange' ? "Confirm Exchange" : "Confirm Refund"}
           </Button>

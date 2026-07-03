@@ -342,7 +342,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
             </Button>
             <Button
               type="submit"
-              className="bg-[var(--brand)] text-[var(--paper)] rounded-xl hover:opacity-90"
+              className="bg-[var(--terracotta)] text-white rounded-xl hover:bg-[var(--terracotta-hover)]"
             >
               CONFIRM EXCHANGE
             </Button>

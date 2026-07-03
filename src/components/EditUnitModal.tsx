@@ -224,7 +224,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
 
  <div className="flex justify-end gap-4 pt-8 border-t border-[var(--line)] mt-10">
  <Button variant="ghost" onClick={handleClose} className="rounded-full h-12 px-8 text-[11px] font-bold text-[var(--subtle)] hover:text-[var(--ink)] hover:bg-[var(--bg-app)] transition-all">Cancel</Button>
- <Button onClick={handleSubmit} className="bg-[var(--success)] hover:bg-[#008F5E] text-[var(--bg-app)] rounded-full h-12 px-10 text-[11px] font-medium shadow-2xl shadow-[var(--success)]/10 transition-all active:scale-95">
+ <Button onClick={handleSubmit} className="bg-[var(--terracotta)] hover:bg-[var(--terracotta-hover)] text-white rounded-xl h-12 px-10 text-[11px] font-medium shadow-sm transition-all active:scale-95">
  Save Changes
  </Button>
  </div>

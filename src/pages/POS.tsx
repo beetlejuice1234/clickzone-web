@@ -580,7 +580,7 @@ _Please keep this message as your digital receipt._`;
  className={cn(
  "h-12 px-6 rounded-xl text-[10px] font-bold font-medium flex items-center gap-2 transition-all active:scale-95 shadow-lg",
  cartItems.length > 0
- ? "bg-[var(--brand)] text-[var(--bg-app)] shadow-[0_0_20px_rgba(37,99,235,0.2)]"
+ ? "bg-[var(--terracotta)] text-white shadow-lg shadow-[var(--terracotta)]/25"
  : "bg-[var(--bg-app)] text-[var(--subtle)] cursor-not-allowed opacity-50"
  )}
  >
@@ -939,7 +939,7 @@ _Please keep this message as your digital receipt._`;
  className={cn(
  'w-full h-14 text-[11px] font-bold rounded-xl',
  cartItems.length > 0 && cartItems.every(i => i.finalPrice)
- ? 'bg-[var(--brand)] text-[var(--bg-app)] hover:bg-[var(--ink)] hover:text-[var(--bg-app)]'
+ ? 'bg-[var(--terracotta)] text-white hover:bg-[var(--terracotta-hover)]'
  : 'bg-[var(--paper)] text-[var(--subtle)] border border-[var(--line)] cursor-not-allowed opacity-50'
  )}
  >

@@ -165,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 className="text-center text-4xl h-16 rounded-xl border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 bg-[var(--bg-app)] text-[var(--brand)] transition-all font-bold"
               />
             </div>
-            <Button type="submit" disabled={submitting} className="w-full bg-[var(--brand)] hover:brightness-90 text-[var(--bg-app)] h-12 text-[10px] font-medium rounded-full shadow-xl shadow-[var(--brand)]/10 transition-all active:scale-95">
+            <Button type="submit" disabled={submitting} className="w-full bg-[var(--terracotta)] hover:bg-[var(--terracotta-hover)] text-white h-12 text-[10px] font-medium rounded-xl shadow-sm transition-all active:scale-95">
               {submitting ? 'Verifying…' : 'Verify Override'}
             </Button>
           </form>

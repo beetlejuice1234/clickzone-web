@@ -367,7 +367,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
 
  <div className="flex justify-end gap-4 pt-8 border-t border-[var(--line)] mt-10">
  <Button variant="ghost" onClick={handleClose} className="rounded-xl h-12 px-8 text-[11px] font-bold text-[var(--subtle)] hover:text-[var(--ink)] hover:bg-[var(--bg-app)] transition-all">Cancel</Button>
- <Button onClick={handleSubmit} className="bg-[var(--brand)] text-[var(--bg-app)] rounded-xl h-12 px-10 text-[11px] font-medium transition-all active:scale-95 hover:brightness-90">
+ <Button onClick={handleSubmit} className="bg-[var(--terracotta)] text-white rounded-xl h-12 px-10 text-[11px] font-medium transition-all active:scale-95 hover:bg-[var(--terracotta-hover)]">
  Add Item
  </Button>
  </div>
