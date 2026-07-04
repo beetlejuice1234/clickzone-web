@@ -34,6 +34,7 @@ export interface Accessory {
  quantity: number;
  costPrice: number;
  salePrice: number;
+ serialNumber?: string;
  minStockLevel?: number;
  category?: string;
  brand?: string;

@@ -62,6 +62,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  const [accQty, setAccQty] = useState('1');
  const [accCost, setAccCost] = useState('');
  const [accSale, setAccSale] = useState('');
+ const [accSerial, setAccSerial] = useState('');
  const [accSkuInfo, setAccSkuInfo] = useState<{ name: string; quantity: number } | null>(null);
 
  const { accessories } = useAccessories();
@@ -163,7 +164,8 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  sku: accSku.trim().toUpperCase(),
  quantity: parseInt(accQty),
  costPrice: parseInt(accCost),
- salePrice: parseInt(accSale)
+ salePrice: parseInt(accSale),
+ serialNumber: accSerial.trim() || undefined,
  };
 
  try {
@@ -177,11 +179,12 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  setAccSku('');
  setAccCost('');
  setAccSale('');
+ setAccSerial('');
  } catch (err) {
  setError(err instanceof Error ? err.message : 'Failed to add accessory');
  }
  }
- }, [activeTab, deviceType, imei, serialNumber, model, storage, color, condition, batteryHealth, icloudStatus, costPrice, salePrice, accName, accSku, accQty, accCost, accSale, handleClose]);
+ }, [activeTab, deviceType, imei, serialNumber, model, storage, color, condition, batteryHealth, icloudStatus, costPrice, salePrice, accName, accSku, accQty, accCost, accSale, accSerial, handleClose]);
 
  return (
  <>
@@ -362,6 +365,10 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <Label className="text-[9px] font-bold text-[var(--brand)] ">Valuation</Label>
  <Input type="number" value={accSale} onChange={(e) => setAccSale(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--brand)]/40 focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]" />
  </div>
+ </div>
+ <div className="space-y-2">
+ <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Serial Number <span className="text-[var(--subtle)] font-normal">(optional)</span></Label>
+ <Input value={accSerial} onChange={(e) => setAccSerial(e.target.value)} placeholder="e.g. device serial, if applicable" className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px]" />
  </div>
  </TabsContent>
 

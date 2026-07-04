@@ -47,6 +47,7 @@ export function mapAccessory(row: Record<string, unknown>): Accessory {
     quantity: num(row.quantity, 0),
     costPrice: num(row.cost_price, 0),            // absent in v_accessories_public (staff)
     salePrice: num(row.sale_price, 0),
+    serialNumber: (row.serial_number as string) ?? undefined,
     minStockLevel: row.min_stock_level == null ? undefined : num(row.min_stock_level),
     category: (row.category as string) ?? undefined,
     brand: (row.brand as string) ?? undefined,
