@@ -154,13 +154,19 @@ export function useStores() {
     queryKey: ['stores'],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from('stores').select('id, name, address, phone');
+      const { data, error } = await supabase.from('stores').select('id, name, address, phone, next_bill_no');
       if (error) throw error;
       return data ?? [];
     },
     ...listOpts,
   });
   return { stores: data ?? [], isLoading, isError: error };
+}
+
+// Owner-only: set a store's next sequential invoice number (null clears → legacy auto id).
+export async function setStoreNextBillNo(storeId: string, next: number | null) {
+  const { error } = await supabase.from('stores').update({ next_bill_no: next }).eq('id', storeId);
+  if (error) throw new Error(error.message);
 }
 
 /* ------------------------------------------------------------------ mutations */
