@@ -35,7 +35,7 @@ export default function POS() {
  const [customerWhatsapp, setCustomerWhatsapp] = useState('');
  const [customerName, setCustomerName] = useState('');
  const [customerNic, setCustomerNic] = useState('');
- const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
+ const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
  const [specialNotes, setSpecialNotes] = useState('');
  const [billGenerated, setBillGenerated] = useState(false);
  const [lastBillId, setLastBillId] = useState('');
@@ -177,9 +177,13 @@ export default function POS() {
  const handleGenerateBill = useCallback(async () => {
  if (cartItems.length === 0) return;
 
- // Desktop: pre-open a tab NOW (inside the click gesture) so the popup blocker doesn't kill it after
- // the checkout await — we navigate it to the bill PDF below. Mobile uses the share sheet instead.
- const billWin = isMobile ? null : window.open('', '_blank');
+ // WhatsApp: pre-open a tab NOW (inside the click gesture) so the popup blocker doesn't kill it after
+ // the checkout await — navigating an already-open tab (below) is never popup-blocked. Only when the
+ // customer gave a usable number. Desktop delivers the PDF as a download; mobile uses the share sheet.
+ const waDigits = customerWhatsapp.replace(/\D/g, '').replace(/^0+/, '');
+ const hasWhatsapp = waDigits.length >= 9;
+ const waNormalized = waDigits.startsWith('94') ? waDigits : `94${waDigits}`;
+ const waWin = (!isMobile && hasWhatsapp) ? window.open('', '_blank') : null;
 
  const now = new Date();
  const dateStr = todayColombo(); // Asia/Colombo, matches what the checkout RPC persists
@@ -265,7 +269,7 @@ export default function POS() {
  sale.billId = billId;
  reloadData();
  } catch (e) {
- billWin?.close(); // checkout failed — don't leave a blank tab open
+ waWin?.close(); // checkout failed — don't leave a blank tab open
  toast.error(e instanceof Error ? e.message : 'Checkout failed. Please try again.');
  return;
  }
@@ -308,10 +312,8 @@ export default function POS() {
       };
       setLastBillData(pdfData);
 
-      // WhatsApp
-      const phoneNum = customerWhatsapp.replace(/\D/g, '').replace(/^0+/, '');
-      if (phoneNum.length >= 9) {
-        const normalized = phoneNum.startsWith('94') ? phoneNum : `94${phoneNum}`;
+      // WhatsApp: send the prefilled receipt to the customer's chat.
+      if (hasWhatsapp) {
         const itemLines = saleItems.map(i =>
           ` • ${i.name}\n ↳ ${i.type === 'phone' ? 'IMEI' : 'SKU'}: ${i.identifier}${i.condition ? ` · Grade: ${i.condition.toUpperCase()}` : ''}`
         ).join('\n');
@@ -347,20 +349,22 @@ We appreciate your trust and support. Your purchase comes with manufacturer warr
 
 _Please keep this message as your digital receipt._`;
 
-        window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(message)}`, '_blank');
+        const waUrl = `https://wa.me/${waNormalized}?text=${encodeURIComponent(message)}`;
+        if (waWin) waWin.location.href = waUrl;   // desktop: navigate the pre-opened tab (not popup-blocked)
+        else window.open(waUrl, '_blank');        // mobile: open directly
+      } else {
+        waWin?.close(); // pre-opened but no usable number after all
       }
 
-      // Deliver the bill: mobile shares (WhatsApp etc.), desktop opens the pre-opened tab.
-      // Both fall back to a download if the browser can't share or blocked the tab.
+      // Bill PDF: desktop downloads it; mobile uses the native share sheet (falls back to a download).
       if (isMobile) {
         const shared = await shareBillPDF(pdfData);
         if (!shared) await downloadBillPDF(pdfData);
       } else {
-        const opened = await openBillPDF(pdfData, billWin);
-        if (!opened) await downloadBillPDF(pdfData);
+        await downloadBillPDF(pdfData);
       }
     } catch (err) {
-      billWin?.close(); // receipt build failed before we could show it — clean up the blank tab
+      waWin?.close(); // receipt build failed before we could show it — clean up the blank tab
       console.error("Receipt generation failed:", err);
       toast.error("Receipt generation failed, but the sale was saved successfully.");
     }
@@ -544,17 +548,17 @@ _Please keep this message as your digital receipt._`;
  className="h-10 px-3 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)]"
  />
  </div>
- <div className="grid grid-cols-2 gap-2">
- {(['cash', 'card'] as const).map(m => (
+ <div className="grid grid-cols-3 gap-2">
+ {(['cash', 'card', 'transfer'] as const).map(m => (
  <button
  key={m}
  type="button"
  onClick={() => setPaymentMethod(m)}
  className={cn(
- "h-10 text-[10px] font-bold uppercase rounded-xl border transition-all",
+ "h-10 text-[10px] font-bold uppercase rounded-xl border-2 transition-all",
  paymentMethod === m
- ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]"
- : "bg-[var(--bg-app)] text-[var(--subtle)] border-[var(--line)]"
+ ? "bg-[var(--terracotta)] text-white border-[var(--terracotta)]"
+ : "bg-[var(--paper)] text-[var(--ink)] border-[var(--line)] hover:border-[var(--ink)]"
  )}
  >
  {m}
@@ -849,18 +853,18 @@ _Please keep this message as your digital receipt._`;
  </div>
  <div className="space-y-2">
  <Label className="text-[9px] font-bold text-[var(--subtle)] ">Payment Method</Label>
- <div className="grid grid-cols-2 gap-2">
- {(['cash', 'card'] as const).map(m => (
+ <div className="grid grid-cols-3 gap-2">
+ {(['cash', 'card', 'transfer'] as const).map(m => (
  <button
  key={m}
  type="button"
  onClick={() => setPaymentMethod(m)}
  disabled={cartItems.length === 0}
  className={cn(
- "h-10 text-[10px] font-bold uppercase rounded-xl border transition-all disabled:opacity-30",
+ "h-10 text-[10px] font-bold uppercase rounded-xl border-2 transition-all disabled:opacity-30",
  paymentMethod === m
- ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]"
- : "bg-[var(--bg-app)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
+ ? "bg-[var(--terracotta)] text-white border-[var(--terracotta)]"
+ : "bg-[var(--paper)] text-[var(--ink)] border-[var(--line)] hover:border-[var(--ink)]"
  )}
  >
  {m}
