@@ -8,7 +8,7 @@
 
 import type {
   PhoneUnit, Accessory, SaleRecord, SaleItem, ReturnRecord, ExchangeRecord,
-  ConditionGrade, UnitStatus, ItemSource, DeviceType,
+  ConditionGrade, UnitStatus, ItemSource, DeviceType, Quotation,
 } from '@/types';
 
 const b2n = (v: unknown): number => (v === true || v === 1 || v === '1' ? 1 : 0);
@@ -124,6 +124,25 @@ export function mapExchange(row: Record<string, unknown>): ExchangeRecord {
     ingestedPhoneId: (row.ingested_phone_id as string) ?? '',
     localUpdatedAt: (row.local_updated_at as string) ?? '',
     syncedAt: (row.synced_at as string) ?? undefined,
+    isDeleted: b2n(row.is_deleted),
+  };
+}
+
+export function mapQuotation(row: Record<string, unknown>): Quotation {
+  return {
+    id: row.id as string,
+    quoteNo: (row.quote_no as string) ?? '',
+    items: (row.items as SaleItem[]) ?? [],
+    customerName: (row.customer_name as string) ?? undefined,
+    customerNic: (row.customer_nic as string) ?? undefined,
+    customerWhatsapp: (row.customer_whatsapp as string) ?? undefined,
+    totalRevenue: num(row.total_revenue, 0),
+    totalDiscount: num(row.total_discount, 0),
+    notes: (row.notes as string) ?? undefined,
+    status: (row.status as Quotation['status']) ?? 'open',
+    validUntil: (row.valid_until as string) ?? undefined,
+    storeId: (row.store_id as string) ?? undefined,
+    createdAt: (row.created_at as string) ?? undefined,
     isDeleted: b2n(row.is_deleted),
   };
 }

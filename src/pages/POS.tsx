@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2 } from 'lucide-react';
-import { usePhones, useAccessories, reloadData, checkout } from '@/lib/api';
+import { usePhones, useAccessories, reloadData, checkout, createQuotation } from '@/lib/api';
 import { formatLKR, cn, todayColombo } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -370,6 +370,96 @@ _Please keep this message as your digital receipt._`;
     }
   }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, netAmount, totalDiscount, pendingExchange, isMobile]);
 
+ // Save a quotation from the current cart (no sale, no stock change) + share via WhatsApp/PDF.
+ const handleGenerateQuotation = useCallback(async () => {
+ if (cartItems.length === 0) return;
+
+ const waDigits = customerWhatsapp.replace(/\D/g, '').replace(/^0+/, '');
+ const hasWhatsapp = waDigits.length >= 9;
+ const waNormalized = waDigits.startsWith('94') ? waDigits : `94${waDigits}`;
+ const waWin = (!isMobile && hasWhatsapp) ? window.open('', '_blank') : null;
+
+ const dateStr = todayColombo();
+ const validUntil = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+
+ const quoteItems: SaleItem[] = cartItems.map(c => {
+ const p = parseInt(c.finalPrice) || 0;
+ const d = parseInt(c.discount) || 0;
+ if (c.type === 'phone') {
+ const phone = c.itemRef as PhoneUnit;
+ return { type: 'phone', name: `${phone.model} ${phone.storage}`, identifier: phone.imei, costPrice: 0, finalPrice: Math.max(0, p - d), discount: d, quantity: 1, condition: phone.condition };
+ }
+ const acc = c.itemRef as Accessory;
+ return { type: 'accessory', name: acc.name, identifier: acc.sku, costPrice: 0, finalPrice: Math.max(0, p - d) * c.quantity, discount: d * c.quantity, quantity: c.quantity };
+ });
+
+ let quoteNo = '';
+ try {
+ const res = await createQuotation({
+ items: quoteItems,
+ total_revenue: netAmount,
+ total_discount: totalDiscount,
+ notes: specialNotes || null,
+ customer_name: customerName || null,
+ customer_nic: customerNic || null,
+ customer_whatsapp: customerWhatsapp || null,
+ valid_until: validUntil,
+ });
+ quoteNo = res.quote_no;
+ reloadData();
+ } catch (e) {
+ waWin?.close();
+ toast.error(e instanceof Error ? e.message : 'Failed to save quotation');
+ return;
+ }
+
+ toast.success(`Quotation ${quoteNo} saved`);
+
+ try {
+ const pdfData: BillData = {
+ billId: quoteNo,
+ date: dateStr,
+ time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Colombo' }),
+ customerWhatsapp: customerWhatsapp || '',
+ saleItems: quoteItems,
+ totals: { subtotal: netAmount + totalDiscount, discount: totalDiscount, tradeIn: 0, grandTotal: netAmount },
+ specialNotes: specialNotes || undefined,
+ kind: 'quotation',
+ validUntil,
+ };
+
+ if (hasWhatsapp) {
+ const itemLines = quoteItems.map(i => ` • ${i.name}${i.quantity && i.quantity > 1 ? ` ×${i.quantity}` : ''} — ${formatLKR(i.finalPrice)}`).join('\n');
+ const message =
+`🔵 *ClickZone Mobile* — Quotation
+━━━━━━━━━━━━━━━━━━━━
+
+📄 *Quote:* \`${quoteNo}\`
+📅 *Date:* ${dateStr}  ·  *Valid until:* ${validUntil}
+
+━━━━━━━━━━━━━━━━━━━━
+🛒 *Items:*
+${itemLines}
+━━━━━━━━━━━━━━━━━━━━
+💰 *Total:* *${formatLKR(netAmount)}*
+
+_This is a quotation, not a receipt. Prices valid until ${validUntil}._
+
+🌐 www.clickzonemobiles.com · 📍 Kandy`;
+ const waUrl = `https://wa.me/${waNormalized}?text=${encodeURIComponent(message)}`;
+ if (waWin) waWin.location.href = waUrl; else window.open(waUrl, '_blank');
+ } else {
+ waWin?.close();
+ }
+
+ if (isMobile) { const shared = await shareBillPDF(pdfData); if (!shared) await downloadBillPDF(pdfData); }
+ else { await downloadBillPDF(pdfData); }
+ } catch (err) {
+ waWin?.close();
+ console.error('Quotation receipt failed:', err);
+ }
+ }, [cartItems, customerWhatsapp, customerName, customerNic, specialNotes, netAmount, totalDiscount, isMobile]);
+
  useEffect(() => {
  if (!billGenerated) return;
  const timer = setTimeout(() => setBillGenerated(false), 5000);
@@ -572,6 +662,13 @@ _Please keep this message as your digital receipt._`;
  rows={2}
  className="w-full px-3 py-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)] transition-all resize-none"
  />
+ <button
+ onClick={handleGenerateQuotation}
+ disabled={cartItems.length === 0}
+ className="w-full h-10 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl disabled:opacity-40"
+ >
+ Save Quotation
+ </button>
  <div className="flex items-center justify-between">
  <div>
  <p className="text-[13px] font-medium text-[var(--ink)] mb-2 block">{cartItems.length} Identified Units</p>
@@ -936,6 +1033,13 @@ _Please keep this message as your digital receipt._`;
  </div>
 
  <div className="mt-auto pt-10 shrink-0 relative z-10">
+ <Button
+ onClick={handleGenerateQuotation}
+ disabled={cartItems.length === 0}
+ className="w-full h-11 mb-3 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl hover:border-[var(--ink)] transition-all disabled:opacity-40"
+ >
+ Save Quotation
+ </Button>
  <Button
  id="pos-complete-sale-btn"
  onClick={handleGenerateBill}

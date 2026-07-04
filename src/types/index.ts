@@ -86,6 +86,23 @@ export interface Customer {
  createdAt?: string;
 }
 
+export interface Quotation {
+ id: string;
+ quoteNo: string;
+ items: SaleItem[];            // customer-facing; no cost stored
+ customerName?: string;
+ customerNic?: string;
+ customerWhatsapp?: string;
+ totalRevenue: number;
+ totalDiscount: number;
+ notes?: string;
+ status: 'open' | 'converted' | 'expired';
+ validUntil?: string;
+ storeId?: string;
+ createdAt?: string;
+ isDeleted?: number;
+}
+
 export interface ReturnRecord {
  id: string;
  returnId: string;

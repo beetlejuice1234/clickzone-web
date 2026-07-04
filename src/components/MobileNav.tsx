@@ -1,9 +1,9 @@
-import { LayoutDashboard, Package, ShoppingCart, ReceiptText, Users } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, ReceiptText, FileText, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 
-type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'customers';
+type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'quotations' | 'customers';
 
 interface MobileNavProps {
  activePage: Page;
@@ -15,6 +15,7 @@ const navItems: { id: Page; label: string; icon: typeof Package; ownerOnly?: boo
  { id: 'inventory', label: 'Stock', icon: Package },
  { id: 'pos', label: 'Sell', icon: ShoppingCart },
  { id: 'sales', label: 'Sales', icon: ReceiptText },
+ { id: 'quotations', label: 'Quotes', icon: FileText },
  { id: 'customers', label: 'People', icon: Users, ownerOnly: true },
 ];
 

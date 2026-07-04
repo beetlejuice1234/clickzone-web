@@ -1,8 +1,8 @@
-import { LayoutDashboard, Package, ShoppingCart, ReceiptText, Users, Lock, Unlock } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, ReceiptText, FileText, Users, Lock, Unlock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
-type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'customers';
+type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'quotations' | 'customers';
 
 interface SidebarProps {
  activePage: Page;
@@ -14,6 +14,7 @@ const menuItems: { id: Page; label: string; icon: typeof Package; ownerOnly?: bo
  { id: 'inventory', label: 'Inventory', icon: Package },
  { id: 'pos', label: 'Point of Sale', icon: ShoppingCart },
  { id: 'sales', label: 'Sales Log', icon: ReceiptText },
+ { id: 'quotations', label: 'Quotations', icon: FileText },
  { id: 'customers', label: 'Customers', icon: Users, ownerOnly: true },
 ];
 

@@ -4,7 +4,7 @@ import { queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStoreScope } from '@/lib/store';
 import {
-  mapPhone, mapAccessory, mapSale, mapReturn, mapExchange,
+  mapPhone, mapAccessory, mapSale, mapReturn, mapExchange, mapQuotation,
   phoneToUpsertPayload,
 } from '@/lib/mappers';
 import type { PhoneUnit, Accessory, Customer } from '@/types';
@@ -169,6 +169,36 @@ export async function setStoreNextBillNo(storeId: string, next: number | null) {
   if (error) throw new Error(error.message);
 }
 
+// Quotations — owner + staff (RLS store-scopes staff). No cost stored; not a sale.
+export function useQuotations() {
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['quotations'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('quotations').select('*')
+        .eq('is_deleted', false).order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map(mapQuotation);
+    },
+    ...listOpts,
+  });
+  return { quotations: data ?? [], isLoading, isError: error };
+}
+
+// Create a quotation from the current cart (sequential Q-number assigned server-side). No stock touched.
+export async function createQuotation(payload: Record<string, unknown>) {
+  const active = useStoreScope.getState().activeStoreId;
+  const body = active && payload.store_id == null ? { ...payload, store_id: active } : payload;
+  const { data, error } = await supabase.rpc('create_quotation', { payload: body });
+  if (error) throw new Error(error.message);
+  return data as { quote_id: string; quote_no: string };
+}
+
+// Update a quotation's status ('converted'/'expired') or soft-delete it.
+export async function updateQuotation(payload: Record<string, unknown>) {
+  const { error } = await supabase.rpc('update_quotation', { payload });
+  if (error) throw new Error(error.message);
+}
+
 /* ------------------------------------------------------------------ mutations */
 
 // Lookup an IMEI/serial across ALL rows (incl. sold/soft-deleted) to decide
@@ -278,7 +308,7 @@ export async function phoneSwap(payload: Record<string, unknown>) {
 
 /** Invalidate all list caches after a write. */
 export const reloadData = () => {
-  for (const k of ['phones', 'accessories', 'sales', 'returns', 'exchanges', 'customers', 'stores']) {
+  for (const k of ['phones', 'accessories', 'sales', 'returns', 'exchanges', 'customers', 'stores', 'quotations']) {
     queryClient.invalidateQueries({ queryKey: [k] });
   }
 };
