@@ -19,6 +19,7 @@ export interface PhoneUnit {
  status: UnitStatus;
  dateAdded: string;
  source?: ItemSource;
+ notes?: string;             // internal note (staff/owner only — never on the invoice)
  exchangeId?: string;
  /**
  * Epoch ms timestamp of the last LOCAL write to this record.
@@ -35,6 +36,7 @@ export interface Accessory {
  costPrice: number;
  salePrice: number;
  serialNumber?: string;
+ notes?: string;             // internal note (staff/owner only — never on the invoice)
  minStockLevel?: number;
  category?: string;
  brand?: string;

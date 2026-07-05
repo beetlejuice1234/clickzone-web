@@ -233,9 +233,10 @@ export async function deletePhone(id: string) {
 }
 
 // Add stock for an accessory — increments if the SKU already exists, else inserts (owner).
-export async function addAccessory(a: { sku: string; name: string; quantity: number; costPrice: number; salePrice: number; serialNumber?: string }) {
+export async function addAccessory(a: { sku: string; name: string; quantity: number; costPrice: number; salePrice: number; serialNumber?: string; notes?: string }) {
   const sku = a.sku.trim().toUpperCase();
   const serial = a.serialNumber?.trim() || null;
+  const note = a.notes?.trim() || null;
   const { data: existing, error: readErr } = await supabase.from('accessories')
     .select('quantity').eq('sku', sku).maybeSingle();
   if (readErr) throw new Error(readErr.message);
@@ -244,14 +245,15 @@ export async function addAccessory(a: { sku: string; name: string; quantity: num
     const { error } = await supabase.from('accessories').update({
       name: a.name, quantity: (existing.quantity ?? 0) + a.quantity,
       cost_price: a.costPrice, sale_price: a.salePrice, is_deleted: false,
-      ...(serial ? { serial_number: serial } : {}),   // only overwrite when a serial is given
+      ...(serial ? { serial_number: serial } : {}),   // only overwrite when given
+      ...(note ? { notes: note } : {}),
       local_updated_at: Date.now().toString(),
     }).eq('sku', sku);
     if (error) throw new Error(error.message);
   } else {
     const { error } = await supabase.from('accessories').insert({
       sku, name: a.name, quantity: a.quantity, cost_price: a.costPrice, sale_price: a.salePrice,
-      serial_number: serial,
+      serial_number: serial, notes: note,
       is_deleted: false, min_stock_level: 5, local_updated_at: Date.now().toString(),
       ...(active ? { store_id: active } : {}),
     });
@@ -259,10 +261,11 @@ export async function addAccessory(a: { sku: string; name: string; quantity: num
   }
 }
 
-export async function updateAccessory(sku: string, patch: { name: string; quantity: number; costPrice: number; salePrice: number; serialNumber?: string }) {
+export async function updateAccessory(sku: string, patch: { name: string; quantity: number; costPrice: number; salePrice: number; serialNumber?: string; notes?: string }) {
   const { error } = await supabase.from('accessories').update({
     name: patch.name, quantity: patch.quantity, cost_price: patch.costPrice, sale_price: patch.salePrice,
     serial_number: patch.serialNumber?.trim() || null,
+    notes: patch.notes?.trim() || null,
     local_updated_at: Date.now().toString(),
   }).eq('sku', sku);
   if (error) throw new Error(error.message);

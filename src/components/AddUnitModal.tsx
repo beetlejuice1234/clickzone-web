@@ -55,6 +55,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  const [icloudStatus, setIcloudStatus] = useState<'clean' | 'locked'>('clean');
  const [costPrice, setCostPrice] = useState('');
  const [salePrice, setSalePrice] = useState('');
+ const [note, setNote] = useState('');            // internal note (not on invoice)
 
  // Accessory states
  const [accName, setAccName] = useState('');
@@ -63,6 +64,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  const [accCost, setAccCost] = useState('');
  const [accSale, setAccSale] = useState('');
  const [accSerial, setAccSerial] = useState('');
+ const [accNote, setAccNote] = useState('');       // internal note (not on invoice)
  const [accSkuInfo, setAccSkuInfo] = useState<{ name: string; quantity: number } | null>(null);
 
  const { accessories } = useAccessories();
@@ -85,7 +87,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  onClose();
  }, [onClose]);
 
- const resetPhoneForm = () => { setImei(''); setSerialNumber(''); setDeviceType('phone'); setCostPrice(''); setSalePrice(''); setModel(''); setModelOther(false); };
+ const resetPhoneForm = () => { setImei(''); setSerialNumber(''); setDeviceType('phone'); setCostPrice(''); setSalePrice(''); setModel(''); setModelOther(false); setNote(''); };
 
  // Actual write: `reviveId` set => revive the existing (sold/deleted) record in place.
  const writePhone = useCallback(async (
@@ -132,7 +134,8 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  costPrice: parseInt(costPrice),
  targetSalePrice: parseInt(salePrice),
  status: 'in-stock' as const,
- dateAdded: new Date().toISOString()
+ dateAdded: new Date().toISOString(),
+ notes: note.trim() || undefined,
  };
 
  try {
@@ -166,6 +169,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  costPrice: parseInt(accCost),
  salePrice: parseInt(accSale),
  serialNumber: accSerial.trim() || undefined,
+ notes: accNote.trim() || undefined,
  };
 
  try {
@@ -180,11 +184,12 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  setAccCost('');
  setAccSale('');
  setAccSerial('');
+ setAccNote('');
  } catch (err) {
  setError(err instanceof Error ? err.message : 'Failed to add accessory');
  }
  }
- }, [activeTab, deviceType, imei, serialNumber, model, storage, color, condition, batteryHealth, icloudStatus, costPrice, salePrice, accName, accSku, accQty, accCost, accSale, accSerial, handleClose]);
+ }, [activeTab, deviceType, imei, serialNumber, model, storage, color, condition, batteryHealth, icloudStatus, costPrice, salePrice, note, accName, accSku, accQty, accCost, accSale, accSerial, accNote, handleClose]);
 
  return (
  <>
@@ -329,6 +334,10 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <Input type="number" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} placeholder="0" className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--brand)]/40 focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]" />
  </div>
  </div>
+ <div className="space-y-2">
+ <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Internal Note <span className="text-[var(--subtle)] font-normal">(staff only — not shown on the invoice)</span></Label>
+ <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Private note — supplier, condition remarks, etc." className="w-full px-3 py-2 rounded-xl bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] focus:outline-none focus:border-[var(--brand)] text-[11px] resize-none" />
+ </div>
  </TabsContent>
 
  <TabsContent value="accessory" className="mt-0 space-y-6">
@@ -369,6 +378,10 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Serial Number <span className="text-[var(--subtle)] font-normal">(optional)</span></Label>
  <Input value={accSerial} onChange={(e) => setAccSerial(e.target.value)} placeholder="e.g. device serial, if applicable" className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px]" />
+ </div>
+ <div className="space-y-2">
+ <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Internal Note <span className="text-[var(--subtle)] font-normal">(staff only — not shown on the invoice)</span></Label>
+ <textarea value={accNote} onChange={(e) => setAccNote(e.target.value)} rows={2} placeholder="Private note — supplier, condition remarks, etc." className="w-full px-3 py-2 rounded-xl bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] focus:outline-none focus:border-[var(--brand)] text-[11px] resize-none" />
  </div>
  </TabsContent>
 

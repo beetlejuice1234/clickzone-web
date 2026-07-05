@@ -33,6 +33,7 @@ export function mapPhone(row: Record<string, unknown>): PhoneUnit {
     status: (row.status as UnitStatus) ?? 'in-stock',
     dateAdded: (row.date_added as string) ?? '',
     source: (row.source as ItemSource) ?? undefined,
+    notes: (row.notes as string) ?? undefined,
     exchangeId: (row.exchange_id as string) ?? undefined,
     localUpdatedAt: (row.local_updated_at as string) ?? undefined,
     syncedAt: (row.synced_at as string) ?? undefined,
@@ -48,6 +49,7 @@ export function mapAccessory(row: Record<string, unknown>): Accessory {
     costPrice: num(row.cost_price, 0),            // absent in v_accessories_public (staff)
     salePrice: num(row.sale_price, 0),
     serialNumber: (row.serial_number as string) ?? undefined,
+    notes: (row.notes as string) ?? undefined,
     minStockLevel: row.min_stock_level == null ? undefined : num(row.min_stock_level),
     category: (row.category as string) ?? undefined,
     brand: (row.brand as string) ?? undefined,
@@ -169,6 +171,7 @@ export function phoneToUpsertPayload(p: Partial<PhoneUnit> & { id: string }) {
     status: p.status,
     date_added: p.dateAdded,
     source: p.source ?? 'purchased',
+    notes: (p.notes ?? '').toString().trim() || null,   // internal note (never on the invoice)
     cost_price: p.costPrice ?? 0,   // routed to phone_costs by the RPC
   };
 }
