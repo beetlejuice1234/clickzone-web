@@ -23,6 +23,8 @@ export default function EditAccessoryModal({ open, accessory, onClose }: EditAcc
  const [quantity, setQuantity] = useState(String(accessory?.quantity ?? ''));
  const [costPrice, setCostPrice] = useState(String(accessory?.costPrice ?? ''));
  const [salePrice, setSalePrice] = useState(String(accessory?.salePrice ?? ''));
+ const [serialNumber, setSerialNumber] = useState(accessory?.serialNumber ?? '');
+ const [notes, setNotes] = useState(accessory?.notes ?? '');
  const [error, setError] = useState('');
 
  const handleClose = useCallback(() => {
@@ -43,6 +45,8 @@ export default function EditAccessoryModal({ open, accessory, onClose }: EditAcc
  quantity: parseInt(quantity),
  costPrice: parseInt(costPrice),
  salePrice: parseInt(salePrice),
+ serialNumber: serialNumber.trim() || undefined,
+ notes: notes.trim() || undefined,
  };
 
  try {
@@ -53,7 +57,7 @@ export default function EditAccessoryModal({ open, accessory, onClose }: EditAcc
  } catch (err) {
  toast.error(err instanceof Error ? err.message : 'Failed to update accessory');
  }
- }, [accessory, name, quantity, costPrice, salePrice, handleClose]);
+ }, [accessory, name, quantity, costPrice, salePrice, serialNumber, notes, handleClose]);
 
  return (
  <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
@@ -95,6 +99,14 @@ export default function EditAccessoryModal({ open, accessory, onClose }: EditAcc
  <Label className="text-[9px] font-bold text-[var(--brand)] ">Sale Price</Label>
  <Input type="number" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--brand)]/40 text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold" />
  </div>
+ </div>
+ <div className="space-y-2">
+ <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Serial Number <span className="text-[var(--subtle)] font-normal">(optional)</span></Label>
+ <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} placeholder="Device serial, if applicable" className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-medium" />
+ </div>
+ <div className="space-y-2">
+ <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Internal Note <span className="text-[var(--subtle)] font-normal">(staff only — not shown on the invoice)</span></Label>
+ <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Private note — supplier, condition remarks, etc." className="w-full px-3 py-2 rounded-xl bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] focus:outline-none focus:border-[var(--brand)] text-[11px] resize-none" />
  </div>
  </div>
 

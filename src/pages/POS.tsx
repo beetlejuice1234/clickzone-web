@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2 } from 'lucide-react';
-import { usePhones, useAccessories, reloadData, checkout } from '@/lib/api';
+import { usePhones, useAccessories, reloadData, checkout, createQuotation } from '@/lib/api';
 import { formatLKR, cn, todayColombo } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,7 +35,7 @@ export default function POS() {
  const [customerWhatsapp, setCustomerWhatsapp] = useState('');
  const [customerName, setCustomerName] = useState('');
  const [customerNic, setCustomerNic] = useState('');
- const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
+ const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
  const [specialNotes, setSpecialNotes] = useState('');
  const [billGenerated, setBillGenerated] = useState(false);
  const [lastBillId, setLastBillId] = useState('');
@@ -177,9 +177,13 @@ export default function POS() {
  const handleGenerateBill = useCallback(async () => {
  if (cartItems.length === 0) return;
 
- // Desktop: pre-open a tab NOW (inside the click gesture) so the popup blocker doesn't kill it after
- // the checkout await — we navigate it to the bill PDF below. Mobile uses the share sheet instead.
- const billWin = isMobile ? null : window.open('', '_blank');
+ // WhatsApp: pre-open a tab NOW (inside the click gesture) so the popup blocker doesn't kill it after
+ // the checkout await — navigating an already-open tab (below) is never popup-blocked. Only when the
+ // customer gave a usable number. Desktop delivers the PDF as a download; mobile uses the share sheet.
+ const waDigits = customerWhatsapp.replace(/\D/g, '').replace(/^0+/, '');
+ const hasWhatsapp = waDigits.length >= 9;
+ const waNormalized = waDigits.startsWith('94') ? waDigits : `94${waDigits}`;
+ const waWin = (!isMobile && hasWhatsapp) ? window.open('', '_blank') : null;
 
  const now = new Date();
  const dateStr = todayColombo(); // Asia/Colombo, matches what the checkout RPC persists
@@ -265,7 +269,7 @@ export default function POS() {
  sale.billId = billId;
  reloadData();
  } catch (e) {
- billWin?.close(); // checkout failed — don't leave a blank tab open
+ waWin?.close(); // checkout failed — don't leave a blank tab open
  toast.error(e instanceof Error ? e.message : 'Checkout failed. Please try again.');
  return;
  }
@@ -308,10 +312,8 @@ export default function POS() {
       };
       setLastBillData(pdfData);
 
-      // WhatsApp
-      const phoneNum = customerWhatsapp.replace(/\D/g, '').replace(/^0+/, '');
-      if (phoneNum.length >= 9) {
-        const normalized = phoneNum.startsWith('94') ? phoneNum : `94${phoneNum}`;
+      // WhatsApp: send the prefilled receipt to the customer's chat.
+      if (hasWhatsapp) {
         const itemLines = saleItems.map(i =>
           ` • ${i.name}\n ↳ ${i.type === 'phone' ? 'IMEI' : 'SKU'}: ${i.identifier}${i.condition ? ` · Grade: ${i.condition.toUpperCase()}` : ''}`
         ).join('\n');
@@ -347,24 +349,116 @@ We appreciate your trust and support. Your purchase comes with manufacturer warr
 
 _Please keep this message as your digital receipt._`;
 
-        window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(message)}`, '_blank');
+        const waUrl = `https://wa.me/${waNormalized}?text=${encodeURIComponent(message)}`;
+        if (waWin) waWin.location.href = waUrl;   // desktop: navigate the pre-opened tab (not popup-blocked)
+        else window.open(waUrl, '_blank');        // mobile: open directly
+      } else {
+        waWin?.close(); // pre-opened but no usable number after all
       }
 
-      // Deliver the bill: mobile shares (WhatsApp etc.), desktop opens the pre-opened tab.
-      // Both fall back to a download if the browser can't share or blocked the tab.
+      // Bill PDF: desktop downloads it; mobile uses the native share sheet (falls back to a download).
       if (isMobile) {
         const shared = await shareBillPDF(pdfData);
         if (!shared) await downloadBillPDF(pdfData);
       } else {
-        const opened = await openBillPDF(pdfData, billWin);
-        if (!opened) await downloadBillPDF(pdfData);
+        await downloadBillPDF(pdfData);
       }
     } catch (err) {
-      billWin?.close(); // receipt build failed before we could show it — clean up the blank tab
+      waWin?.close(); // receipt build failed before we could show it — clean up the blank tab
       console.error("Receipt generation failed:", err);
       toast.error("Receipt generation failed, but the sale was saved successfully.");
     }
   }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, netAmount, totalDiscount, pendingExchange, isMobile]);
+
+ // Save a quotation from the current cart (no sale, no stock change) + share via WhatsApp/PDF.
+ const handleGenerateQuotation = useCallback(async () => {
+ if (cartItems.length === 0) return;
+
+ const waDigits = customerWhatsapp.replace(/\D/g, '').replace(/^0+/, '');
+ const hasWhatsapp = waDigits.length >= 9;
+ const waNormalized = waDigits.startsWith('94') ? waDigits : `94${waDigits}`;
+ const waWin = (!isMobile && hasWhatsapp) ? window.open('', '_blank') : null;
+
+ const dateStr = todayColombo();
+ const validUntil = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+
+ const quoteItems: SaleItem[] = cartItems.map(c => {
+ const p = parseInt(c.finalPrice) || 0;
+ const d = parseInt(c.discount) || 0;
+ if (c.type === 'phone') {
+ const phone = c.itemRef as PhoneUnit;
+ return { type: 'phone', name: `${phone.model} ${phone.storage}`, identifier: phone.imei, costPrice: 0, finalPrice: Math.max(0, p - d), discount: d, quantity: 1, condition: phone.condition };
+ }
+ const acc = c.itemRef as Accessory;
+ return { type: 'accessory', name: acc.name, identifier: acc.sku, costPrice: 0, finalPrice: Math.max(0, p - d) * c.quantity, discount: d * c.quantity, quantity: c.quantity };
+ });
+
+ let quoteNo = '';
+ try {
+ const res = await createQuotation({
+ items: quoteItems,
+ total_revenue: netAmount,
+ total_discount: totalDiscount,
+ notes: specialNotes || null,
+ customer_name: customerName || null,
+ customer_nic: customerNic || null,
+ customer_whatsapp: customerWhatsapp || null,
+ valid_until: validUntil,
+ });
+ quoteNo = res.quote_no;
+ reloadData();
+ } catch (e) {
+ waWin?.close();
+ toast.error(e instanceof Error ? e.message : 'Failed to save quotation');
+ return;
+ }
+
+ toast.success(`Quotation ${quoteNo} saved`);
+
+ try {
+ const pdfData: BillData = {
+ billId: quoteNo,
+ date: dateStr,
+ time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Colombo' }),
+ customerWhatsapp: customerWhatsapp || '',
+ saleItems: quoteItems,
+ totals: { subtotal: netAmount + totalDiscount, discount: totalDiscount, tradeIn: 0, grandTotal: netAmount },
+ specialNotes: specialNotes || undefined,
+ kind: 'quotation',
+ validUntil,
+ };
+
+ if (hasWhatsapp) {
+ const itemLines = quoteItems.map(i => ` • ${i.name}${i.quantity && i.quantity > 1 ? ` ×${i.quantity}` : ''} — ${formatLKR(i.finalPrice)}`).join('\n');
+ const message =
+`🔵 *ClickZone Mobile* — Quotation
+━━━━━━━━━━━━━━━━━━━━
+
+📄 *Quote:* \`${quoteNo}\`
+📅 *Date:* ${dateStr}  ·  *Valid until:* ${validUntil}
+
+━━━━━━━━━━━━━━━━━━━━
+🛒 *Items:*
+${itemLines}
+━━━━━━━━━━━━━━━━━━━━
+💰 *Total:* *${formatLKR(netAmount)}*
+
+_This is a quotation, not a receipt. Prices valid until ${validUntil}._
+
+🌐 www.clickzonemobiles.com · 📍 Kandy`;
+ const waUrl = `https://wa.me/${waNormalized}?text=${encodeURIComponent(message)}`;
+ if (waWin) waWin.location.href = waUrl; else window.open(waUrl, '_blank');
+ } else {
+ waWin?.close();
+ }
+
+ if (isMobile) { const shared = await shareBillPDF(pdfData); if (!shared) await downloadBillPDF(pdfData); }
+ else { await downloadBillPDF(pdfData); }
+ } catch (err) {
+ waWin?.close();
+ console.error('Quotation receipt failed:', err);
+ }
+ }, [cartItems, customerWhatsapp, customerName, customerNic, specialNotes, netAmount, totalDiscount, isMobile]);
 
  useEffect(() => {
  if (!billGenerated) return;
@@ -544,17 +638,17 @@ _Please keep this message as your digital receipt._`;
  className="h-10 px-3 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)]"
  />
  </div>
- <div className="grid grid-cols-2 gap-2">
- {(['cash', 'card'] as const).map(m => (
+ <div className="grid grid-cols-3 gap-2">
+ {(['cash', 'card', 'transfer'] as const).map(m => (
  <button
  key={m}
  type="button"
  onClick={() => setPaymentMethod(m)}
  className={cn(
- "h-10 text-[10px] font-bold uppercase rounded-xl border transition-all",
+ "h-10 text-[10px] font-bold uppercase rounded-xl border-2 transition-all",
  paymentMethod === m
- ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]"
- : "bg-[var(--bg-app)] text-[var(--subtle)] border-[var(--line)]"
+ ? "bg-[var(--terracotta)] text-white border-[var(--terracotta)]"
+ : "bg-[var(--paper)] text-[var(--ink)] border-[var(--line)] hover:border-[var(--ink)]"
  )}
  >
  {m}
@@ -568,6 +662,13 @@ _Please keep this message as your digital receipt._`;
  rows={2}
  className="w-full px-3 py-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)] transition-all resize-none"
  />
+ <button
+ onClick={handleGenerateQuotation}
+ disabled={cartItems.length === 0}
+ className="w-full h-10 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl disabled:opacity-40"
+ >
+ Save Quotation
+ </button>
  <div className="flex items-center justify-between">
  <div>
  <p className="text-[13px] font-medium text-[var(--ink)] mb-2 block">{cartItems.length} Identified Units</p>
@@ -849,18 +950,18 @@ _Please keep this message as your digital receipt._`;
  </div>
  <div className="space-y-2">
  <Label className="text-[9px] font-bold text-[var(--subtle)] ">Payment Method</Label>
- <div className="grid grid-cols-2 gap-2">
- {(['cash', 'card'] as const).map(m => (
+ <div className="grid grid-cols-3 gap-2">
+ {(['cash', 'card', 'transfer'] as const).map(m => (
  <button
  key={m}
  type="button"
  onClick={() => setPaymentMethod(m)}
  disabled={cartItems.length === 0}
  className={cn(
- "h-10 text-[10px] font-bold uppercase rounded-xl border transition-all disabled:opacity-30",
+ "h-10 text-[10px] font-bold uppercase rounded-xl border-2 transition-all disabled:opacity-30",
  paymentMethod === m
- ? "bg-[var(--brand)] text-[var(--bg-app)] border-[var(--brand)]"
- : "bg-[var(--bg-app)] text-[var(--subtle)] border-[var(--line)] hover:border-[var(--ink)]"
+ ? "bg-[var(--terracotta)] text-white border-[var(--terracotta)]"
+ : "bg-[var(--paper)] text-[var(--ink)] border-[var(--line)] hover:border-[var(--ink)]"
  )}
  >
  {m}
@@ -932,6 +1033,13 @@ _Please keep this message as your digital receipt._`;
  </div>
 
  <div className="mt-auto pt-10 shrink-0 relative z-10">
+ <Button
+ onClick={handleGenerateQuotation}
+ disabled={cartItems.length === 0}
+ className="w-full h-11 mb-3 bg-[var(--paper)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl hover:border-[var(--ink)] transition-all disabled:opacity-40"
+ >
+ Save Quotation
+ </Button>
  <Button
  id="pos-complete-sale-btn"
  onClick={handleGenerateBill}

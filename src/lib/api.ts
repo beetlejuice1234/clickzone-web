@@ -4,7 +4,7 @@ import { queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStoreScope } from '@/lib/store';
 import {
-  mapPhone, mapAccessory, mapSale, mapReturn, mapExchange,
+  mapPhone, mapAccessory, mapSale, mapReturn, mapExchange, mapQuotation,
   phoneToUpsertPayload,
 } from '@/lib/mappers';
 import type { PhoneUnit, Accessory, Customer } from '@/types';
@@ -154,13 +154,49 @@ export function useStores() {
     queryKey: ['stores'],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from('stores').select('id, name, address, phone');
+      const { data, error } = await supabase.from('stores').select('id, name, address, phone, next_bill_no');
       if (error) throw error;
       return data ?? [];
     },
     ...listOpts,
   });
   return { stores: data ?? [], isLoading, isError: error };
+}
+
+// Owner-only: set a store's next sequential invoice number (null clears → legacy auto id).
+export async function setStoreNextBillNo(storeId: string, next: number | null) {
+  const { error } = await supabase.from('stores').update({ next_bill_no: next }).eq('id', storeId);
+  if (error) throw new Error(error.message);
+}
+
+// Quotations — owner + staff (RLS store-scopes staff). No cost stored; not a sale.
+export function useQuotations() {
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['quotations'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('quotations').select('*')
+        .eq('is_deleted', false).order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map(mapQuotation);
+    },
+    ...listOpts,
+  });
+  return { quotations: data ?? [], isLoading, isError: error };
+}
+
+// Create a quotation from the current cart (sequential Q-number assigned server-side). No stock touched.
+export async function createQuotation(payload: Record<string, unknown>) {
+  const active = useStoreScope.getState().activeStoreId;
+  const body = active && payload.store_id == null ? { ...payload, store_id: active } : payload;
+  const { data, error } = await supabase.rpc('create_quotation', { payload: body });
+  if (error) throw new Error(error.message);
+  return data as { quote_id: string; quote_no: string };
+}
+
+// Update a quotation's status ('converted'/'expired') or soft-delete it.
+export async function updateQuotation(payload: Record<string, unknown>) {
+  const { error } = await supabase.rpc('update_quotation', { payload });
+  if (error) throw new Error(error.message);
 }
 
 /* ------------------------------------------------------------------ mutations */
@@ -197,8 +233,10 @@ export async function deletePhone(id: string) {
 }
 
 // Add stock for an accessory — increments if the SKU already exists, else inserts (owner).
-export async function addAccessory(a: { sku: string; name: string; quantity: number; costPrice: number; salePrice: number }) {
+export async function addAccessory(a: { sku: string; name: string; quantity: number; costPrice: number; salePrice: number; serialNumber?: string; notes?: string }) {
   const sku = a.sku.trim().toUpperCase();
+  const serial = a.serialNumber?.trim() || null;
+  const note = a.notes?.trim() || null;
   const { data: existing, error: readErr } = await supabase.from('accessories')
     .select('quantity').eq('sku', sku).maybeSingle();
   if (readErr) throw new Error(readErr.message);
@@ -207,12 +245,15 @@ export async function addAccessory(a: { sku: string; name: string; quantity: num
     const { error } = await supabase.from('accessories').update({
       name: a.name, quantity: (existing.quantity ?? 0) + a.quantity,
       cost_price: a.costPrice, sale_price: a.salePrice, is_deleted: false,
+      ...(serial ? { serial_number: serial } : {}),   // only overwrite when given
+      ...(note ? { notes: note } : {}),
       local_updated_at: Date.now().toString(),
     }).eq('sku', sku);
     if (error) throw new Error(error.message);
   } else {
     const { error } = await supabase.from('accessories').insert({
       sku, name: a.name, quantity: a.quantity, cost_price: a.costPrice, sale_price: a.salePrice,
+      serial_number: serial, notes: note,
       is_deleted: false, min_stock_level: 5, local_updated_at: Date.now().toString(),
       ...(active ? { store_id: active } : {}),
     });
@@ -220,9 +261,11 @@ export async function addAccessory(a: { sku: string; name: string; quantity: num
   }
 }
 
-export async function updateAccessory(sku: string, patch: { name: string; quantity: number; costPrice: number; salePrice: number }) {
+export async function updateAccessory(sku: string, patch: { name: string; quantity: number; costPrice: number; salePrice: number; serialNumber?: string; notes?: string }) {
   const { error } = await supabase.from('accessories').update({
     name: patch.name, quantity: patch.quantity, cost_price: patch.costPrice, sale_price: patch.salePrice,
+    serial_number: patch.serialNumber?.trim() || null,
+    notes: patch.notes?.trim() || null,
     local_updated_at: Date.now().toString(),
   }).eq('sku', sku);
   if (error) throw new Error(error.message);
@@ -268,7 +311,7 @@ export async function phoneSwap(payload: Record<string, unknown>) {
 
 /** Invalidate all list caches after a write. */
 export const reloadData = () => {
-  for (const k of ['phones', 'accessories', 'sales', 'returns', 'exchanges', 'customers', 'stores']) {
+  for (const k of ['phones', 'accessories', 'sales', 'returns', 'exchanges', 'customers', 'stores', 'quotations']) {
     queryClient.invalidateQueries({ queryKey: [k] });
   }
 };

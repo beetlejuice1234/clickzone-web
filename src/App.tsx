@@ -10,19 +10,21 @@ import Inventory from '@/pages/Inventory';
 import POS from '@/pages/POS';
 import SalesLog from '@/pages/SalesLog';
 import Customers from '@/pages/Customers';
+import Quotations from '@/pages/Quotations';
 import AddUnitModal from '@/components/AddUnitModal';
 import { useMobile } from '@/hooks/useMobile';
 
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 
-type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'customers';
+type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'quotations' | 'customers';
 
 const pageToPath: Record<Page, string> = {
   dashboard: '/dashboard',
   inventory: '/inventory',
   pos: '/pos',
   sales: '/sales',
+  quotations: '/quotations',
   customers: '/customers',
 };
 
@@ -31,6 +33,7 @@ const pathToPage: Record<string, Page> = {
   '/inventory': 'inventory',
   '/pos': 'pos',
   '/sales': 'sales',
+  '/quotations': 'quotations',
   '/customers': 'customers',
 };
 
@@ -39,6 +42,7 @@ const pageTitles: Record<Page, string> = {
   inventory: 'Inventory',
   pos: 'Point of Sale',
   sales: 'Sales Log',
+  quotations: 'Quotations',
   customers: 'Customers',
 };
 
@@ -163,6 +167,7 @@ export default function App() {
             <Route path="/inventory" element={<InventoryRoute />} />
             <Route path="/pos" element={<POS />} />
             <Route path="/sales" element={<SalesLog />} />
+            <Route path="/quotations" element={<Quotations />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="*" element={<Navigate to="/pos" replace />} />
           </Route>

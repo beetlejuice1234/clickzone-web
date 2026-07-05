@@ -21,8 +21,10 @@ export interface BillData {
   customerWhatsapp: string;
   saleItems: SaleItem[];
   totals: BillTotals;
-  paymentMethod?: string;   // 'cash' | 'card'
+  paymentMethod?: string;   // 'cash' | 'card' | 'transfer'
   specialNotes?: string;    // per-sale free-text note (sales.notes)
+  kind?: 'bill' | 'quotation';  // quotation → no PAID badge, "TOTAL" not "TOTAL DUE", valid-until
+  validUntil?: string;          // quotations only (YYYY-MM-DD)
 }
 
 const COLORS = {
@@ -74,7 +76,7 @@ async function fetchLogo(): Promise<string | null> {
 }
 
 // The black left rail — drawn on every page so page 2+ keeps the same identity.
-function drawSidebar(doc: jsPDF, logo: string | null): void {
+function drawSidebar(doc: jsPDF, logo: string | null, railLabel: string = 'INVOICE'): void {
   doc.setFillColor(COLORS.INK[0], COLORS.INK[1], COLORS.INK[2]);
   doc.rect(0, 0, SW, PH, 'F');
 
@@ -88,7 +90,7 @@ function drawSidebar(doc: jsPDF, logo: string | null): void {
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(48);
-  doc.text('INVOICE', 18, PH / 2 + 40, { angle: 90 });
+  doc.text(railLabel, 18, PH / 2 + 40, { angle: 90 });
 
   // (No crown glyph — the built-in PDF fonts don't have ♛, it renders as garbage. A thin rule reads clean.)
   doc.setDrawColor(255, 255, 255);
@@ -102,8 +104,10 @@ function drawSidebar(doc: jsPDF, logo: string | null): void {
 async function generateBill(data: BillData): Promise<jsPDF> {
   const doc = new jsPDF({ unit: 'mm', format: 'a5' });
   const logo = await fetchLogo();
+  const isQuote = data.kind === 'quotation';
+  const rail = isQuote ? 'QUOTE' : 'INVOICE';
 
-  drawSidebar(doc, logo);
+  drawSidebar(doc, logo, rail);
 
   let y = TOP_Y;
 
@@ -111,7 +115,7 @@ async function generateBill(data: BillData): Promise<jsPDF> {
   const ensureSpace = (needed: number) => {
     if (y + needed > FLOW_LIMIT) {
       doc.addPage();
-      drawSidebar(doc, logo);
+      drawSidebar(doc, logo, rail);
       y = TOP_Y;
     }
   };
@@ -135,20 +139,20 @@ async function generateBill(data: BillData): Promise<jsPDF> {
   let metaY = TOP_Y;
   doc.setFontSize(7);
   doc.setTextColor(COLORS.MUTED[0], COLORS.MUTED[1], COLORS.MUTED[2]);
-  doc.text('Invoice No.', META_X - 42, metaY, { align: 'left' });
+  doc.text(isQuote ? 'Quote No.' : 'Invoice No.', META_X - 42, metaY, { align: 'left' });
   doc.text('Date', META_X - 42, metaY + 5, { align: 'left' });
-  doc.text('Due', META_X - 42, metaY + 10, { align: 'left' });
+  doc.text(isQuote ? 'Valid' : 'Due', META_X - 42, metaY + 10, { align: 'left' });
 
   doc.setTextColor(COLORS.INK[0], COLORS.INK[1], COLORS.INK[2]);
   doc.setFont('courier', 'bold');
   doc.setFontSize(8);
   doc.text(data.billId, META_X, metaY, { align: 'right' });
   doc.text(toDisplayDate(data.date), META_X, metaY + 5, { align: 'right' });
-  doc.text('On receipt', META_X, metaY + 10, { align: 'right' });
+  doc.text(isQuote ? (data.validUntil ? toDisplayDate(data.validUntil) : '—') : 'On receipt', META_X, metaY + 10, { align: 'right' });
 
-  // Payment badge — reflects the actual method persisted on the sale.
+  // Payment badge — reflects the persisted method; quotations show a QUOTATION marker instead.
   metaY += 18;
-  const payLabel = `PAID · ${(data.paymentMethod || 'cash').toUpperCase()}`;
+  const payLabel = isQuote ? 'QUOTATION' : `PAID · ${(data.paymentMethod || 'cash').toUpperCase()}`;
   doc.setDrawColor(COLORS.INK[0], COLORS.INK[1], COLORS.INK[2]);
   doc.setLineWidth(0.3);
   doc.rect(META_X - 30, metaY - 5, 30, 6);
@@ -260,7 +264,7 @@ async function generateBill(data: BillData): Promise<jsPDF> {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   // Label on the far left so the large right-aligned amount never collides with it (any amount size).
-  doc.text('TOTAL DUE', CONTENT_X, y);
+  doc.text(isQuote ? 'TOTAL' : 'TOTAL DUE', CONTENT_X, y);
   doc.setFont('times', 'bold');
   doc.setFontSize(13);
   doc.text(`LKR ${money2(data.totals.grandTotal)}`, META_X, y, { align: 'right' });

@@ -8,7 +8,7 @@
 
 import type {
   PhoneUnit, Accessory, SaleRecord, SaleItem, ReturnRecord, ExchangeRecord,
-  ConditionGrade, UnitStatus, ItemSource, DeviceType,
+  ConditionGrade, UnitStatus, ItemSource, DeviceType, Quotation,
 } from '@/types';
 
 const b2n = (v: unknown): number => (v === true || v === 1 || v === '1' ? 1 : 0);
@@ -33,6 +33,7 @@ export function mapPhone(row: Record<string, unknown>): PhoneUnit {
     status: (row.status as UnitStatus) ?? 'in-stock',
     dateAdded: (row.date_added as string) ?? '',
     source: (row.source as ItemSource) ?? undefined,
+    notes: (row.notes as string) ?? undefined,
     exchangeId: (row.exchange_id as string) ?? undefined,
     localUpdatedAt: (row.local_updated_at as string) ?? undefined,
     syncedAt: (row.synced_at as string) ?? undefined,
@@ -47,6 +48,8 @@ export function mapAccessory(row: Record<string, unknown>): Accessory {
     quantity: num(row.quantity, 0),
     costPrice: num(row.cost_price, 0),            // absent in v_accessories_public (staff)
     salePrice: num(row.sale_price, 0),
+    serialNumber: (row.serial_number as string) ?? undefined,
+    notes: (row.notes as string) ?? undefined,
     minStockLevel: row.min_stock_level == null ? undefined : num(row.min_stock_level),
     category: (row.category as string) ?? undefined,
     brand: (row.brand as string) ?? undefined,
@@ -127,6 +130,25 @@ export function mapExchange(row: Record<string, unknown>): ExchangeRecord {
   };
 }
 
+export function mapQuotation(row: Record<string, unknown>): Quotation {
+  return {
+    id: row.id as string,
+    quoteNo: (row.quote_no as string) ?? '',
+    items: (row.items as SaleItem[]) ?? [],
+    customerName: (row.customer_name as string) ?? undefined,
+    customerNic: (row.customer_nic as string) ?? undefined,
+    customerWhatsapp: (row.customer_whatsapp as string) ?? undefined,
+    totalRevenue: num(row.total_revenue, 0),
+    totalDiscount: num(row.total_discount, 0),
+    notes: (row.notes as string) ?? undefined,
+    status: (row.status as Quotation['status']) ?? 'open',
+    validUntil: (row.valid_until as string) ?? undefined,
+    storeId: (row.store_id as string) ?? undefined,
+    createdAt: (row.created_at as string) ?? undefined,
+    isDeleted: b2n(row.is_deleted),
+  };
+}
+
 /* --------------------------------------------------- writes (model -> row / RPC payload) */
 
 // Owner add/edit of a phone. Cost is split out for the upsert_phone RPC (phones + phone_costs).
@@ -149,6 +171,7 @@ export function phoneToUpsertPayload(p: Partial<PhoneUnit> & { id: string }) {
     status: p.status,
     date_added: p.dateAdded,
     source: p.source ?? 'purchased',
+    notes: (p.notes ?? '').toString().trim() || null,   // internal note (never on the invoice)
     cost_price: p.costPrice ?? 0,   // routed to phone_costs by the RPC
   };
 }

@@ -19,6 +19,7 @@ export interface PhoneUnit {
  status: UnitStatus;
  dateAdded: string;
  source?: ItemSource;
+ notes?: string;             // internal note (staff/owner only — never on the invoice)
  exchangeId?: string;
  /**
  * Epoch ms timestamp of the last LOCAL write to this record.
@@ -34,6 +35,8 @@ export interface Accessory {
  quantity: number;
  costPrice: number;
  salePrice: number;
+ serialNumber?: string;
+ notes?: string;             // internal note (staff/owner only — never on the invoice)
  minStockLevel?: number;
  category?: string;
  brand?: string;
@@ -83,6 +86,23 @@ export interface Customer {
  whatsapp?: string;
  notes?: string;
  createdAt?: string;
+}
+
+export interface Quotation {
+ id: string;
+ quoteNo: string;
+ items: SaleItem[];            // customer-facing; no cost stored
+ customerName?: string;
+ customerNic?: string;
+ customerWhatsapp?: string;
+ totalRevenue: number;
+ totalDiscount: number;
+ notes?: string;
+ status: 'open' | 'converted' | 'expired';
+ validUntil?: string;
+ storeId?: string;
+ createdAt?: string;
+ isDeleted?: number;
 }
 
 export interface ReturnRecord {

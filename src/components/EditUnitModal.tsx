@@ -41,6 +41,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  const [icloudStatus, setIcloudStatus] = useState<'clean' | 'locked'>(phone?.icloudStatus ?? 'clean');
  const [costPrice, setCostPrice] = useState(String(phone?.costPrice ?? ''));
  const [targetSalePrice, setTargetSalePrice] = useState(String(phone?.targetSalePrice ?? ''));
+ const [notes, setNotes] = useState(phone?.notes ?? '');
  const [error, setError] = useState('');
 
  const handleClose = useCallback(() => {
@@ -76,6 +77,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  costPrice: parseInt(costPrice),
  targetSalePrice: parseInt(targetSalePrice),
  status: phone.status,
+ notes: notes.trim() || undefined,
  };
 
  try {
@@ -86,7 +88,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  } catch (err) {
  toast.error(err instanceof Error ? err.message : 'Failed to update unit');
  }
- }, [phone, deviceType, imei, serialNumber, model, storage, color, condition, batteryHealth, icloudStatus, costPrice, targetSalePrice, handleClose]);
+ }, [phone, deviceType, imei, serialNumber, model, storage, color, condition, batteryHealth, icloudStatus, costPrice, targetSalePrice, notes, handleClose]);
 
  return (
  <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
@@ -219,6 +221,10 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  <Label className="text-[9px] font-bold text-[var(--brand)] ">Sale Price</Label>
  <Input type="number" value={targetSalePrice} onChange={(e) => setTargetSalePrice(e.target.value)} className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--brand)]/40 text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold underline decoration-[var(--brand)]/20" />
  </div>
+ </div>
+ <div className="space-y-2">
+ <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Internal Note <span className="text-[var(--subtle)] font-normal">(staff only — not shown on the invoice)</span></Label>
+ <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Private note — supplier, condition remarks, etc." className="w-full px-3 py-2 rounded-xl bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] focus:outline-none focus:border-[var(--success)] text-[11px] resize-none" />
  </div>
  </div>
 

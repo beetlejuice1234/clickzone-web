@@ -1,7 +1,9 @@
-import { Plus, Store } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Store, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStores } from '@/lib/api';
 import { useStoreScope } from '@/lib/store';
+import SettingsModal from '@/components/SettingsModal';
 
 interface HeaderProps {
  onAddNew: () => void;
@@ -18,6 +20,7 @@ export default function Header({
  const { stores } = useStores();
  const activeStoreId = useStoreScope((s) => s.activeStoreId);
  const setActiveStore = useStoreScope((s) => s.setActiveStore);
+ const [settingsOpen, setSettingsOpen] = useState(false);
 
  return (
  <header className="h-16 bg-[var(--bg-app)]/90 backdrop-blur border-b border-[var(--line)] flex items-center justify-between px-8 sticky top-0 z-30">
@@ -44,6 +47,16 @@ export default function Header({
  </div>
  )}
 
+ {isAdmin && (
+ <button
+ onClick={() => setSettingsOpen(true)}
+ aria-label="Settings"
+ className="h-9 w-9 rounded-xl bg-[var(--paper)] border border-[var(--line)] text-[var(--subtle)] flex items-center justify-center hover:text-[var(--ink)] hover:border-[var(--ink)] transition-all"
+ >
+ <Settings size={16} />
+ </button>
+ )}
+
  {showAddButton && (
  <button
  onClick={onAddNew}
@@ -54,6 +67,8 @@ export default function Header({
  </button>
  )}
  </div>
+
+ {isAdmin && <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />}
  </header>
  );
 }
