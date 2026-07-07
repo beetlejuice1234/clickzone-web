@@ -1,9 +1,9 @@
-import { LayoutDashboard, Package, ShoppingCart, ReceiptText, FileText, Users } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, ReceiptText, FileText, Boxes, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 
-type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'quotations' | 'customers';
+type Page = 'dashboard' | 'inventory' | 'pos' | 'sales' | 'quotations' | 'stock' | 'customers';
 
 interface MobileNavProps {
  activePage: Page;
@@ -13,6 +13,7 @@ interface MobileNavProps {
 const navItems: { id: Page; label: string; icon: typeof Package; ownerOnly?: boolean }[] = [
  { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
  { id: 'inventory', label: 'Stock', icon: Package },
+ { id: 'stock', label: 'Models', icon: Boxes },
  { id: 'pos', label: 'Sell', icon: ShoppingCart },
  { id: 'sales', label: 'Sales', icon: ReceiptText },
  { id: 'quotations', label: 'Quotes', icon: FileText },
@@ -32,7 +33,7 @@ export default function MobileNav({ activePage, onNavigate }: MobileNavProps) {
  key={item.id}
  onClick={() => onNavigate(item.id)}
  className={cn(
- 'flex flex-col items-center gap-1 px-4 py-2.5 my-1.5 rounded-xl transition-all relative min-w-[60px]',
+ 'flex flex-col items-center gap-1 px-2 py-2.5 my-1.5 rounded-xl transition-all relative flex-1 min-w-0',
  isActive ? 'text-[var(--teal)]' : 'text-[var(--subtle)] active:scale-90'
  )}
  >

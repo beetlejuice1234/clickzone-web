@@ -13,7 +13,7 @@ import {
 , ArrowUpDown, ArrowUp, ArrowDown} from 'lucide-react';
 import { useSales, reloadData, deleteSale } from '@/lib/api';
 import type { SaleRecord } from '@/types';
-import { formatLKR, cn, todayColombo, startOfWeekColombo, monthBounds, monthColombo } from '@/lib/utils';
+import { formatLKR, cn, todayColombo, startOfWeekColombo, monthBounds, monthColombo, saleNetRevenue } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -139,7 +139,7 @@ export default function SalesLog() {
   const handleExport = useCallback(() => {
     const csvContent = "data:text/csv;charset=utf-8," 
       + "Bill ID,Date,Time,Customer,Total Revenue,Items,Status\n"
-      + filteredSales.map(e => `${e.billId},${e.date},${e.time},${e.customerWhatsapp || 'Walk-in'},${e.totalRevenue},"${e.items.map(i => i.name).join('; ')}",${e.returnStatus || 'none'}`).join("\n");
+      + filteredSales.map(e => `${e.billId},${e.date},${e.time},${e.customerWhatsapp || 'Walk-in'},${saleNetRevenue(e)},"${e.items.map(i => i.name).join('; ')}",${e.returnStatus || 'none'}`).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -194,7 +194,7 @@ export default function SalesLog() {
   }
   }, [isMobile]);
 
- const totalRevenue = useMemo(() => filteredSales.reduce((sum, s) => sum + s.totalRevenue, 0), [filteredSales]);
+ const totalRevenue = useMemo(() => filteredSales.reduce((sum, s) => sum + saleNetRevenue(s), 0), [filteredSales]);
  const totalProfit = useMemo(() => filteredSales.reduce((sum, s) => {
    const cost = s.items.reduce((acc, i) => acc + i.costPrice, 0);
    return sum + (s.totalRevenue - cost);

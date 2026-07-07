@@ -5,7 +5,7 @@ import {
  Receipt
 } from 'lucide-react';
 import { usePhones, useAccessories, useSales, useExchanges } from '@/lib/api';
-import { formatLKR, cn, monthColombo, monthBounds, todayColombo, lastNDaysColombo, weekdayShortColombo } from '@/lib/utils';
+import { formatLKR, cn, monthColombo, monthBounds, todayColombo, lastNDaysColombo, weekdayShortColombo, saleNetRevenue } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -23,7 +23,7 @@ export default function Dashboard() {
  const monthRange = useMemo(() => monthBounds(selectedMonth), [selectedMonth]);
  const { sales: monthSales, isLoading: monthLoading } = useSales(monthRange);
  const monthly = useMemo(() => {
-   const revenue = monthSales.reduce((sum, s) => sum + s.totalRevenue, 0);
+   const revenue = monthSales.reduce((sum, s) => sum + saleNetRevenue(s), 0);
    const profit = monthSales.reduce((sum, s) => {
      const cost = s.items.reduce((acc, item) => acc + item.costPrice, 0);
      return sum + (s.totalRevenue - cost);
@@ -41,7 +41,7 @@ export default function Dashboard() {
   
   const today = todayColombo();
   const todaySales = sales.filter(s => s.date === today);
-  const todayRevenue = todaySales.reduce((sum, s) => sum + s.totalRevenue, 0);
+  const todayRevenue = todaySales.reduce((sum, s) => sum + saleNetRevenue(s), 0);
   const todayProfit = todaySales.reduce((sum, s) => {
   const cost = s.items.reduce((acc, item) => acc + item.costPrice, 0);
   return sum + (s.totalRevenue - cost);
@@ -98,7 +98,7 @@ export default function Dashboard() {
  // fixing the off-by-one "weekly revenue" bug near midnight.
  return lastNDaysColombo(7).map(date => {
  const daySales = sales.filter(s => s.date === date);
- const revenue = daySales.reduce((sum, s) => sum + s.totalRevenue, 0);
+ const revenue = daySales.reduce((sum, s) => sum + saleNetRevenue(s), 0);
  const profit = daySales.reduce((sum, s) => {
  const cost = s.items.reduce((acc, item) => acc + item.costPrice, 0);
  return sum + (s.totalRevenue - cost);
@@ -332,7 +332,7 @@ export default function Dashboard() {
  </div>
  </div>
  <div className="text-right shrink-0">
- <p className="text-[11px] font-bold text-[var(--brand)]">{formatLKR(sale.totalRevenue)}</p>
+ <p className="text-[11px] font-bold text-[var(--brand)]">{formatLKR(saleNetRevenue(sale))}</p>
  <span className="text-[8px] font-bold text-[var(--success)] ">VERIFIED</span>
  </div>
  </div>

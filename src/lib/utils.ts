@@ -9,6 +9,14 @@ export function formatLKR(amount: number): string {
  return `LKR ${amount.toLocaleString('en-US')}`;
 }
 
+/** Net revenue actually collected on a sale = gross goods revenue minus any trade-in credit.
+ *  Plain sales: net == gross. Trade-in sales: the traded device's value is deducted here (it becomes
+ *  resale stock, and shows up in profit — not in revenue). Use this for every REVENUE display.
+ *  Profit stays on gross (total_revenue − COGS) so the traded-in asset isn't double-counted. */
+export function saleNetRevenue(s: { netPayable?: number; totalRevenue: number; tradeInValue?: number }): number {
+ return s.netPayable ?? (s.totalRevenue - (s.tradeInValue ?? 0));
+}
+
 /* ---------------------------------------------------------------- Asia/Colombo dates
  * Date columns are text 'YYYY-MM-DD' (validated: 0 rows off-format), so lexicographic
  * gte/lte comparison is correct. These helpers pin "now" to Asia/Colombo to stay
@@ -120,6 +128,7 @@ export const MODEL_OPTIONS = [
  'iPhone 17 Air',
  'iPhone 17 Pro',
  'iPhone 17 Pro Max',
+ 'iPhone SE (2nd Gen)',
  'iPhone SE (3rd Gen)',
 ] as const;
 
