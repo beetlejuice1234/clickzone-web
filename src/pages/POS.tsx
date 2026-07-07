@@ -250,6 +250,7 @@ export default function POS() {
  whatsapp: customerWhatsapp || null,
  } : null,
  trade_in: pendingExchange ? {
+ type: pendingExchange.type,
  imei: pendingExchange.tradeInImei,
  model: pendingExchange.tradeInModel,
  valuation: pendingExchange.tradeInValuation,
@@ -260,6 +261,8 @@ export default function POS() {
  customer_name: pendingExchange.customerName,
  customer_nic: pendingExchange.customerNic,
  customer_whatsapp: pendingExchange.customerWhatsapp,
+ sku: pendingExchange.tradeInSku,
+ quantity: pendingExchange.tradeInQuantity,
  } : null,
  };
 
