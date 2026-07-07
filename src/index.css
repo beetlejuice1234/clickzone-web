@@ -45,8 +45,11 @@
     --secondary-foreground: 171 50% 11%;
     --muted: 44 40% 92%;
     --muted-foreground: 166 8% 40%;
-    --brand: 48 100% 90%;                 /* cream tint for menu/hover highlights */
-    --brand-foreground: 171 50% 11%;
+    /* NOTE: --brand / --brand-foreground are intentionally NOT redefined here. They are set as
+       teal/cream HEX above (lines ~23–24) and consumed directly as var(--brand) by components.
+       A previous HSL redefinition ("48 100% 90%") silently overrode the hex, making every
+       bg-[var(--brand)] fill an invalid color → transparent → selected buttons/filter pills
+       became invisible. Tailwind maps accent/primary/etc. (not brand), so no HSL brand var is needed. */
     --destructive: 11 61% 47%;
     --destructive-foreground: 0 0% 100%;
     --border: 44 32% 86%;

@@ -89,15 +89,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
-  // Auto sign-out after 20 minutes of inactivity (unattended shop/staff terminals).
+  // Auto sign-out the OWNER after 15 minutes of inactivity (an unattended owner terminal must not
+  // leave cost/profit/customer data exposed). Staff sessions are NOT auto-signed-out — a staff
+  // till is meant to stay logged in through the shift.
   useEffect(() => {
-    if (!session) return;
-    const TIMEOUT_MS = 20 * 60 * 1000;
+    if (!session || role !== 'owner') return;
+    const TIMEOUT_MS = 15 * 60 * 1000;
     let timer: ReturnType<typeof setTimeout>;
     const reset = () => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        toast.info('Signed out after 20 minutes of inactivity');
+        toast.info('Signed out after 15 minutes of inactivity');
         void signOut();
       }, TIMEOUT_MS);
     };
@@ -108,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(timer);
       events.forEach((e) => window.removeEventListener(e, reset, { capture: true }));
     };
-  }, [session, signOut]);
+  }, [session, role, signOut]);
 
   const requireAdmin = useCallback((cb: () => void) => {
     if (role === 'owner' || (overrideUntil != null && overrideUntil > Date.now())) {

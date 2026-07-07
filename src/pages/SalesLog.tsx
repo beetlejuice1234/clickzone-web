@@ -339,7 +339,7 @@ export default function SalesLog() {
  </div>
  <span className="text-[11px] font-medium text-[var(--ink)]">{sale.customerWhatsapp || 'Walk-in Registry'}</span>
  </div>
- <p className="text-sm font-bold text-[var(--brand)]">{formatLKR(sale.totalRevenue)}</p>
+ <p className="text-sm font-bold text-[var(--brand)]">{formatLKR(sale.netPayable ?? (sale.totalRevenue - (sale.tradeInValue ?? 0)))}</p>
  </div>
  </motion.div>
  ))
@@ -504,7 +504,7 @@ export default function SalesLog() {
  </TableCell>
  <TableCell className="py-6 px-6 text-right">
  <div className="flex flex-col items-end">
- <span className="text-lg font-bold text-[var(--brand)]">{formatLKR(sale.totalRevenue)}</span>
+ <span className="text-lg font-bold text-[var(--brand)]">{formatLKR(sale.netPayable ?? (sale.totalRevenue - (sale.tradeInValue ?? 0)))}</span>
  {sale.totalDiscount > 0 && <span className="text-[8px] font-bold bg-[var(--danger)]/20 text-[var(--danger)] border border-[var(--danger)]/30 px-1.5 py-0.5 mt-1 cursor-help" title="Adjustment Applied">-[{formatLKR(sale.totalDiscount).split(' ')[1]}]</span>}
  {sale.tradeInValue && sale.tradeInValue > 0 ? <span className="text-[8px] font-bold bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 px-1.5 py-0.5 mt-1" title="Trade-in Applied">Trade-in -{formatLKR(sale.tradeInValue).split(' ')[1]}</span> : null}
  </div>
