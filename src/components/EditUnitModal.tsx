@@ -149,7 +149,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  onValueChange={(v) => { if (v === '__other__') { setModelOther(true); setModel(''); } else { setModelOther(false); setModel(v); } }}
  >
  <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-medium "><SelectValue placeholder="Select model" /></SelectTrigger>
- <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl max-h-[300px]">
+ <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl max-h-[300px]">
  {MODEL_OPTIONS.map((m) => <SelectItem key={m} value={m} className="text-[10px] font-medium ">{m}</SelectItem>)}
  <SelectItem value="__other__" className="text-[10px] font-medium ">Other (Android / specify)…</SelectItem>
  </SelectContent>

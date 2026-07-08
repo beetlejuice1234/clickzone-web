@@ -262,7 +262,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 focus:border-[var(--brand)] text-[11px] font-medium ">
  <SelectValue placeholder="Identify Model" />
  </SelectTrigger>
- <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl max-h-[300px]">
+ <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl max-h-[300px]">
  {MODEL_OPTIONS.map(m => <SelectItem key={m} value={m} className="text-[10px] font-medium hover:bg-[var(--bg-app)]">{m}</SelectItem>)}
  <SelectItem value="__other__" className="text-[10px] font-medium hover:bg-[var(--bg-app)]">Other (Android / specify)…</SelectItem>
  </SelectContent>

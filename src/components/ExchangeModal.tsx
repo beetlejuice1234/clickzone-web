@@ -214,7 +214,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                   <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]">
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-60">
+                  <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
                     {MODEL_OPTIONS.map(m => (
                       <SelectItem key={m} value={m} className="rounded-xl text-[10px] font-medium">{m}</SelectItem>
                     ))}
