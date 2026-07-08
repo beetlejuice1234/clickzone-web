@@ -194,7 +194,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  return (
  <>
  <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
- <DialogContent className="sm:max-w-xl bg-[var(--paper)] border border-[var(--line)] p-0 overflow-hidden rounded-xl shadow-none">
+ <DialogContent className="sm:max-w-xl bg-[var(--paper)] border border-[var(--line)] p-0 max-h-[90vh] overflow-y-auto rounded-xl shadow-none">
  <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'phone' | 'accessory')} className="w-full">
  <div className="bg-[var(--bg-app)] px-8 pt-8 pb-6 border-b border-[var(--line)]">
  <DialogHeader className="mb-6">

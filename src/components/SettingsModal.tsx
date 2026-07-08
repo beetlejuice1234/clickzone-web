@@ -53,7 +53,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-md bg-[var(--paper)] border border-[var(--line)] p-0 overflow-hidden rounded-xl">
+      <DialogContent className="sm:max-w-md bg-[var(--paper)] border border-[var(--line)] p-0 max-h-[90vh] overflow-y-auto rounded-xl">
         <div className="bg-[var(--bg-app)] px-8 pt-8 pb-6 border-b border-[var(--line)]">
           <DialogHeader>
             <DialogTitle className="text-3xl text-[var(--ink)]">Settings</DialogTitle>

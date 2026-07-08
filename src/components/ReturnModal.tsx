@@ -169,7 +169,7 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={resetAndClose}>
-      <DialogContent className="sm:max-w-[460px] bg-[var(--paper)] border-[var(--line)]">
+      <DialogContent className="sm:max-w-[460px] bg-[var(--paper)] border-[var(--line)] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-[var(--ink)]">Process Return</DialogTitle>
           <p className="text-[10px] text-[var(--subtle)]">Bill ID: {sale.billId}</p>

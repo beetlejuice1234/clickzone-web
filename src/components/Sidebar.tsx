@@ -28,7 +28,7 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
  <span className="font-display text-2xl font-semibold text-[var(--cream)] tracking-tight">ClickZone</span>
  </div>
 
- <nav className="flex-1 px-3 py-6 space-y-1.5">
+ <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-6 space-y-1.5">
  <p className="px-4 mb-2 text-[10px] uppercase tracking-[0.15em] text-[var(--cream)]/45 font-semibold">Navigation</p>
  {menuItems.filter((item) => !item.ownerOnly || isAdmin).map((item) => {
  const isActive = activePage === item.id;

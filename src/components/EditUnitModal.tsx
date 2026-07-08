@@ -92,7 +92,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
 
  return (
  <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
- <DialogContent className="sm:max-w-xl bg-[var(--paper)] border border-[var(--line)] p-0 overflow-hidden rounded-xl shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+ <DialogContent className="sm:max-w-xl bg-[var(--paper)] border border-[var(--line)] p-0 max-h-[90vh] overflow-y-auto rounded-xl shadow-[0_0_100px_rgba(0,0,0,0.5)]">
  <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--success)]/30 to-transparent" />
  <div className="bg-[var(--bg-app)] px-8 pt-8 pb-6 border-b border-[var(--line)]">
  <DialogHeader>
