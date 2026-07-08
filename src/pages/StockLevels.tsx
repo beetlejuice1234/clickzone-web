@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Boxes, Search, Smartphone } from 'lucide-react';
-import { usePhones } from '@/lib/api';
+import { usePhones, useAccessories } from '@/lib/api';
 import { cn, formatLKR } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 // cost-free views → costPrice is 0 for them; the card is also gated on isAdmin, fail-closed).
 export default function StockLevels() {
   const { phones, isLoading } = usePhones();
+  const { accessories } = useAccessories();
   const { isAdmin } = useAuth();
   const [search, setSearch] = useState('');
   const [showSoldOut, setShowSoldOut] = useState(false);
@@ -36,6 +37,9 @@ export default function StockLevels() {
   const totalInStock = useMemo(() => phones.filter(p => p.status === 'in-stock').length, [phones]);
   // Owner-only: total COST price of every in-stock phone.
   const totalCost = useMemo(() => phones.filter(p => p.status === 'in-stock').reduce((s, p) => s + (p.costPrice || 0), 0), [phones]);
+  // Owner-only: total COST of accessory stock = cost_price × quantity across all accessories.
+  const totalAccessoryCost = useMemo(() => accessories.reduce((s, a) => s + (a.costPrice || 0) * (a.quantity || 0), 0), [accessories]);
+  const totalAccessoryUnits = useMemo(() => accessories.reduce((s, a) => s + (a.quantity || 0), 0), [accessories]);
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6 min-h-screen bg-[var(--bg-app)]">
@@ -71,14 +75,19 @@ export default function StockLevels() {
 
       {/* Owner-only: total cost of everything in stock (staff never receive cost via the DB views). */}
       {isAdmin && (
-        <div className="bg-[var(--cream)] rounded-2xl shadow-sm p-6 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold text-[var(--teal)]/70 uppercase tracking-wide mb-1">Total In-Stock Cost</p>
-            <p className="text-[10px] text-[var(--teal)]/60">Cost price of all {totalInStock} phones currently in stock</p>
+        <div className="bg-[var(--cream)] rounded-2xl shadow-sm p-6 space-y-3">
+          <p className="text-[11px] font-semibold text-[var(--teal)]/70 uppercase tracking-wide">Total In-Stock Cost</p>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[12px] font-medium text-[var(--teal)]/70">Phones · {totalInStock} in stock</span>
+            <span className="font-display text-2xl font-semibold text-[var(--teal)]">{formatLKR(totalCost)}</span>
           </div>
-          <div className="flex items-baseline gap-1 shrink-0">
-            <span className="text-sm font-medium text-[var(--teal)]/60">{formatLKR(totalCost).split(' ')[0]}</span>
-            <span className="font-display text-4xl font-semibold text-[var(--teal)]">{formatLKR(totalCost).split(' ')[1]}</span>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[12px] font-medium text-[var(--teal)]/70">Accessories · {totalAccessoryUnits} units</span>
+            <span className="font-display text-2xl font-semibold text-[var(--teal)]">{formatLKR(totalAccessoryCost)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4 border-t border-[var(--teal)]/15 pt-3">
+            <span className="text-[12px] font-bold text-[var(--teal)] uppercase tracking-wide">Combined</span>
+            <span className="font-display text-3xl font-semibold text-[var(--teal)]">{formatLKR(totalCost + totalAccessoryCost)}</span>
           </div>
         </div>
       )}
