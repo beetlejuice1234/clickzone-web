@@ -1,14 +1,17 @@
 import { useMemo, useState } from 'react';
 import { Boxes, Search, Smartphone } from 'lucide-react';
 import { usePhones } from '@/lib/api';
-import { cn } from '@/lib/utils';
+import { cn, formatLKR } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Stock-by-model overview: how many units are in stock for each phone model (owner + staff; counts
-// only, no cost/price). Reads the same store-scoped phones the rest of the app uses (v_phones_public
-// for staff, v_phones_full for owner), so staff see only their store's counts.
+// Stock-by-model overview: how many units are in stock for each phone model (owner + staff; counts).
+// Reads the same store-scoped phones the rest of the app uses (v_phones_public for staff, v_phones_full
+// for owner), so staff see only their store's counts. The total COST figure is owner-only (staff read
+// cost-free views → costPrice is 0 for them; the card is also gated on isAdmin, fail-closed).
 export default function StockLevels() {
   const { phones, isLoading } = usePhones();
+  const { isAdmin } = useAuth();
   const [search, setSearch] = useState('');
   const [showSoldOut, setShowSoldOut] = useState(false);
 
@@ -31,6 +34,8 @@ export default function StockLevels() {
   }, [phones, search, showSoldOut]);
 
   const totalInStock = useMemo(() => phones.filter(p => p.status === 'in-stock').length, [phones]);
+  // Owner-only: total COST price of every in-stock phone.
+  const totalCost = useMemo(() => phones.filter(p => p.status === 'in-stock').reduce((s, p) => s + (p.costPrice || 0), 0), [phones]);
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6 min-h-screen bg-[var(--bg-app)]">
@@ -63,6 +68,20 @@ export default function StockLevels() {
           </button>
         </div>
       </div>
+
+      {/* Owner-only: total cost of everything in stock (staff never receive cost via the DB views). */}
+      {isAdmin && (
+        <div className="bg-[var(--cream)] rounded-2xl shadow-sm p-6 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold text-[var(--teal)]/70 uppercase tracking-wide mb-1">Total In-Stock Cost</p>
+            <p className="text-[10px] text-[var(--teal)]/60">Cost price of all {totalInStock} phones currently in stock</p>
+          </div>
+          <div className="flex items-baseline gap-1 shrink-0">
+            <span className="text-sm font-medium text-[var(--teal)]/60">{formatLKR(totalCost).split(' ')[0]}</span>
+            <span className="font-display text-4xl font-semibold text-[var(--teal)]">{formatLKR(totalCost).split(' ')[1]}</span>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
