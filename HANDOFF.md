@@ -7,6 +7,37 @@ parent folder, `../BUILD_PROGRESS.md`, `../IMPLEMENTATION_RUNBOOK.md`, `../.hand
 
 ---
 
+## 0. LATEST STATE — LIVE IN PRODUCTION (updated 7 Jul 2026)
+**The cutover is DONE. The shop is live on the new web app** at **https://pos.clickzonemobiles.com**,
+backed by the **production** Supabase `zahoixqvkshqalvvrtbs`. Path C is complete — the "never touch
+production" framing in §1 below is now **historical**; production is the app's real database and
+`web-migration` deploys straight to it via Vercel (env vars point at production).
+
+- **Owner login (production):** `akash123@clickzone.com`. Staging still uses the `*.test` accounts (see CLAUDE.md).
+- The **`redesign`** branch (warm teal/cream/terracotta) was **merged** into `web-migration`.
+- **Override PIN** is still the default `4321` — should be changed. **Backups:** production is on
+  Supabase **Free** (no automated backups) — upgrade to **Pro** before relying on it long-term.
+
+### Post-go-live fix rounds (all on `web-migration`, deployed)
+- **Round 1:** invisible-selected-button fix (a duplicate `--brand` token made teal fills
+  transparent); **Online transfer** payment option; **15-min owner-only** idle auto-logout (staff
+  stay logged in); Sales-Log rows show **net payable**; sequential invoice numbers (owner sets the
+  start in **Settings**; plain digits, no prefix); accessory **serial numbers**; **saved quotations**
+  (Quotations page + WhatsApp/PDF); internal item notes.
+- **Round 2:** all **revenue** figures now show **net of trade-in** (`total_revenue − trade_in_value`)
+  — profit deliberately stays **gross − COGS** so the traded device isn't double-counted; past
+  transactions auto-correct (recompute). **iPhone SE (2nd Gen)** added + scrollable model dropdowns.
+  **Accessory trade-in** (Phone/Accessory toggle → traded accessory enters resale stock at the
+  valuation, `sale_price 0`). New **Stock Levels** tab (in-stock quantity per phone model).
+
+### DB migrations added after Phase 10 — applied to BOTH staging + production
+`20260703_accessory_serial.sql`, `20260703_quotations.sql`, `20260703_sequential_bill_no.sql`,
+`20260705_internal_notes.sql`, `20260707_accessory_trade_in.sql` (the current `checkout` — plain
+invoice numbers + accessory trade-in branch). Phase `8d/8e/8f` were applied to production at cutover.
+Every DB change now goes to **staging first → verify → production only with the owner's explicit yes**.
+
+---
+
 ## 1. The one rule that matters most: two Supabase projects
 | Project | Ref | Role |
 |---|---|---|
