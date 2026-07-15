@@ -43,7 +43,7 @@ export default function POS() {
  const [lastSale, setLastSale] = useState<SaleRecord | null>(null);
  const [lastBillData, setLastBillData] = useState<BillData | null>(null);
  const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
- const [pendingExchange, setPendingExchange] = useState<ExchangePayload | null>(null);
+ const [pendingExchanges, setPendingExchanges] = useState<ExchangePayload[]>([]);
 
  // B1 FIX: Use ref to avoid stale closure in barcode scanner callback
  const cartItemsRef = useRef(cartItems);
@@ -144,7 +144,7 @@ export default function POS() {
  };
 
  const handleExchangeConfirm = useCallback((exchange: ExchangePayload) => {
-   setPendingExchange(exchange);
+   setPendingExchanges(prev => [...prev, exchange]);   // append — multiple trade-ins allowed
    setExchangeModalOpen(false);
  }, []);
 
@@ -173,6 +173,13 @@ export default function POS() {
  const totalDiscount = useMemo(() => {
  return cartItems.reduce((sum, item) => sum + ((parseInt(item.discount) || 0) * item.quantity), 0);
  }, [cartItems]);
+
+ // Total trade-in credit across all pending trade-in items (phones + accessories).
+ const tradeInTotal = useMemo(
+ () => pendingExchanges.reduce((sum, e) => sum + (e.tradeInValuation || 0), 0),
+ [pendingExchanges]
+ );
+ const removeExchange = (idx: number) => setPendingExchanges(prev => prev.filter((_, i) => i !== idx));
 
  const handleGenerateBill = useCallback(async () => {
  if (cartItems.length === 0) return;
@@ -227,7 +234,7 @@ export default function POS() {
  billId,
  customerWhatsapp: customerWhatsapp || '',
  items: saleItems,
- totalRevenue: Math.max(0, netAmount - (pendingExchange?.tradeInValuation ?? 0)),
+ totalRevenue: Math.max(0, netAmount - tradeInTotal),
  totalDiscount,
  date: dateStr,
  time: timeStr
@@ -249,21 +256,22 @@ export default function POS() {
  nic: customerNic || null,
  whatsapp: customerWhatsapp || null,
  } : null,
- trade_in: pendingExchange ? {
- type: pendingExchange.type,
- imei: pendingExchange.tradeInImei,
- model: pendingExchange.tradeInModel,
- valuation: pendingExchange.tradeInValuation,
- condition: pendingExchange.tradeInCondition,
- battery_health: pendingExchange.tradeInBatteryHealth,
- resale_price: pendingExchange.tradeInTargetSalePrice,
- notes: pendingExchange.tradeInNotes,
- customer_name: pendingExchange.customerName,
- customer_nic: pendingExchange.customerNic,
- customer_whatsapp: pendingExchange.customerWhatsapp,
- sku: pendingExchange.tradeInSku,
- quantity: pendingExchange.tradeInQuantity,
- } : null,
+ // Multiple trade-in items — each becomes its own inventory record inside the checkout RPC.
+ trade_ins: pendingExchanges.map(e => ({
+ type: e.type,
+ imei: e.tradeInImei,
+ model: e.tradeInModel,
+ valuation: e.tradeInValuation,
+ condition: e.tradeInCondition,
+ battery_health: e.tradeInBatteryHealth,
+ resale_price: e.tradeInTargetSalePrice,
+ notes: e.tradeInNotes,
+ customer_name: e.customerName,
+ customer_nic: e.customerNic,
+ customer_whatsapp: e.customerWhatsapp,
+ sku: e.tradeInSku,
+ quantity: e.tradeInQuantity,
+ })),
  };
 
  try {
@@ -277,7 +285,7 @@ export default function POS() {
  return;
  }
 
- const completedExchange = pendingExchange; // capture before clearing
+ const completedExchanges = pendingExchanges; // capture before clearing
 
  setLastBillId(billId);
  setBillGenerated(true);
@@ -291,12 +299,12 @@ export default function POS() {
     setCustomerNic('');
     setPaymentMethod('cash');
     setSpecialNotes('');
-    setPendingExchange(null);
+    setPendingExchanges([]);
 
     try {
       // PDF — totals mirror what the checkout RPC persisted, so the bill == the sale record.
       // total_revenue = netAmount (gross goods); net_payable = netAmount - trade_in.
-      const tradeIn = completedExchange?.tradeInValuation ?? 0;
+      const tradeIn = completedExchanges.reduce((s, e) => s + (e.tradeInValuation || 0), 0);
       const finalNetAmount = Math.max(0, netAmount - tradeIn); // = net payable, for the WhatsApp receipt
       const pdfData: BillData = {
         billId: sale.billId,
@@ -325,8 +333,8 @@ export default function POS() {
           ? `\n💰 *Discount Applied:* ${formatLKR(totalDiscount)}`
           : '';
 
-        const tradeInLine = completedExchange
-          ? `\n🔄 *Trade-In:* ${completedExchange.tradeInModel} → -${formatLKR(completedExchange.tradeInValuation)}`
+        const tradeInLine = completedExchanges.length
+          ? `\n🔄 *Trade-In:* ${completedExchanges.map(e => `${e.tradeInModel} -${formatLKR(e.tradeInValuation)}`).join(', ')}`
           : '';
 
         const message =
@@ -371,7 +379,7 @@ _Please keep this message as your digital receipt._`;
       console.error("Receipt generation failed:", err);
       toast.error("Receipt generation failed, but the sale was saved successfully.");
     }
-  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, netAmount, totalDiscount, pendingExchange, isMobile]);
+  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, netAmount, totalDiscount, pendingExchanges, tradeInTotal, isMobile]);
 
  // Save a quotation from the current cart (no sale, no stock change) + share via WhatsApp/PDF.
  const handleGenerateQuotation = useCallback(async () => {
@@ -596,25 +604,24 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
 
  {/* Footer — Customer + Checkout */}
  <div className="bg-[var(--paper)] border-t border-[var(--line)] p-5 shadow-2xl shrink-0 space-y-4">
-   {!pendingExchange ? (
-     <Button
-       onClick={() => requireAdmin(() => setExchangeModalOpen(true))}
-       disabled={cartItems.length === 0}
-       className="w-full h-10 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl hover:bg-[var(--line)] transition-all"
-     >
-       ＋ TRADE-IN
-     </Button>
-   ) : (
-     <div className="w-full bg-[var(--brand)]/10 border border-[var(--brand)]/30 p-3 flex items-center justify-between rounded-xl">
+   {pendingExchanges.map((ex, idx) => (
+     <div key={idx} className="w-full bg-[var(--brand)]/10 border border-[var(--brand)]/30 p-3 flex items-center justify-between rounded-xl">
        <div>
-         <p className="text-[10px] font-bold text-[var(--brand)] uppercase">Trade-In Active</p>
-         <p className="text-[11px] font-bold text-[var(--ink)] mt-0.5">{pendingExchange.tradeInModel} · LKR {pendingExchange.tradeInValuation.toLocaleString()}</p>
+         <p className="text-[10px] font-bold text-[var(--brand)] uppercase">Trade-In{ex.type === 'accessory' ? ' · Accessory' : ''}</p>
+         <p className="text-[11px] font-bold text-[var(--ink)] mt-0.5">{ex.tradeInModel} · LKR {ex.tradeInValuation.toLocaleString()}</p>
        </div>
-       <button onClick={() => setPendingExchange(null)} className="text-[var(--subtle)] hover:text-[var(--danger)]">
+       <button onClick={() => removeExchange(idx)} className="text-[var(--subtle)] hover:text-[var(--danger)]">
          <X size={16} />
        </button>
      </div>
-   )}
+   ))}
+   <Button
+     onClick={() => requireAdmin(() => setExchangeModalOpen(true))}
+     disabled={cartItems.length === 0}
+     className="w-full h-10 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl hover:bg-[var(--line)] transition-all"
+   >
+     ＋ {pendingExchanges.length ? 'ADD ANOTHER TRADE-IN' : 'TRADE-IN'}
+   </Button>
  <div className="relative">
  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--subtle)] ">WhatsApp:</span>
  <input
@@ -675,7 +682,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  <div className="flex items-center justify-between">
  <div>
  <p className="text-[13px] font-medium text-[var(--ink)] mb-2 block">{cartItems.length} Identified Units</p>
- <p className="text-2xl font-bold text-[var(--brand)]">{formatLKR(netAmount - (pendingExchange?.tradeInValuation ?? 0))}</p>
+ <p className="text-2xl font-bold text-[var(--brand)]">{formatLKR(netAmount - tradeInTotal)}</p>
  </div>
  <button
  id="pos-complete-sale-btn"
@@ -988,25 +995,24 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  {cartItems.length > 0 && (
  <div className="pt-4 space-y-4">
    <div className="px-2">
-     {!pendingExchange ? (
-       <Button
-         onClick={() => setExchangeModalOpen(true)}
-         disabled={cartItems.length === 0}
-         className="w-full h-10 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl hover:bg-[var(--line)] transition-all"
-       >
-         ＋ TRADE-IN
-       </Button>
-     ) : (
-       <div className="w-full bg-[var(--brand)]/10 border border-[var(--brand)]/30 p-3 flex items-center justify-between rounded-xl">
+     {pendingExchanges.map((ex, idx) => (
+       <div key={idx} className="w-full bg-[var(--brand)]/10 border border-[var(--brand)]/30 p-3 mb-2 flex items-center justify-between rounded-xl">
          <div>
-           <p className="text-[10px] font-bold text-[var(--brand)] uppercase">Trade-In Active</p>
-           <p className="text-[11px] font-bold text-[var(--ink)] mt-0.5">{pendingExchange.tradeInModel} · LKR {pendingExchange.tradeInValuation.toLocaleString()}</p>
+           <p className="text-[10px] font-bold text-[var(--brand)] uppercase">Trade-In{ex.type === 'accessory' ? ' · Accessory' : ''}</p>
+           <p className="text-[11px] font-bold text-[var(--ink)] mt-0.5">{ex.tradeInModel} · LKR {ex.tradeInValuation.toLocaleString()}</p>
          </div>
-         <button onClick={() => setPendingExchange(null)} className="text-[var(--subtle)] hover:text-[var(--danger)]">
+         <button onClick={() => removeExchange(idx)} className="text-[var(--subtle)] hover:text-[var(--danger)]">
            <X size={16} />
          </button>
        </div>
-     )}
+     ))}
+     <Button
+       onClick={() => setExchangeModalOpen(true)}
+       disabled={cartItems.length === 0}
+       className="w-full h-10 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl hover:bg-[var(--line)] transition-all"
+     >
+       ＋ {pendingExchanges.length ? 'ADD ANOTHER TRADE-IN' : 'TRADE-IN'}
+     </Button>
    </div>
  <div className="flex items-center justify-between opacity-30 px-2 ">
  <span className="text-[9px] font-medium text-[var(--subtle)]">Subtotal</span>
@@ -1018,18 +1024,18 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  <span className="text-xs font-bold">-{formatLKR(totalDiscount)}</span>
  </div>
  )}
- {pendingExchange && (
-   <div className="flex items-center justify-between text-[var(--danger)] px-2 ">
-     <span className="text-[9px] font-medium ">Trade-in ({pendingExchange.tradeInModel})</span>
-     <span className="text-xs font-bold">-{formatLKR(pendingExchange.tradeInValuation)}</span>
+ {pendingExchanges.map((ex, idx) => (
+   <div key={idx} className="flex items-center justify-between text-[var(--danger)] px-2 ">
+     <span className="text-[9px] font-medium ">Trade-in ({ex.tradeInModel})</span>
+     <span className="text-xs font-bold">-{formatLKR(ex.tradeInValuation)}</span>
    </div>
- )}
+ ))}
  <div className="flex items-end justify-between pt-4 border-t border-[var(--line)] px-2">
  <div>
- <p className="text-[9px] font-bold text-[var(--brand)] mb-1 ">{pendingExchange ? 'NET PAYABLE' : 'TOTAL PAYABLE'}</p>
- <p className="text-5xl font-bold text-[var(--ink)] ">{formatLKR(Math.max(0, netAmount - (pendingExchange?.tradeInValuation ?? 0))).split(' ')[1]}</p>
+ <p className="text-[9px] font-bold text-[var(--brand)] mb-1 ">{tradeInTotal > 0 ? 'NET PAYABLE' : 'TOTAL PAYABLE'}</p>
+ <p className="text-5xl font-bold text-[var(--ink)] ">{formatLKR(Math.max(0, netAmount - tradeInTotal)).split(' ')[1]}</p>
  </div>
- <span className="text-xl font-bold text-[var(--brand)] pb-1 ">{formatLKR(Math.max(0, netAmount - (pendingExchange?.tradeInValuation ?? 0))).split(' ')[0]}</span>
+ <span className="text-xl font-bold text-[var(--brand)] pb-1 ">{formatLKR(Math.max(0, netAmount - tradeInTotal)).split(' ')[0]}</span>
  </div>
  </div>
  )}
