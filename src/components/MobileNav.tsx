@@ -33,14 +33,14 @@ export default function MobileNav({ activePage, onNavigate }: MobileNavProps) {
  key={item.id}
  onClick={() => onNavigate(item.id)}
  className={cn(
- 'flex flex-col items-center gap-1 px-2 py-2.5 my-1.5 rounded-xl transition-all relative flex-1 min-w-0',
+ 'flex flex-col items-center gap-1 px-2 py-2.5 my-1.5 rounded-xl transition-all relative flex-1 min-w-0 touch-manipulation',
  isActive ? 'text-[var(--teal)]' : 'text-[var(--subtle)] active:scale-90'
  )}
  >
  {isActive && (
  <motion.div
  layoutId="mobile-nav-pill"
- className="absolute inset-0 bg-[var(--cream)] rounded-xl"
+ className="absolute inset-0 bg-[var(--cream)] rounded-xl pointer-events-none"
  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
  />
  )}

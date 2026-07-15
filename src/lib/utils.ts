@@ -133,22 +133,45 @@ export const MODEL_OPTIONS = [
 ] as const;
 
 export const COLOR_OPTIONS = [
+ // Neutrals / classics
+ 'Black',
+ 'White',
+ 'Silver',
+ 'Gold',
+ 'Space Gray',
+ 'Space Black',
+ 'Graphite',
+ 'Jet Black',
+ 'Rose Gold',
  'Midnight',
  'Starlight',
+ // Titanium family (15/16 Pro)
+ 'Natural Titanium',
+ 'Blue Titanium',
+ 'White Titanium',
+ 'Black Titanium',
+ 'Desert Titanium',
+ // Colours
  'Blue',
- 'Pink',
+ 'Pacific Blue',
+ 'Sierra Blue',
  'Green',
+ 'Alpine Green',
+ 'Midnight Green',
+ 'Pink',
  'Red',
  'Purple',
- 'Natural Titanium',
- 'Sierra Blue',
- 'Space Black',
- 'White',
- 'Black',
- 'Gold',
- 'Silver',
  'Deep Purple',
- 'Midnight Green',
+ 'Yellow',
+ 'Coral',
+ 'Ultramarine',
+ 'Teal',
+ // iPhone 17 (2025)
+ 'Cosmic Orange',
+ 'Deep Blue',
+ 'Sage',
+ 'Lavender',
+ 'Mist Blue',
 ] as const;
 
 export function conditionBadgeClass(condition: ConditionGrade): string {

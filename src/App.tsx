@@ -73,19 +73,19 @@ function Layout() {
     requireAdmin(() => setAddModalOpen(true));
   }, [requireAdmin]);
 
+  // No AnimatePresence/exit here on purpose: mode="wait" held the old page through its exit before
+  // mounting the next one, which swallowed mobile nav taps (needing 2–3 taps). Swap instantly; a
+  // lightweight enter fade (re-keyed on activePage) keeps the transition feel without blocking.
   const routedContent = (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={activePage}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -12 }}
-        transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="min-h-full"
-      >
-        <Outlet context={{ onAddStock } satisfies LayoutContext} />
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={activePage}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
+      className="min-h-full"
+    >
+      <Outlet context={{ onAddStock } satisfies LayoutContext} />
+    </motion.div>
   );
 
   if (isMobile) {
