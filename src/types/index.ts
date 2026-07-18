@@ -47,10 +47,10 @@ export interface Accessory {
 }
 
 export interface SaleItem {
- type: 'phone' | 'accessory';
+ type: 'phone' | 'accessory' | 'repair';
  name: string;
- identifier: string; // IMEI or SKU
- costPrice: number;
+ identifier: string; // IMEI or SKU (empty for a repair/service line)
+ costPrice: number;  // for a repair this is the entered parts cost
  finalPrice: number;
  discount: number;
  quantity?: number; // Added for bulk accessories

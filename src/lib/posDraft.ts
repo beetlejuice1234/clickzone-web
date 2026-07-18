@@ -4,11 +4,13 @@ import type { ExchangePayload } from '@/components/ExchangeModal';
 
 export interface CartItem {
   cartId: string;
-  type: 'phone' | 'accessory';
-  itemRef: PhoneUnit | Accessory;
-  finalPrice: string;
+  type: 'phone' | 'accessory' | 'repair';
+  itemRef?: PhoneUnit | Accessory;  // undefined for a repair (no stock behind it)
+  finalPrice: string;               // selling price
   discount: string;
-  quantity: number; // for bulk accessories
+  quantity: number;                 // for bulk accessories; always 1 for phone/repair
+  repairDescription?: string;       // repair-only: what the repair is
+  repairCost?: string;              // repair-only: parts cost (feeds profit)
 }
 
 export type PaymentMethod = 'cash' | 'card' | 'transfer';

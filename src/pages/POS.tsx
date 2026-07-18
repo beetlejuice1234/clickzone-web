@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2 } from 'lucide-react';
+import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2, Wrench } from 'lucide-react';
 import { usePhones, useAccessories, reloadData, checkout, createQuotation } from '@/lib/api';
 import { formatLKR, cn, todayColombo } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { PhoneUnit, Accessory, SaleItem, SaleRecord } from '@/types';
 import ExchangeModal, { type ExchangePayload } from '@/components/ExchangeModal';
+import RepairModal, { type RepairPayload } from '@/components/RepairModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePosDraft } from '@/lib/posDraft';
 
@@ -48,6 +49,7 @@ export default function POS() {
  const [lastSale, setLastSale] = useState<SaleRecord | null>(null);
  const [lastBillData, setLastBillData] = useState<BillData | null>(null);
  const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
+ const [repairModalOpen, setRepairModalOpen] = useState(false);
 
  // B1 FIX: Use ref to avoid stale closure in barcode scanner callback
  const cartItemsRef = useRef(cartItems);
@@ -152,6 +154,21 @@ export default function POS() {
    setExchangeModalOpen(false);
  }, []);
 
+ // Add a repair/service line to the cart (no stock; description + parts cost + selling price).
+ const handleAddRepair = useCallback((r: RepairPayload) => {
+   setCartItems(prev => [...prev, {
+     cartId: `c${Date.now()}`,
+     type: 'repair',
+     finalPrice: r.price,
+     discount: '0',
+     quantity: 1,
+     repairDescription: r.description,
+     repairCost: r.cost,
+   }]);
+   setRepairModalOpen(false);
+   toast.success('Repair added to cart');
+ }, []);
+
  const updateCartItem = (cartId: string, field: 'finalPrice' | 'discount' | 'quantity', value: string | number) => {
  setCartItems(prev => prev.map(c => {
    if (c.cartId === cartId) {
@@ -219,7 +236,7 @@ export default function POS() {
  quantity: 1,
  condition: phone.condition
  };
- } else {
+ } else if (c.type === 'accessory') {
  const acc = c.itemRef as Accessory;
  return {
  type: 'accessory',
@@ -229,6 +246,17 @@ export default function POS() {
  finalPrice: Math.max(0, p - d) * c.quantity,
  discount: d * c.quantity,
  quantity: c.quantity
+ };
+ } else {
+ // repair / service line — no stock; entered parts cost feeds owner profit
+ return {
+ type: 'repair' as const,
+ name: c.repairDescription || 'Repair',
+ identifier: '',
+ costPrice: parseInt(c.repairCost || '0') || 0,
+ finalPrice: Math.max(0, p - d),
+ discount: d,
+ quantity: 1,
  };
  }
  });
@@ -398,8 +426,11 @@ _Please keep this message as your digital receipt._`;
  const phone = c.itemRef as PhoneUnit;
  return { type: 'phone', name: `${phone.model} ${phone.storage}`, identifier: phone.imei, costPrice: 0, finalPrice: Math.max(0, p - d), discount: d, quantity: 1, condition: phone.condition };
  }
+ if (c.type === 'accessory') {
  const acc = c.itemRef as Accessory;
  return { type: 'accessory', name: acc.name, identifier: acc.sku, costPrice: 0, finalPrice: Math.max(0, p - d) * c.quantity, discount: d * c.quantity, quantity: c.quantity };
+ }
+ return { type: 'repair' as const, name: c.repairDescription || 'Repair', identifier: '', costPrice: 0, finalPrice: Math.max(0, p - d), discount: d, quantity: 1 };
  });
 
  let quoteNo = '';
@@ -509,12 +540,20 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  )}
  <div className="flex items-center justify-between mt-3">
  <span className="text-[9px] text-[var(--subtle)] ">{inStockCount} Units Available</span>
+ <div className="flex items-center gap-2">
+ <button
+ onClick={() => setRepairModalOpen(true)}
+ className="h-8 px-3 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[9px] font-bold rounded-xl active:scale-95 transition-transform"
+ >
+ ＋ Repair
+ </button>
  <button
  onClick={() => handleLookup(imeiQuery)}
  className="h-8 px-4 bg-[var(--brand)] text-[var(--bg-app)] text-[9px] font-medium rounded-xl active:scale-95 transition-transform"
  >
  Find
  </button>
+ </div>
  </div>
  </div>
 
@@ -531,8 +570,8 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  <AnimatePresence>
  {cartItems.map((item) => {
  const ref = item.itemRef as (PhoneUnit & Accessory);
- const name = item.type === 'phone' ? `${ref.model} ${ref.storage}` : ref.name;
- const sub = item.type === 'phone' ? ref.imei : ref.sku;
+ const name = item.type === 'repair' ? (item.repairDescription || 'Repair') : item.type === 'phone' ? `${ref.model} ${ref.storage}` : ref.name;
+ const sub = item.type === 'repair' ? 'Repair / Service' : item.type === 'phone' ? ref.imei : ref.sku;
  return (
  <motion.div
  key={item.cartId}
@@ -721,6 +760,13 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  </motion.div>
  )}
  </div>
+ <ExchangeModal
+   open={exchangeModalOpen}
+   onClose={() => setExchangeModalOpen(false)}
+   cartSubtotal={cartItems.reduce((sum, item) => sum + (parseFloat(item.finalPrice) || 0) * item.quantity, 0)}
+   onConfirm={handleExchangeConfirm}
+ />
+ <RepairModal open={repairModalOpen} onClose={() => setRepairModalOpen(false)} onAdd={handleAddRepair} />
  </div>
  );
  }
@@ -771,6 +817,13 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  )}
  </div>
 
+ <button
+ onClick={() => setRepairModalOpen(true)}
+ className="w-full h-9 bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] text-[10px] font-bold rounded-xl hover:border-[var(--ink)] transition-all"
+ >
+ ＋ Add Repair / Service
+ </button>
+
  {notFound && (
  <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
  className="bg-[var(--danger)]/5 border border-[var(--danger)]/20 p-3 flex items-center gap-3 rounded-xl">
@@ -799,7 +852,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  <div className="flex items-center gap-5 min-w-0">
  <div className={cn("w-12 h-12 border flex items-center justify-center shrink-0", 
  item.type === 'phone' ? 'border-[var(--brand)] bg-[var(--brand)]/5 text-[var(--brand)]' : 'border-[var(--subtle)] bg-[var(--paper)] text-[var(--subtle)]')}>
- {item.type === 'phone' ? <Smartphone size={20} /> : <Package size={20} />}
+ {item.type === 'phone' ? <Smartphone size={20} /> : item.type === 'repair' ? <Wrench size={20} /> : <Package size={20} />}
  </div>
  <div className="flex-1 min-w-0">
  {item.type === 'phone' ? (
@@ -810,10 +863,15 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  </p>
  <p className="text-[9px] font-bold text-[var(--success)] mt-1.5 ">REF: #{(item.itemRef as PhoneUnit).imei}</p>
  </>
- ) : (
+ ) : item.type === 'accessory' ? (
  <>
  <h3 className="text-xs font-bold text-[var(--ink)] ">{(item.itemRef as Accessory).name}</h3>
  <p className="text-[9px] font-bold text-[var(--subtle)] mt-1.5 ">SKU-ID: #{(item.itemRef as Accessory).sku}</p>
+ </>
+ ) : (
+ <>
+ <h3 className="text-xs font-bold text-[var(--ink)] ">{item.repairDescription || 'Repair'}</h3>
+ <p className="text-[9px] font-bold text-[var(--subtle)] mt-1.5 ">Repair / Service</p>
  </>
  )}
  </div>
@@ -872,7 +930,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  <div className="flex items-center gap-2">
  <span className="text-[9px] font-bold text-[var(--brand)] bg-[var(--bg-app)] px-2 py-0.5 border border-[var(--brand)]">Entry {String(idx + 1).padStart(2, '0')}</span>
  <p className="text-[11px] font-bold text-[var(--ink)] truncate max-w-[180px]">
- {item.type === 'phone' ? (item.itemRef as PhoneUnit).model : (item.itemRef as Accessory).name}
+ {item.type === 'phone' ? (item.itemRef as PhoneUnit).model : item.type === 'accessory' ? (item.itemRef as Accessory).name : (item.repairDescription || 'Repair')}
  </p>
  </div>
  <button
@@ -1088,6 +1146,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
    cartSubtotal={cartItems.reduce((sum, item) => sum + (parseFloat(item.finalPrice) || 0) * item.quantity, 0)}
    onConfirm={handleExchangeConfirm}
  />
+ <RepairModal open={repairModalOpen} onClose={() => setRepairModalOpen(false)} onAdd={handleAddRepair} />
  </div>
  );
 }

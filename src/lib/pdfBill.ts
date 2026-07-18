@@ -207,7 +207,9 @@ async function generateBill(data: BillData): Promise<jsPDF> {
     doc.setFont('courier', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(COLORS.MUTED[0], COLORS.MUTED[1], COLORS.MUTED[2]);
-    const idText = item.type === 'phone' ? `IMEI ${item.identifier}` : `SKU ${item.identifier}`;
+    const idText = item.type === 'phone' ? `IMEI ${item.identifier}`
+      : item.type === 'accessory' ? `SKU ${item.identifier}`
+      : 'REPAIR / SERVICE';
     doc.text(idText, CONTENT_X, y);
 
     doc.setTextColor(COLORS.INK[0], COLORS.INK[1], COLORS.INK[2]);
