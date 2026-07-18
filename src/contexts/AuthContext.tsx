@@ -10,6 +10,7 @@ import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import LoginScreen from '@/components/LoginScreen';
 import { useStoreScope } from '@/lib/store';
+import { usePosDraft } from '@/lib/posDraft';
 
 type Role = 'owner' | 'staff';
 
@@ -75,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       await loadProfile(s?.user ?? null);
       setOverrideUntil(null); // any auth change clears a staff override
+      usePosDraft.getState().resetDraft(); // don't carry an in-progress cart across a user switch
     });
     return () => { active = false; sub.subscription.unsubscribe(); };
   }, [loadProfile]);

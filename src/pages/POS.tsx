@@ -13,15 +13,7 @@ import { toast } from 'sonner';
 import type { PhoneUnit, Accessory, SaleItem, SaleRecord } from '@/types';
 import ExchangeModal, { type ExchangePayload } from '@/components/ExchangeModal';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface CartItem {
- cartId: string;
- type: 'phone' | 'accessory';
- itemRef: PhoneUnit | Accessory;
- finalPrice: string;
- discount: string;
- quantity: number; // Added for bulk accessories
-}
+import { usePosDraft } from '@/lib/posDraft';
 
 export default function POS() {
  const isMobile = useMobile();
@@ -30,20 +22,32 @@ export default function POS() {
  const { accessories } = useAccessories();
  const inStockCount = useMemo(() => phones.filter(p => p.status === 'in-stock').length, [phones]);
  
+ // Draft-sale state lives in a module-level zustand store so it SURVIVES tab navigation (this page
+ // unmounts on route change). Cleared on sale complete / manual Clear / refresh / auth change.
+ const cartItems = usePosDraft(s => s.cartItems);
+ const setCartItems = usePosDraft(s => s.setCartItems);
+ const customerWhatsapp = usePosDraft(s => s.customerWhatsapp);
+ const setCustomerWhatsapp = usePosDraft(s => s.setCustomerWhatsapp);
+ const customerName = usePosDraft(s => s.customerName);
+ const setCustomerName = usePosDraft(s => s.setCustomerName);
+ const customerNic = usePosDraft(s => s.customerNic);
+ const setCustomerNic = usePosDraft(s => s.setCustomerNic);
+ const paymentMethod = usePosDraft(s => s.paymentMethod);
+ const setPaymentMethod = usePosDraft(s => s.setPaymentMethod);
+ const specialNotes = usePosDraft(s => s.specialNotes);
+ const setSpecialNotes = usePosDraft(s => s.setSpecialNotes);
+ const pendingExchanges = usePosDraft(s => s.pendingExchanges);
+ const setPendingExchanges = usePosDraft(s => s.setPendingExchanges);
+ const resetDraft = usePosDraft(s => s.resetDraft);
+
+ // Ephemeral UI state (fine to reset on navigation).
  const [imeiQuery, setImeiQuery] = useState('');
- const [cartItems, setCartItems] = useState<CartItem[]>([]);
- const [customerWhatsapp, setCustomerWhatsapp] = useState('');
- const [customerName, setCustomerName] = useState('');
- const [customerNic, setCustomerNic] = useState('');
- const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
- const [specialNotes, setSpecialNotes] = useState('');
  const [billGenerated, setBillGenerated] = useState(false);
  const [lastBillId, setLastBillId] = useState('');
  const [notFound, setNotFound] = useState(false);
  const [lastSale, setLastSale] = useState<SaleRecord | null>(null);
  const [lastBillData, setLastBillData] = useState<BillData | null>(null);
  const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
- const [pendingExchanges, setPendingExchanges] = useState<ExchangePayload[]>([]);
 
  // B1 FIX: Use ref to avoid stale closure in barcode scanner callback
  const cartItemsRef = useRef(cartItems);
@@ -292,14 +296,8 @@ export default function POS() {
  setLastSale(sale);
  toast.success(`Sale ${billId} completed!`);
 
-    setCartItems([]);
+    resetDraft();      // clears cart, customer, payment, notes, trade-ins (module store)
     setImeiQuery('');
-    setCustomerWhatsapp('');
-    setCustomerName('');
-    setCustomerNic('');
-    setPaymentMethod('cash');
-    setSpecialNotes('');
-    setPendingExchanges([]);
 
     try {
       // PDF — totals mirror what the checkout RPC persisted, so the bill == the sale record.
@@ -672,6 +670,14 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  rows={2}
  className="w-full px-3 py-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus:outline-none focus:border-[var(--brand)] transition-all resize-none"
  />
+ {cartItems.length > 0 && (
+ <button
+ onClick={resetDraft}
+ className="w-full h-9 text-[9px] font-bold uppercase text-[var(--danger)] border border-[var(--danger)]/30 rounded-xl hover:bg-[var(--danger)]/5 transition-all"
+ >
+ Clear cart
+ </button>
+ )}
  <button
  onClick={handleGenerateQuotation}
  disabled={cartItems.length === 0}
@@ -1042,6 +1048,14 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  </div>
 
  <div className="mt-auto pt-10 shrink-0 relative z-10">
+ {cartItems.length > 0 && (
+ <Button
+ onClick={resetDraft}
+ className="w-full h-9 mb-3 bg-transparent border border-[var(--danger)]/30 text-[var(--danger)] text-[9px] font-bold uppercase rounded-xl hover:bg-[var(--danger)]/5 transition-all"
+ >
+ Clear cart
+ </Button>
+ )}
  <Button
  onClick={handleGenerateQuotation}
  disabled={cartItems.length === 0}
