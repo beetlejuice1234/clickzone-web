@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { MoreHorizontal, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Package, Smartphone, Search, Plus } from 'lucide-react';
-import { usePhones, useAccessories, reloadData, deletePhone, deleteAccessory } from '@/lib/api';
+import { usePhones, useAccessories, useSales, reloadData, deletePhone, deleteAccessory } from '@/lib/api';
 import { formatLKR, STATUS_LABELS, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useMobile } from '@/hooks/useMobile';
@@ -49,7 +49,23 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  const { isAdmin, requireAdmin } = useAuth();
  const { phones, isLoading: isLoadingPhones } = usePhones();
  const { accessories, isLoading: isLoadingAcc } = useAccessories();
+ const { sales } = useSales();
  const isLoading = isLoadingPhones || isLoadingAcc;
+
+ // Sold date per phone = the date of the (latest) sale whose items include this phone's IMEI.
+ // Derived from sales (no schema change); a returned-then-resold phone shows the most recent sale.
+ const soldDateByImei = useMemo(() => {
+ const map = new Map<string, string>();
+ for (const s of sales) {
+ for (const it of s.items) {
+ if (it.type === 'phone' && it.identifier) {
+ const prev = map.get(it.identifier);
+ if (!prev || s.date > prev) map.set(it.identifier, s.date);
+ }
+ }
+ }
+ return map;
+ }, [sales]);
 
  // In-stock vs sold counts for the current store scope (usePhones is already store-scoped:
  // owner's active store, or the staff's own store). Client issue: "number of phones should be shown".
@@ -263,6 +279,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <div className="flex-1 min-w-0">
  <p className="text-xs font-bold text-[var(--ink)] truncate ">{phone.model}</p>
  <p className="text-[9px] text-[var(--subtle)] ">{phone.storage} · {phone.color}</p>
+ <p className="text-[8px] text-[var(--subtle)]/70 mt-0.5">Added {phone.dateAdded || '—'}{phone.status === 'sold' ? ` · Sold ${soldDateByImei.get(phone.imei) ?? '—'}` : ''}</p>
  </div>
  <div className="text-right shrink-0">
  <p className="text-xs font-bold text-[var(--brand)]">{isAdmin ? formatLKR(phone.costPrice).split(' ')[1] : '---'}</p>
@@ -406,13 +423,15 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium cursor-pointer group hover:text-[var(--brand)]" onClick={() => handleSort('status')}>
  <div className="flex items-center gap-2 text-inherit transition-colors">Status {renderSortIcon('status')}</div>
  </TableHead>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium">Added</TableHead>
+ <TableHead className="py-3 px-6 text-[9px] font-bold text-[var(--subtle)] font-medium">Sold</TableHead>
  <TableHead className="py-3 px-6 text-right text-[9px] font-bold text-[var(--subtle)] font-medium">Actions</TableHead>
  </TableRow>
  </TableHeader>
  <TableBody className="zebra-table">
- {isLoading ? <SkeletonRows cols={isAdmin ? 8 : 7} /> : filteredPhones.length === 0 ? (
+ {isLoading ? <SkeletonRows cols={isAdmin ? 10 : 9} /> : filteredPhones.length === 0 ? (
  <TableRow>
- <TableCell colSpan={isAdmin ? 8 : 7} className="h-60 text-center bg-[var(--paper)]">
+ <TableCell colSpan={isAdmin ? 10 : 9} className="h-60 text-center bg-[var(--paper)]">
  <Smartphone size={32} className="mx-auto mb-4 text-[var(--line)]" />
  <p className="text-[10px] font-bold text-[var(--subtle)] ">No results found</p>
  </TableCell>
@@ -457,6 +476,8 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <span className="text-[9px] font-bold text-[var(--ink)] ">{STATUS_LABELS[phone.status]}</span>
  </div>
  </TableCell>
+ <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{phone.dateAdded || '—'}</TableCell>
+ <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{phone.status === 'sold' ? (soldDateByImei.get(phone.imei) ?? '—') : '—'}</TableCell>
  <TableCell className="py-3 px-6 text-right">
  <DropdownMenu>
  <DropdownMenuTrigger asChild>

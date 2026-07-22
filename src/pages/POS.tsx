@@ -293,6 +293,8 @@ export default function POS() {
  type: e.type,
  imei: e.tradeInImei,
  model: e.tradeInModel,
+ storage: e.tradeInStorage,
+ color: e.tradeInColor,
  valuation: e.tradeInValuation,
  condition: e.tradeInCondition,
  battery_health: e.tradeInBatteryHealth,

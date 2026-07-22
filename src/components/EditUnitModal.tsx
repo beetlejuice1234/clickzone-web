@@ -77,6 +77,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  costPrice: parseInt(costPrice),
  targetSalePrice: parseInt(targetSalePrice),
  status: phone.status,
+ source: phone.source,   // preserve trade-in / returned / purchased mark through an edit
  notes: notes.trim() || undefined,
  };
 

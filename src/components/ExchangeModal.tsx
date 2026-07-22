@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { cn, formatLKR, MODEL_OPTIONS } from '@/lib/utils';
+import { cn, formatLKR, MODEL_OPTIONS, STORAGE_OPTIONS, COLOR_OPTIONS } from '@/lib/utils';
 import { usePhones } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -14,6 +14,8 @@ export interface ExchangePayload {
   // Phone trade-in
   tradeInImei: string;
   tradeInModel: string;              // phone model OR accessory name (shown in the POS summary)
+  tradeInStorage?: string;
+  tradeInColor?: string;
   tradeInValuation: number;
   tradeInCondition: string;
   tradeInBatteryHealth?: number;
@@ -45,6 +47,8 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
   const [modelOther, setModelOther] = useState(false); // "Other" → free-text model (Android/etc.)
   const [condition, setCondition] = useState('');
   const [batteryHealth, setBatteryHealth] = useState('');
+  const [storage, setStorage] = useState('');
+  const [color, setColor] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerNic, setCustomerNic] = useState('');
   const [customerWhatsapp, setCustomerWhatsapp] = useState('');
@@ -75,6 +79,8 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
       setModelOther(!(MODEL_OPTIONS as readonly string[]).includes(match.model));
       if (match.condition) setCondition(match.condition);
       if (match.batteryHealth) setBatteryHealth(String(match.batteryHealth));
+      if (match.storage) setStorage(match.storage);
+      if (match.color) setColor(match.color);
       if (match.status === 'sold') {
         setPrevSoldBill(match.imei);
         setImeiWarning(`⚠ This phone was previously sold from ClickZone. It will be re-ingested as a trade-in.`);
@@ -137,6 +143,8 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
       tradeInCondition: condition,
       tradeInBatteryHealth: batteryHealth ? parseInt(batteryHealth) : undefined,
       tradeInTargetSalePrice: targetSalePrice ? parseInt(targetSalePrice) : undefined,
+      tradeInStorage: storage || undefined,
+      tradeInColor: color || undefined,
       tradeInNotes: notes,
       customerName,
       customerNic,
@@ -148,6 +156,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
   const handleClose = () => {
     setType('phone');
     setImei(''); setModel(''); setModelOther(false); setCondition(''); setBatteryHealth('');
+    setStorage(''); setColor('');
     setCustomerName(''); setCustomerNic(''); setCustomerWhatsapp('');
     setValuation(''); setTargetSalePrice(''); setNotes('');
     setImeiWarning(''); setPrevSoldBill('');
@@ -249,6 +258,25 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Battery Health %</Label>
                 <Input type="number" min="0" max="100" value={batteryHealth} onChange={(e) => setBatteryHealth(e.target.value)} placeholder="%" className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]" />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Storage</Label>
+                <Select value={storage} onValueChange={setStorage}>
+                  <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"><SelectValue placeholder="Storage" /></SelectTrigger>
+                  <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
+                    {STORAGE_OPTIONS.map(s => <SelectItem key={s} value={s} className="rounded-xl text-[10px] font-medium">{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Colour</Label>
+                <Select value={color} onValueChange={setColor}>
+                  <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"><SelectValue placeholder="Colour" /></SelectTrigger>
+                  <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
+                    {COLOR_OPTIONS.map(c => <SelectItem key={c} value={c} className="rounded-xl text-[10px] font-medium">{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
