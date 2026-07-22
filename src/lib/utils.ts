@@ -17,6 +17,12 @@ export function saleNetRevenue(s: { netPayable?: number; totalRevenue: number; t
  return s.netPayable ?? (s.totalRevenue - (s.tradeInValue ?? 0));
 }
 
+/** Normalise any stored date value (plain 'YYYY-MM-DD', ISO timestamp, or 'YYYY-MM-DD HH:MM:SS')
+ *  to a clean 'YYYY-MM-DD' for display. All those formats start with the date, so slice(0,10). */
+export function shortDate(s?: string | null): string {
+ return s ? String(s).slice(0, 10) : '—';
+}
+
 /* ---------------------------------------------------------------- Asia/Colombo dates
  * Date columns are text 'YYYY-MM-DD' (validated: 0 rows off-format), so lexicographic
  * gte/lte comparison is correct. These helpers pin "now" to Asia/Colombo to stay

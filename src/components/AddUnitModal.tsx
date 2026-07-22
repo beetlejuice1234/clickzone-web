@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Smartphone, Package } from 'lucide-react';
-import { MODEL_OPTIONS, STORAGE_OPTIONS, COLOR_OPTIONS, CONDITION_OPTIONS, CONDITION_LABELS } from '@/lib/utils';
+import { MODEL_OPTIONS, STORAGE_OPTIONS, COLOR_OPTIONS, CONDITION_OPTIONS, CONDITION_LABELS, todayColombo } from '@/lib/utils';
 import type { ConditionGrade } from '@/types';
 
 interface AddUnitModalProps {
@@ -134,7 +134,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  costPrice: parseInt(costPrice),
  targetSalePrice: parseInt(salePrice),
  status: 'in-stock' as const,
- dateAdded: new Date().toISOString(),
+ dateAdded: todayColombo(),
  notes: note.trim() || undefined,
  };
 

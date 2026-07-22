@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { MoreHorizontal, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Package, Smartphone, Search, Plus } from 'lucide-react';
 import { usePhones, useAccessories, useSales, reloadData, deletePhone, deleteAccessory } from '@/lib/api';
-import { formatLKR, STATUS_LABELS, cn } from '@/lib/utils';
+import { formatLKR, STATUS_LABELS, cn, shortDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useMobile } from '@/hooks/useMobile';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
@@ -279,7 +279,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <div className="flex-1 min-w-0">
  <p className="text-xs font-bold text-[var(--ink)] truncate ">{phone.model}</p>
  <p className="text-[9px] text-[var(--subtle)] ">{phone.storage} · {phone.color}</p>
- <p className="text-[8px] text-[var(--subtle)]/70 mt-0.5">Added {phone.dateAdded || '—'}{phone.status === 'sold' ? ` · Sold ${soldDateByImei.get(phone.imei) ?? '—'}` : ''}</p>
+ <p className="text-[8px] text-[var(--subtle)]/70 mt-0.5">Added {shortDate(phone.dateAdded)}{phone.status === 'sold' ? ` · Sold ${shortDate(soldDateByImei.get(phone.imei))}` : ''}</p>
  </div>
  <div className="text-right shrink-0">
  <p className="text-xs font-bold text-[var(--brand)]">{isAdmin ? formatLKR(phone.costPrice).split(' ')[1] : '---'}</p>
@@ -476,8 +476,8 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <span className="text-[9px] font-bold text-[var(--ink)] ">{STATUS_LABELS[phone.status]}</span>
  </div>
  </TableCell>
- <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{phone.dateAdded || '—'}</TableCell>
- <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{phone.status === 'sold' ? (soldDateByImei.get(phone.imei) ?? '—') : '—'}</TableCell>
+ <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{shortDate(phone.dateAdded)}</TableCell>
+ <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{phone.status === 'sold' ? shortDate(soldDateByImei.get(phone.imei)) : '—'}</TableCell>
  <TableCell className="py-3 px-6 text-right">
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
