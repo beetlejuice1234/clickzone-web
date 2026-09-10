@@ -23,6 +23,28 @@ import type { PhoneUnit, Accessory, Customer } from '@/types';
  */
 
 const listOpts = { staleTime: 5000 } as const;
+const PAGE_SIZE = 1000;
+
+/**
+ * Auto-paginating fetch helper.
+ * PostgREST hard-caps responses at 1000 rows. When tables exceed 1000 rows
+ * (e.g. sales, inventory), this fetches all pages sequentially so records are never lost.
+ */
+async function fetchAllRows<T>(
+  queryFactory: (rangeFrom: number, rangeTo: number) => PromiseLike<{ data: T[] | null; error: any }>
+): Promise<T[]> {
+  let offset = 0;
+  const allRows: T[] = [];
+  while (true) {
+    const { data, error } = await queryFactory(offset, offset + PAGE_SIZE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    allRows.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  return allRows;
+}
 
 /* ------------------------------------------------------------------ reads */
 
@@ -36,11 +58,12 @@ export function usePhones() {
   const { data, error, isLoading } = useQuery({
     queryKey: ['phones', isAdmin ? 'full' : 'public', scoped ?? 'all'],
     queryFn: async () => {
-      let q = supabase.from(view).select('*');
-      if (scoped) q = q.eq('store_id', scoped);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []).map(mapPhone);
+      const rows = await fetchAllRows((from, to) => {
+        let q = supabase.from(view).select('*');
+        if (scoped) q = q.eq('store_id', scoped);
+        return q.order('date_added', { ascending: false }).range(from, to);
+      });
+      return rows.map(mapPhone);
     },
     ...listOpts,
   });
@@ -55,11 +78,12 @@ export function useAccessories() {
   const { data, error, isLoading } = useQuery({
     queryKey: ['accessories', isAdmin ? 'full' : 'public', scoped ?? 'all'],
     queryFn: async () => {
-      let q = supabase.from(view).select('*');
-      if (scoped) q = q.eq('store_id', scoped);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []).map(mapAccessory);
+      const rows = await fetchAllRows((from, to) => {
+        let q = supabase.from(view).select('*');
+        if (scoped) q = q.eq('store_id', scoped);
+        return q.order('name', { ascending: true }).range(from, to);
+      });
+      return rows.map(mapAccessory);
     },
     ...listOpts,
   });
@@ -70,6 +94,7 @@ export function useAccessories() {
 // so a filtered Sales Log / monthly Dashboard pulls only the rows it needs. Dates are
 // 'YYYY-MM-DD', so string comparison is correct. No args = all rows (unchanged behaviour).
 // The range is part of the queryKey, so each range caches independently and refetches on change.
+// Ordered date desc, time desc and paginated beyond PostgREST 1000-row cap.
 export function useSales(range?: { from?: string; to?: string }) {
   const { isAdmin } = useAuth();
   const activeStore = useStoreScope((s) => s.activeStoreId);
@@ -80,13 +105,14 @@ export function useSales(range?: { from?: string; to?: string }) {
   const { data, error, isLoading } = useQuery({
     queryKey: ['sales', isAdmin ? 'full' : 'public', scoped ?? 'all', from ?? 'any', to ?? 'any'],
     queryFn: async () => {
-      let q = supabase.from(view).select('*');
-      if (scoped) q = q.eq('store_id', scoped);
-      if (from) q = q.gte('date', from);
-      if (to) q = q.lte('date', to);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []).map(mapSale);
+      const rows = await fetchAllRows((rFrom, rTo) => {
+        let q = supabase.from(view).select('*');
+        if (scoped) q = q.eq('store_id', scoped);
+        if (from) q = q.gte('date', from);
+        if (to) q = q.lte('date', to);
+        return q.order('date', { ascending: false }).order('time', { ascending: false }).range(rFrom, rTo);
+      });
+      return rows.map(mapSale);
     },
     ...listOpts,
   });
@@ -100,9 +126,10 @@ export function useReturns() {
     queryKey: ['returns'],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from('returns').select('*').eq('is_deleted', false);
-      if (error) throw error;
-      return (data ?? []).map(mapReturn);
+      const rows = await fetchAllRows((from, to) => {
+        return supabase.from('returns').select('*').eq('is_deleted', false).range(from, to);
+      });
+      return rows.map(mapReturn);
     },
     ...listOpts,
   });
@@ -115,9 +142,10 @@ export function useExchanges() {
     queryKey: ['exchanges'],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from('exchanges').select('*').eq('is_deleted', false);
-      if (error) throw error;
-      return (data ?? []).map(mapExchange);
+      const rows = await fetchAllRows((from, to) => {
+        return supabase.from('exchanges').select('*').eq('is_deleted', false).range(from, to);
+      });
+      return rows.map(mapExchange);
     },
     ...listOpts,
   });
@@ -131,10 +159,13 @@ export function useCustomers() {
     queryKey: ['customers'],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from('customers')
-        .select('id, name, nic, whatsapp, notes, created_at').order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data ?? []).map((r): Customer => ({
+      const rows = await fetchAllRows((from, to) => {
+        return supabase.from('customers')
+          .select('id, name, nic, whatsapp, notes, created_at')
+          .order('created_at', { ascending: false })
+          .range(from, to);
+      });
+      return rows.map((r): Customer => ({
         id: r.id as string,
         name: (r.name as string) ?? undefined,
         nic: (r.nic as string) ?? undefined,

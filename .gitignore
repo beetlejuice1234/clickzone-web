@@ -31,3 +31,5 @@ dist-ssr
 
 # Data snapshots / backups (contain real customer data — keep out of git history)
 docs/backups/
+backups/
+supabase/.temp/
