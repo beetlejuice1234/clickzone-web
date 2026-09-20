@@ -140,6 +140,55 @@ export const MODEL_OPTIONS = [
  'iPhone SE (3rd Gen)',
 ] as const;
 
+export const IPAD_MODELS = [
+  'iPad Pro 13" (M4)',
+  'iPad Pro 11" (M4)',
+  'iPad Pro 12.9" (6th Gen)',
+  'iPad Pro 11" (4th Gen)',
+  'iPad Air 13" (M2)',
+  'iPad Air 11" (M2)',
+  'iPad Air 5 (M1)',
+  'iPad Air 4',
+  'iPad 10th Gen',
+  'iPad 9th Gen',
+  'iPad 8th Gen',
+  'iPad mini 6',
+  'iPad mini 5',
+] as const;
+
+export const WATCH_MODELS = [
+  'Apple Watch Ultra 2',
+  'Apple Watch Ultra',
+  'Apple Watch Series 10 (46mm)',
+  'Apple Watch Series 10 (42mm)',
+  'Apple Watch Series 9 (45mm)',
+  'Apple Watch Series 9 (41mm)',
+  'Apple Watch Series 8 (45mm)',
+  'Apple Watch Series 8 (41mm)',
+  'Apple Watch Series 7 (45mm)',
+  'Apple Watch Series 7 (41mm)',
+  'Apple Watch Series 6 (44mm)',
+  'Apple Watch Series 6 (40mm)',
+  'Apple Watch SE (44mm)',
+  'Apple Watch SE (40mm)',
+  'Apple Watch Series 5 (44mm)',
+  'Apple Watch Series 5 (40mm)',
+  'Apple Watch Series 4 (44mm)',
+  'Apple Watch Series 4 (40mm)',
+  'Apple Watch Series 3 (42mm)',
+  'Apple Watch Series 3 (38mm)',
+] as const;
+
+export const WARRANTY_PRESETS = [
+  '1 Year Apple Care / Company Warranty',
+  '6 Months Shop Warranty',
+  '3 Months Shop Warranty',
+  '1 Month Checking Warranty',
+  '14 Days Checking Warranty',
+  '7 Days Checking Warranty',
+  'No Warranty',
+] as const;
+
 export const COLOR_OPTIONS = [
  // Neutrals / classics
  'Black',

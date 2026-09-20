@@ -55,6 +55,7 @@ export interface SaleItem {
  discount: number;
  quantity?: number; // Added for bulk accessories
  condition?: ConditionGrade; // For phones only
+ warranty?: string; // Optional per-item warranty description
 }
 
 export interface SaleRecord {

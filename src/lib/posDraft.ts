@@ -11,6 +11,7 @@ export interface CartItem {
   quantity: number;                 // for bulk accessories; always 1 for phone/repair
   repairDescription?: string;       // repair-only: what the repair is
   repairCost?: string;              // repair-only: parts cost (feeds profit)
+  warranty?: string;                // item warranty (e.g. '1 Year AppleCare', '6 Months Shop Warranty', etc.)
 }
 
 export type PaymentMethod = 'cash' | 'card' | 'transfer';
@@ -27,6 +28,7 @@ interface PosDraft {
   customerNic: string;
   paymentMethod: PaymentMethod;
   specialNotes: string;
+  defaultWarranty: string;
   pendingExchanges: ExchangePayload[];
   setCartItems: (u: SetArg<CartItem[]>) => void;
   setCustomerWhatsapp: (u: SetArg<string>) => void;
@@ -34,6 +36,7 @@ interface PosDraft {
   setCustomerNic: (u: SetArg<string>) => void;
   setPaymentMethod: (u: SetArg<PaymentMethod>) => void;
   setSpecialNotes: (u: SetArg<string>) => void;
+  setDefaultWarranty: (u: SetArg<string>) => void;
   setPendingExchanges: (u: SetArg<ExchangePayload[]>) => void;
   resetDraft: () => void;
 }
@@ -51,6 +54,7 @@ export const usePosDraft = create<PosDraft>((set) => ({
   customerNic: '',
   paymentMethod: 'cash',
   specialNotes: '',
+  defaultWarranty: '1 Month Checking Warranty',
   pendingExchanges: [],
   setCartItems: (u) => set((s) => ({ cartItems: apply(s.cartItems, u) })),
   setCustomerWhatsapp: (u) => set((s) => ({ customerWhatsapp: apply(s.customerWhatsapp, u) })),
@@ -58,9 +62,10 @@ export const usePosDraft = create<PosDraft>((set) => ({
   setCustomerNic: (u) => set((s) => ({ customerNic: apply(s.customerNic, u) })),
   setPaymentMethod: (u) => set((s) => ({ paymentMethod: apply(s.paymentMethod, u) })),
   setSpecialNotes: (u) => set((s) => ({ specialNotes: apply(s.specialNotes, u) })),
+  setDefaultWarranty: (u) => set((s) => ({ defaultWarranty: apply(s.defaultWarranty, u) })),
   setPendingExchanges: (u) => set((s) => ({ pendingExchanges: apply(s.pendingExchanges, u) })),
   resetDraft: () => set({
     cartItems: [], customerWhatsapp: '', customerName: '', customerNic: '',
-    paymentMethod: 'cash', specialNotes: '', pendingExchanges: [],
+    paymentMethod: 'cash', specialNotes: '', defaultWarranty: '1 Month Checking Warranty', pendingExchanges: [],
   }),
 }));
