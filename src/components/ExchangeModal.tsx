@@ -5,15 +5,17 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { cn, formatLKR, MODEL_OPTIONS, STORAGE_OPTIONS, COLOR_OPTIONS } from '@/lib/utils';
+import { cn, formatLKR, MODEL_OPTIONS, IPAD_MODELS, WATCH_MODELS, STORAGE_OPTIONS, COLOR_OPTIONS } from '@/lib/utils';
 import { usePhones } from '@/lib/api';
 import { toast } from 'sonner';
 
 export interface ExchangePayload {
-  type: 'phone' | 'accessory';
-  // Phone trade-in
-  tradeInImei: string;
-  tradeInModel: string;              // phone model OR accessory name (shown in the POS summary)
+  type: 'phone' | 'tablet' | 'watch' | 'accessory';
+  tradeInDeviceType?: 'phone' | 'tablet' | 'watch';
+  // Device trade-in
+  tradeInImei?: string;
+  tradeInSerialNumber?: string;
+  tradeInModel: string;              // model OR accessory name (shown in the POS summary)
   tradeInStorage?: string;
   tradeInColor?: string;
   tradeInValuation: number;
@@ -36,13 +38,16 @@ interface ExchangeModalProps {
   onConfirm: (exchange: ExchangePayload) => void;
 }
 
+const WATCH_SIZES = ['38mm', '40mm', '41mm', '42mm', '44mm', '45mm', '46mm', '49mm'] as const;
+
 export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }: ExchangeModalProps) {
   const { phones } = usePhones();
 
-  const [type, setType] = useState<'phone' | 'accessory'>('phone');
+  const [type, setType] = useState<'phone' | 'tablet' | 'watch' | 'accessory'>('phone');
 
-  // Phone fields
+  // Device fields
   const [imei, setImei] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
   const [model, setModel] = useState('');
   const [modelOther, setModelOther] = useState(false); // "Other" → free-text model (Android/etc.)
   const [condition, setCondition] = useState('');
@@ -55,7 +60,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
   const [valuation, setValuation] = useState('');
   const [targetSalePrice, setTargetSalePrice] = useState('');
   const [notes, setNotes] = useState('');
-  const [imeiWarning, setImeiWarning] = useState('');
+  const [identifierWarning, setIdentifierWarning] = useState('');
   const [prevSoldBill, setPrevSoldBill] = useState('');
 
   // Accessory fields
@@ -66,35 +71,48 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
   const numValuation = parseFloat(valuation) || 0;
   const netPayable = cartSubtotal - numValuation;
 
-  // Auto-fill when IMEI matches an existing phone in inventory (phone mode only)
+  // Auto-fill when IMEI or Serial matches an existing device in inventory
   useEffect(() => {
-    if (type !== 'phone' || imei.length !== 15) {
-      setImeiWarning('');
+    if (type === 'accessory') {
+      setIdentifierWarning('');
       setPrevSoldBill('');
       return;
     }
-    const match = phones.find(p => p.imei === imei);
+
+    let match = null;
+    if (type === 'phone' && imei.length === 15) {
+      match = phones.find(p => p.imei === imei);
+    } else if ((type === 'tablet' || type === 'watch') && serialNumber.trim().length >= 4) {
+      const q = serialNumber.trim().toLowerCase();
+      match = phones.find(p => p.serialNumber && p.serialNumber.trim().toLowerCase() === q);
+    }
+
     if (match) {
       setModel(match.model);
-      setModelOther(!(MODEL_OPTIONS as readonly string[]).includes(match.model));
+      const isKnownModel = (
+        type === 'phone' ? (MODEL_OPTIONS as readonly string[]).includes(match.model)
+        : type === 'tablet' ? (IPAD_MODELS as readonly string[]).includes(match.model)
+        : (WATCH_MODELS as readonly string[]).includes(match.model)
+      );
+      setModelOther(!isKnownModel);
       if (match.condition) setCondition(match.condition);
       if (match.batteryHealth) setBatteryHealth(String(match.batteryHealth));
       if (match.storage) setStorage(match.storage);
       if (match.color) setColor(match.color);
       if (match.status === 'sold') {
-        setPrevSoldBill(match.imei);
-        setImeiWarning(`⚠ This phone was previously sold from ClickZone. It will be re-ingested as a trade-in.`);
+        setPrevSoldBill(match.imei || match.serialNumber || 'sold');
+        setIdentifierWarning(`⚠ This unit was previously sold from ClickZone. It will be re-ingested as a trade-in.`);
       } else if (match.status === 'in-stock') {
-        setImeiWarning(`⚠ This IMEI is currently IN STOCK in your inventory. Cannot trade in an unsold unit.`);
+        setIdentifierWarning(`⚠ This unit is currently IN STOCK in your inventory. Cannot trade in an unsold unit.`);
       } else {
-        setImeiWarning('');
+        setIdentifierWarning('');
         setPrevSoldBill('');
       }
     } else {
-      setImeiWarning('');
+      setIdentifierWarning('');
       setPrevSoldBill('');
     }
-  }, [imei, phones, type]);
+  }, [imei, serialNumber, phones, type]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +125,6 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
       const qty = Math.max(1, parseInt(accQty) || 1);
       onConfirm({
         type: 'accessory',
-        tradeInImei: '',
         tradeInModel: accName.trim(),
         tradeInValuation: numValuation,
         tradeInCondition: condition,
@@ -123,21 +140,37 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
       return;
     }
 
-    // Phone trade-in
-    if (!imei || !/^\d{15}$/.test(imei)) { toast.error('IMEI must be exactly 15 digits'); return; }
-    const match = phones.find(p => p.imei === imei);
-    if (match && match.status === 'in-stock') {
-      toast.error('This IMEI is currently in stock — cannot trade in an unsold unit.');
-      return;
+    // Phone / Tablet / Watch trade-in
+    if (type === 'phone') {
+      if (!imei || !/^\d{15}$/.test(imei)) { toast.error('IMEI must be exactly 15 digits'); return; }
+      const match = phones.find(p => p.imei === imei);
+      if (match && match.status === 'in-stock') {
+        toast.error('This IMEI is currently in stock — cannot trade in an unsold unit.');
+        return;
+      }
+    } else {
+      // Tablet or Watch requires Serial Number
+      if (!serialNumber.trim()) {
+        toast.error('Serial Number is required for iPad / Apple Watch');
+        return;
+      }
+      const match = phones.find(p => p.serialNumber && p.serialNumber.trim().toLowerCase() === serialNumber.trim().toLowerCase());
+      if (match && match.status === 'in-stock') {
+        toast.error('This Serial Number is currently in stock — cannot trade in an unsold unit.');
+        return;
+      }
     }
+
     if (!model) { toast.error('Model is required'); return; }
     if (!condition) { toast.error('Condition is required'); return; }
     if (!customerName) { toast.error('Customer Name is required'); return; }
     if (!customerNic) { toast.error('Customer NIC is required'); return; }
 
     onConfirm({
-      type: 'phone',
-      tradeInImei: imei,
+      type,
+      tradeInDeviceType: type,
+      tradeInImei: imei.trim() || undefined,
+      tradeInSerialNumber: serialNumber.trim() ? serialNumber.trim().toUpperCase() : undefined,
       tradeInModel: model,
       tradeInValuation: numValuation,
       tradeInCondition: condition,
@@ -155,65 +188,106 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
 
   const handleClose = () => {
     setType('phone');
-    setImei(''); setModel(''); setModelOther(false); setCondition(''); setBatteryHealth('');
+    setImei(''); setSerialNumber(''); setModel(''); setModelOther(false); setCondition(''); setBatteryHealth('');
     setStorage(''); setColor('');
     setCustomerName(''); setCustomerNic(''); setCustomerWhatsapp('');
     setValuation(''); setTargetSalePrice(''); setNotes('');
-    setImeiWarning(''); setPrevSoldBill('');
+    setIdentifierWarning(''); setPrevSoldBill('');
     setAccName(''); setAccSku(''); setAccQty('1');
     onClose();
   };
 
+  const activeModels = (
+    type === 'phone' ? MODEL_OPTIONS
+    : type === 'tablet' ? IPAD_MODELS
+    : WATCH_MODELS
+  );
+
   return (
     <Dialog open={open} onOpenChange={(val) => !val && handleClose()}>
-      <DialogContent className="sm:max-w-[620px] bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[640px] bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold uppercase tracking-widest text-[var(--ink)]">Add Trade-In</DialogTitle>
           <DialogDescription className="text-[10px] uppercase text-[var(--subtle)] tracking-widest font-bold">
-            Customer Exchange Details
+            Customer Exchange Details · Phone, iPad, Watch or Accessory
           </DialogDescription>
         </DialogHeader>
 
         {/* Type toggle */}
-        <div className="grid grid-cols-2 gap-2">
-          {(['phone', 'accessory'] as const).map(t => (
+        <div className="grid grid-cols-4 gap-2">
+          {([
+            { id: 'phone', label: 'Phone' },
+            { id: 'tablet', label: 'iPad / Tablet' },
+            { id: 'watch', label: 'Apple Watch' },
+            { id: 'accessory', label: 'Accessory' },
+          ] as const).map(t => (
             <button
-              key={t}
+              key={t.id}
               type="button"
-              onClick={() => setType(t)}
+              onClick={() => { setType(t.id); setModel(''); setModelOther(false); }}
               className={cn(
-                'h-10 text-[11px] font-bold uppercase rounded-xl border-2 transition-all',
-                type === t
+                'h-10 text-[10px] font-bold uppercase rounded-xl border-2 transition-all px-1',
+                type === t.id
                   ? 'bg-[var(--terracotta)] text-white border-[var(--terracotta)]'
                   : 'bg-[var(--paper)] text-[var(--ink)] border-[var(--line)] hover:border-[var(--ink)]'
               )}
             >
-              {t === 'phone' ? 'Phone' : 'Accessory'}
+              {t.label}
             </button>
           ))}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {type === 'phone' ? (
+          {type !== 'accessory' ? (
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2 col-span-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Trade-In IMEI *</Label>
-                <Input
-                  value={imei}
-                  onChange={(e) => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
-                  placeholder="15-digit IMEI (auto-fills if found in system)"
-                  className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
-                />
-                {imeiWarning && (
-                  <p className={`text-[10px] font-bold px-2 py-1 rounded-xl border ${prevSoldBill ? 'text-[var(--warning)] bg-[var(--warning)]/10 border-[var(--warning)]/30' : 'text-[var(--danger)] bg-[var(--danger)]/5 border-[var(--danger)]/20'}`}>
-                    {imeiWarning}
-                  </p>
-                )}
-                {imei.length === 15 && !phones.find(p => p.imei === imei) && (
-                  <p className="text-[10px] text-[var(--subtle)] font-bold">New IMEI — not in your system. Fill details manually.</p>
-                )}
-              </div>
+              {/* Primary Identifier */}
+              {type === 'phone' ? (
+                <div className="space-y-2 col-span-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Trade-In IMEI *</Label>
+                  <Input
+                    value={imei}
+                    onChange={(e) => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                    placeholder="15-digit IMEI (auto-fills if found in system)"
+                    className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
+                  />
+                  {identifierWarning && (
+                    <p className={`text-[10px] font-bold px-2 py-1 rounded-xl border ${prevSoldBill ? 'text-[var(--warning)] bg-[var(--warning)]/10 border-[var(--warning)]/30' : 'text-[var(--danger)] bg-[var(--danger)]/5 border-[var(--danger)]/20'}`}>
+                      {identifierWarning}
+                    </p>
+                  )}
+                  {imei.length === 15 && !phones.find(p => p.imei === imei) && (
+                    <p className="text-[10px] text-[var(--subtle)] font-bold">New IMEI — not in your system. Fill details manually.</p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2 col-span-2 sm:col-span-1">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Serial Number *</Label>
+                    <Input
+                      value={serialNumber}
+                      onChange={(e) => setSerialNumber(e.target.value.toUpperCase())}
+                      placeholder={type === 'watch' ? 'Apple Watch Serial Number' : 'iPad Serial Number'}
+                      className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)] uppercase font-mono"
+                    />
+                  </div>
+                  <div className="space-y-2 col-span-2 sm:col-span-1">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">IMEI (Optional / Cellular)</Label>
+                    <Input
+                      value={imei}
+                      onChange={(e) => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                      placeholder="Optional for cellular units"
+                      className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
+                    />
+                  </div>
+                  {identifierWarning && (
+                    <p className={`col-span-2 text-[10px] font-bold px-2 py-1 rounded-xl border ${prevSoldBill ? 'text-[var(--warning)] bg-[var(--warning)]/10 border-[var(--warning)]/30' : 'text-[var(--danger)] bg-[var(--danger)]/5 border-[var(--danger)]/20'}`}>
+                      {identifierWarning}
+                    </p>
+                  )}
+                </>
+              )}
 
+              {/* Model */}
               <div className="space-y-2 col-span-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Model *</Label>
                 <Select
@@ -221,25 +295,26 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                   onValueChange={(v) => { if (v === '__other__') { setModelOther(true); setModel(''); } else { setModelOther(false); setModel(v); } }}
                 >
                   <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]">
-                    <SelectValue placeholder="Select model" />
+                    <SelectValue placeholder={`Select ${type === 'watch' ? 'Apple Watch' : type === 'tablet' ? 'iPad' : 'phone'} model`} />
                   </SelectTrigger>
                   <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
-                    {MODEL_OPTIONS.map(m => (
+                    {activeModels.map(m => (
                       <SelectItem key={m} value={m} className="rounded-xl text-[10px] font-medium">{m}</SelectItem>
                     ))}
-                    <SelectItem value="__other__" className="rounded-xl text-[10px] font-medium">Other (Android / specify)…</SelectItem>
+                    <SelectItem value="__other__" className="rounded-xl text-[10px] font-medium">Other (Specify model)…</SelectItem>
                   </SelectContent>
                 </Select>
                 {modelOther && (
                   <Input
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    placeholder="e.g. Samsung Galaxy S23"
+                    placeholder={type === 'watch' ? 'e.g. Apple Watch Hermès 45mm' : type === 'tablet' ? 'e.g. Samsung Galaxy Tab S9' : 'e.g. Samsung Galaxy S23'}
                     className="mt-2 bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
                   />
                 )}
               </div>
 
+              {/* Condition & Battery */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Condition *</Label>
                 <Select value={condition} onValueChange={setCondition}>
@@ -260,15 +335,29 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 <Input type="number" min="0" max="100" value={batteryHealth} onChange={(e) => setBatteryHealth(e.target.value)} placeholder="%" className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]" />
               </div>
 
+              {/* Storage or Watch Case Size */}
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Storage</Label>
-                <Select value={storage} onValueChange={setStorage}>
-                  <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"><SelectValue placeholder="Storage" /></SelectTrigger>
-                  <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
-                    {STORAGE_OPTIONS.map(s => <SelectItem key={s} value={s} className="rounded-xl text-[10px] font-medium">{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">
+                  {type === 'watch' ? 'Case Size / Spec' : 'Storage'}
+                </Label>
+                {type === 'watch' ? (
+                  <Select value={storage} onValueChange={setStorage}>
+                    <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"><SelectValue placeholder="Case size" /></SelectTrigger>
+                    <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
+                      {WATCH_SIZES.map(s => <SelectItem key={s} value={s} className="rounded-xl text-[10px] font-medium">{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select value={storage} onValueChange={setStorage}>
+                    <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"><SelectValue placeholder="Storage" /></SelectTrigger>
+                    <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
+                      {STORAGE_OPTIONS.map(s => <SelectItem key={s} value={s} className="rounded-xl text-[10px] font-medium">{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
+
+              {/* Colour */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Colour</Label>
                 <Select value={color} onValueChange={setColor}>
@@ -279,6 +368,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 </Select>
               </div>
 
+              {/* Customer Info */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">Customer Name *</Label>
                 <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="John Doe" className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]" />

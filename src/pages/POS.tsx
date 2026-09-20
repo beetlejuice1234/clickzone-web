@@ -1,10 +1,11 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2, Wrench } from 'lucide-react';
+import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2, Wrench, ShieldCheck } from 'lucide-react';
 import { usePhones, useAccessories, reloadData, checkout, createQuotation } from '@/lib/api';
-import { formatLKR, cn, todayColombo } from '@/lib/utils';
+import { formatLKR, cn, todayColombo, WARRANTY_PRESETS } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { shareBillPDF, downloadBillPDF, openBillPDF, type BillData } from '@/lib/pdfBill';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { useMobile } from '@/hooks/useMobile';
@@ -37,6 +38,8 @@ export default function POS() {
  const setPaymentMethod = usePosDraft(s => s.setPaymentMethod);
  const specialNotes = usePosDraft(s => s.specialNotes);
  const setSpecialNotes = usePosDraft(s => s.setSpecialNotes);
+ const defaultWarranty = usePosDraft(s => s.defaultWarranty);
+ const setDefaultWarranty = usePosDraft(s => s.setDefaultWarranty);
  const pendingExchanges = usePosDraft(s => s.pendingExchanges);
  const setPendingExchanges = usePosDraft(s => s.setPendingExchanges);
  const resetDraft = usePosDraft(s => s.resetDraft);
@@ -58,61 +61,84 @@ export default function POS() {
  phonesRef.current = phones;
  const accRef = useRef(accessories);
  accRef.current = accessories;
+ const defaultWarrantyRef = useRef(defaultWarranty);
+ defaultWarrantyRef.current = defaultWarranty;
 
  const handleLookup = useCallback((value: string) => {
  const query = value.trim();
  if (!query) return;
 
- // Check phones by IMEI or Serial Number (watches/tablets have no IMEI)
- const phone = phonesRef.current.find(p => (!!p.imei && p.imei === query) || (!!p.serialNumber && p.serialNumber === query));
- if (phone && phone.status === 'in-stock') {
- if (!cartItemsRef.current.some(c => c.type === 'phone' && (c.itemRef as PhoneUnit).id === phone.id)) {
- setCartItems(prev => [...prev, {
- cartId: `c${Date.now()}`,
- type: 'phone',
- itemRef: phone,
- finalPrice: phone.targetSalePrice ? String(phone.targetSalePrice) : '',
- discount: '0',
- quantity: 1
- }]);
- toast.success(`Added ${phone.model} to cart`);
- } else {
- toast.info('This phone is already in the cart');
- }
- setNotFound(false);
- setImeiQuery('');
- return;
+ const qClean = query.toUpperCase();
+
+ // Check phones, tablets, and watches by IMEI or Serial Number (case-insensitive & trimmed)
+ const phone = phonesRef.current.find(p => {
+   const imClean = p.imei ? p.imei.trim().toUpperCase() : '';
+   const snClean = p.serialNumber ? p.serialNumber.trim().toUpperCase() : '';
+   return (imClean && imClean === qClean) || (snClean && snClean === qClean);
+ });
+
+ if (phone) {
+   if (phone.status === 'in-stock') {
+     if (!cartItemsRef.current.some(c => c.type === 'phone' && (c.itemRef as PhoneUnit).id === phone.id)) {
+       setCartItems(prev => [...prev, {
+         cartId: `c${Date.now()}`,
+         type: 'phone',
+         itemRef: phone,
+         finalPrice: phone.targetSalePrice ? String(phone.targetSalePrice) : '',
+         discount: '0',
+         quantity: 1,
+         warranty: defaultWarrantyRef.current || undefined,
+       }]);
+       toast.success(`Added ${phone.model} to cart`);
+     } else {
+       toast.info('This device is already in the cart');
+     }
+     setNotFound(false);
+     setImeiQuery('');
+     return;
+   } else {
+     toast.error(`Device ${phone.model} found, but status is "${phone.status}" (not in-stock)`);
+     setNotFound(true);
+     return;
+   }
  }
 
- // Check accessories by SKU
- const accessory = accRef.current.find(a => a.sku === query);
- if (accessory && accessory.quantity > 0) {
-  const existingIndex = cartItemsRef.current.findIndex(c => c.type === 'accessory' && (c.itemRef as Accessory).sku === query);
-  
-  if (existingIndex > -1) {
-    const existing = cartItemsRef.current[existingIndex];
-    if (existing.quantity + 1 > accessory.quantity) {
-      toast.error(`Only ${accessory.quantity} available in stock`);
-      return;
+ // Check accessories by SKU (case-insensitive)
+ const accessory = accRef.current.find(a => a.sku.trim().toUpperCase() === qClean);
+ if (accessory) {
+  if (accessory.quantity > 0) {
+    const existingIndex = cartItemsRef.current.findIndex(c => c.type === 'accessory' && (c.itemRef as Accessory).sku.trim().toUpperCase() === qClean);
+    
+    if (existingIndex > -1) {
+      const existing = cartItemsRef.current[existingIndex];
+      if (existing.quantity + 1 > accessory.quantity) {
+        toast.error(`Only ${accessory.quantity} available in stock`);
+        return;
+      }
+      setCartItems(prev => prev.map((item, idx) => 
+        idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item
+      ));
+      toast.success(`Incremented ${accessory.name} quantity`);
+    } else {
+      setCartItems(prev => [...prev, {
+        cartId: `c${Date.now()}`,
+        type: 'accessory',
+        itemRef: accessory,
+        finalPrice: String(accessory.salePrice),
+        discount: '0',
+        quantity: 1,
+        warranty: defaultWarrantyRef.current || undefined,
+      }]);
+      toast.success(`Added ${accessory.name} to cart`);
     }
-    setCartItems(prev => prev.map((item, idx) => 
-      idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item
-    ));
-    toast.success(`Incremented ${accessory.name} quantity`);
+    setNotFound(false);
+    setImeiQuery('');
+    return;
   } else {
-    setCartItems(prev => [...prev, {
-      cartId: `c${Date.now()}`,
-      type: 'accessory',
-      itemRef: accessory,
-      finalPrice: String(accessory.salePrice),
-      discount: '0',
-      quantity: 1
-    }]);
-    toast.success(`Added ${accessory.name} to cart`);
+    toast.error(`Accessory ${accessory.name} is out of stock`);
+    setNotFound(true);
+    return;
   }
- setNotFound(false);
- setImeiQuery('');
- return;
  }
 
  setNotFound(true);
@@ -164,12 +190,13 @@ export default function POS() {
      quantity: 1,
      repairDescription: r.description,
      repairCost: r.cost,
+     warranty: defaultWarrantyRef.current || undefined,
    }]);
    setRepairModalOpen(false);
    toast.success('Repair added to cart');
  }, []);
 
- const updateCartItem = (cartId: string, field: 'finalPrice' | 'discount' | 'quantity', value: string | number) => {
+ const updateCartItem = (cartId: string, field: 'finalPrice' | 'discount' | 'quantity' | 'warranty', value: string | number) => {
  setCartItems(prev => prev.map(c => {
    if (c.cartId === cartId) {
      if (field === 'quantity') {
@@ -224,17 +251,20 @@ export default function POS() {
  const saleItems: SaleItem[] = cartItems.map(c => {
  const p = parseInt(c.finalPrice) || 0;
  const d = parseInt(c.discount) || 0;
+ const itemWarranty = c.warranty ?? defaultWarranty ?? undefined;
  if (c.type === 'phone') {
  const phone = c.itemRef as PhoneUnit;
+ const deviceIdentifier = (phone.imei && phone.imei.trim()) || (phone.serialNumber && phone.serialNumber.trim()) || phone.id;
  return {
  type: 'phone',
- name: `${phone.model} ${phone.storage}`,
- identifier: phone.imei,
+ name: `${phone.model} ${phone.storage}`.trim(),
+ identifier: deviceIdentifier,
  costPrice: phone.costPrice,
  finalPrice: Math.max(0, p - d),
  discount: d,
  quantity: 1,
- condition: phone.condition
+ condition: phone.condition,
+ warranty: itemWarranty,
  };
  } else if (c.type === 'accessory') {
  const acc = c.itemRef as Accessory;
@@ -245,7 +275,8 @@ export default function POS() {
  costPrice: acc.costPrice * c.quantity,
  finalPrice: Math.max(0, p - d) * c.quantity,
  discount: d * c.quantity,
- quantity: c.quantity
+ quantity: c.quantity,
+ warranty: itemWarranty,
  };
  } else {
  // repair / service line — no stock; entered parts cost feeds owner profit
@@ -257,6 +288,7 @@ export default function POS() {
  finalPrice: Math.max(0, p - d),
  discount: d,
  quantity: 1,
+ warranty: itemWarranty,
  };
  }
  });
@@ -291,10 +323,12 @@ export default function POS() {
  // Multiple trade-in items — each becomes its own inventory record inside the checkout RPC.
  trade_ins: pendingExchanges.map(e => ({
  type: e.type,
- imei: e.tradeInImei,
+ device_type: e.tradeInDeviceType || (e.type === 'accessory' ? undefined : e.type),
+ imei: e.tradeInImei || null,
+ serial_number: e.tradeInSerialNumber || null,
  model: e.tradeInModel,
- storage: e.tradeInStorage,
- color: e.tradeInColor,
+ storage: e.tradeInStorage || null,
+ color: e.tradeInColor || null,
  valuation: e.tradeInValuation,
  condition: e.tradeInCondition,
  battery_health: e.tradeInBatteryHealth,
@@ -353,9 +387,14 @@ export default function POS() {
 
       // WhatsApp: send the prefilled receipt to the customer's chat.
       if (hasWhatsapp) {
-        const itemLines = saleItems.map(i =>
-          ` • ${i.name}\n ↳ ${i.type === 'phone' ? 'IMEI' : 'SKU'}: ${i.identifier}${i.condition ? ` · Grade: ${i.condition.toUpperCase()}` : ''}`
-        ).join('\n');
+        const itemLines = saleItems.map(i => {
+          const isImei = (/^\d{15}$/).test(i.identifier || '');
+          const idLabel = i.type === 'phone' ? (isImei ? 'IMEI' : 'S/N') : 'SKU';
+          const idPart = i.identifier ? `\n ↳ ${idLabel}: ${i.identifier}` : '';
+          const condPart = i.condition ? ` · Grade: ${i.condition.toUpperCase()}` : '';
+          const warPart = i.warranty ? `\n ↳ Warranty: ${i.warranty}` : '';
+          return ` • ${i.name}${idPart}${condPart}${warPart}`;
+        }).join('\n');
 
         const discountLine = totalDiscount > 0
           ? `\n💰 *Discount Applied:* ${formatLKR(totalDiscount)}`
@@ -424,15 +463,45 @@ _Please keep this message as your digital receipt._`;
  const quoteItems: SaleItem[] = cartItems.map(c => {
  const p = parseInt(c.finalPrice) || 0;
  const d = parseInt(c.discount) || 0;
+ const itemWarranty = c.warranty ?? defaultWarranty ?? undefined;
  if (c.type === 'phone') {
  const phone = c.itemRef as PhoneUnit;
- return { type: 'phone', name: `${phone.model} ${phone.storage}`, identifier: phone.imei, costPrice: 0, finalPrice: Math.max(0, p - d), discount: d, quantity: 1, condition: phone.condition };
+ const deviceIdentifier = (phone.imei && phone.imei.trim()) || (phone.serialNumber && phone.serialNumber.trim()) || phone.id;
+ return {
+ type: 'phone',
+ name: `${phone.model} ${phone.storage}`.trim(),
+ identifier: deviceIdentifier,
+ costPrice: 0,
+ finalPrice: Math.max(0, p - d),
+ discount: d,
+ quantity: 1,
+ condition: phone.condition,
+ warranty: itemWarranty,
+ };
  }
  if (c.type === 'accessory') {
  const acc = c.itemRef as Accessory;
- return { type: 'accessory', name: acc.name, identifier: acc.sku, costPrice: 0, finalPrice: Math.max(0, p - d) * c.quantity, discount: d * c.quantity, quantity: c.quantity };
+ return {
+ type: 'accessory',
+ name: acc.name,
+ identifier: acc.sku,
+ costPrice: 0,
+ finalPrice: Math.max(0, p - d) * c.quantity,
+ discount: d * c.quantity,
+ quantity: c.quantity,
+ warranty: itemWarranty,
+ };
  }
- return { type: 'repair' as const, name: c.repairDescription || 'Repair', identifier: '', costPrice: 0, finalPrice: Math.max(0, p - d), discount: d, quantity: 1 };
+ return {
+ type: 'repair' as const,
+ name: c.repairDescription || 'Repair',
+ identifier: '',
+ costPrice: 0,
+ finalPrice: Math.max(0, p - d),
+ discount: d,
+ quantity: 1,
+ warranty: itemWarranty,
+ };
  });
 
  let quoteNo = '';
@@ -569,91 +638,101 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  <p className="text-[10px] font-bold text-[var(--subtle)] font-medium">Cart is empty</p>
  </div>
  ) : (
- <AnimatePresence>
- {cartItems.map((item) => {
- const ref = item.itemRef as (PhoneUnit & Accessory);
- const name = item.type === 'repair' ? (item.repairDescription || 'Repair') : item.type === 'phone' ? `${ref.model} ${ref.storage}` : ref.name;
- const sub = item.type === 'repair' ? 'Repair / Service' : item.type === 'phone' ? ref.imei : ref.sku;
- return (
- <motion.div
- key={item.cartId}
- initial={{ opacity: 0, scale: 0.98 }}
- animate={{ opacity: 1, scale: 1 }}
- exit={{ opacity: 0, x: -20 }}
- className="bg-[var(--paper)] rounded-xl p-4 border border-[var(--line)] relative overflow-hidden"
- >
- <div className="absolute top-0 left-0 w-[2px] h-full bg-[var(--brand)]" />
- <div className="flex items-start justify-between gap-2 mb-3 pl-1">
- <div className="flex items-center gap-3 flex-1 min-w-0">
- <div className="min-w-0">
- <p className="text-xs font-bold text-[var(--ink)] truncate ">{name}</p>
- <p className="text-[9px] text-[var(--subtle)] ">{sub}</p>
- </div>
- </div>
- <button onClick={() => handleRemoveCartItem(item.cartId)} className="w-6 h-6 flex items-center justify-center rounded-xl bg-[var(--bg-app)] text-[var(--danger)] active:scale-90 transition-transform shrink-0">
- <X size={12} />
- </button>
- </div>
- <div className="grid grid-cols-2 gap-3 pl-1">
- {item.type === 'accessory' && (
-   <div className="col-span-2 flex items-center justify-between bg-[var(--bg-app)] border border-[var(--line)] p-2 rounded-xl">
-     <span className="text-[8px] font-bold text-[var(--subtle)] ">QUANTITY</span>
-     <div className="flex items-center gap-3">
-       <button 
-         onClick={() => updateCartItem(item.cartId, 'quantity', item.quantity - 1)}
-         className="w-6 h-6 flex items-center justify-center border border-[var(--line)] bg-[var(--paper)] text-[var(--ink)] active:bg-[var(--line)]"
-       >
-         -
-       </button>
-       <span className="text-[10px] font-bold w-4 text-center">{item.quantity}</span>
-       <button 
-         onClick={() => updateCartItem(item.cartId, 'quantity', item.quantity + 1)}
-         className="w-6 h-6 flex items-center justify-center border border-[var(--line)] bg-[var(--paper)] text-[var(--ink)] active:bg-[var(--line)]"
-       >
-         +
-       </button>
-     </div>
-   </div>
- )}
- <div>
- <p className="text-[8px] text-[var(--subtle)] mb-1 font-medium ">Price</p>
- <input
- type="number"
- value={item.finalPrice}
- onChange={(e) => updateCartItem(item.cartId, 'finalPrice', e.target.value)}
- className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] focus:outline-none focus:border-[var(--brand)]"
- />
- </div>
- <div>
- <p className="text-[8px] text-[var(--subtle)] mb-1 font-medium ">Discount</p>
- <input
- type="number"
- value={item.discount}
- onChange={(e) => updateCartItem(item.cartId, 'discount', e.target.value)}
- className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--danger)] focus:outline-none focus:border-[var(--brand)]"
- />
- </div>
- </div>
- </motion.div>
- );
- })}
- </AnimatePresence>
- )}
- </div>
+  <AnimatePresence>
+  {cartItems.map((item) => {
+  const ref = item.itemRef as (PhoneUnit & Accessory);
+  const name = item.type === 'repair' ? (item.repairDescription || 'Repair') : item.type === 'phone' ? `${ref.model} ${ref.storage}` : ref.name;
+  const sub = item.type === 'repair' ? 'Repair / Service' : item.type === 'phone' ? (ref.imei ? `IMEI: ${ref.imei}` : `S/N: ${ref.serialNumber || ref.id}`) : ref.sku;
+  return (
+  <motion.div
+  key={item.cartId}
+  initial={{ opacity: 0, scale: 0.98 }}
+  animate={{ opacity: 1, scale: 1 }}
+  exit={{ opacity: 0, x: -20 }}
+  className="bg-[var(--paper)] rounded-xl p-4 border border-[var(--line)] relative overflow-hidden"
+  >
+  <div className="absolute top-0 left-0 w-[2px] h-full bg-[var(--brand)]" />
+  <div className="flex items-start justify-between gap-2 mb-3 pl-1">
+  <div className="flex items-center gap-3 flex-1 min-w-0">
+  <div className="min-w-0">
+  <p className="text-xs font-bold text-[var(--ink)] truncate ">{name}</p>
+  <p className="text-[9px] text-[var(--subtle)] ">{sub}</p>
+  </div>
+  </div>
+  <button onClick={() => handleRemoveCartItem(item.cartId)} className="w-6 h-6 flex items-center justify-center rounded-xl bg-[var(--bg-app)] text-[var(--danger)] active:scale-90 transition-transform shrink-0">
+  <X size={12} />
+  </button>
+  </div>
+  <div className="grid grid-cols-2 gap-3 pl-1">
+  {item.type === 'accessory' && (
+    <div className="col-span-2 flex items-center justify-between bg-[var(--bg-app)] border border-[var(--line)] p-2 rounded-xl">
+      <span className="text-[8px] font-bold text-[var(--subtle)] ">QUANTITY</span>
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={() => updateCartItem(item.cartId, 'quantity', item.quantity - 1)}
+          className="w-6 h-6 flex items-center justify-center border border-[var(--line)] bg-[var(--paper)] text-[var(--ink)] active:bg-[var(--line)]"
+        >
+          -
+        </button>
+        <span className="text-[10px] font-bold w-4 text-center">{item.quantity}</span>
+        <button 
+          onClick={() => updateCartItem(item.cartId, 'quantity', item.quantity + 1)}
+          className="w-6 h-6 flex items-center justify-center border border-[var(--line)] bg-[var(--paper)] text-[var(--ink)] active:bg-[var(--line)]"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  )}
+  <div>
+  <p className="text-[8px] text-[var(--subtle)] mb-1 font-medium ">Price</p>
+  <input
+  type="number"
+  value={item.finalPrice}
+  onChange={(e) => updateCartItem(item.cartId, 'finalPrice', e.target.value)}
+  className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--ink)] focus:outline-none focus:border-[var(--brand)]"
+  />
+  </div>
+  <div>
+  <p className="text-[8px] text-[var(--subtle)] mb-1 font-medium ">Discount</p>
+  <input
+  type="number"
+  value={item.discount}
+  onChange={(e) => updateCartItem(item.cartId, 'discount', e.target.value)}
+  className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--danger)] focus:outline-none focus:border-[var(--brand)]"
+  />
+  </div>
+  <div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
+    <span className="text-[8px] font-bold text-[var(--subtle)] uppercase shrink-0">Warranty</span>
+    <input
+      type="text"
+      value={item.warranty ?? defaultWarranty ?? ''}
+      onChange={(e) => updateCartItem(item.cartId, 'warranty', e.target.value)}
+      placeholder="e.g. 1 Year Apple Care"
+      className="h-7 px-2 flex-1 bg-[var(--bg-app)] border border-[var(--line)] rounded-lg text-[9px] font-bold text-[var(--ink)] focus:outline-none focus:border-[var(--brand)]"
+    />
+  </div>
+  </div>
+  </motion.div>
+  );
+  })}
+  </AnimatePresence>
+  )}
+  </div>
 
- {/* Footer — Customer + Checkout */}
- <div className="bg-[var(--paper)] border-t border-[var(--line)] p-5 shadow-2xl shrink-0 space-y-4">
-   {pendingExchanges.map((ex, idx) => (
-     <div key={idx} className="w-full bg-[var(--brand)]/10 border border-[var(--brand)]/30 p-3 flex items-center justify-between rounded-xl">
-       <div>
-         <p className="text-[10px] font-bold text-[var(--brand)] uppercase">Trade-In{ex.type === 'accessory' ? ' · Accessory' : ''}</p>
-         <p className="text-[11px] font-bold text-[var(--ink)] mt-0.5">{ex.tradeInModel} · LKR {ex.tradeInValuation.toLocaleString()}</p>
-       </div>
-       <button onClick={() => removeExchange(idx)} className="text-[var(--subtle)] hover:text-[var(--danger)]">
-         <X size={16} />
-       </button>
-     </div>
-   ))}
+  {/* Footer — Customer + Checkout */}
+  <div className="bg-[var(--paper)] border-t border-[var(--line)] p-5 shadow-2xl shrink-0 space-y-4">
+    {pendingExchanges.map((ex, idx) => (
+      <div key={idx} className="w-full bg-[var(--brand)]/10 border border-[var(--brand)]/30 p-3 flex items-center justify-between rounded-xl">
+        <div>
+          <p className="text-[10px] font-bold text-[var(--brand)] uppercase">Trade-In{ex.type === 'accessory' ? ' · Accessory' : ''}</p>
+          <p className="text-[11px] font-bold text-[var(--ink)] mt-0.5">{ex.tradeInModel} · LKR {ex.tradeInValuation.toLocaleString()}</p>
+        </div>
+        <button onClick={() => removeExchange(idx)} className="text-[var(--subtle)] hover:text-[var(--danger)]">
+          <X size={16} />
+        </button>
+      </div>
+    ))}
    <Button
      onClick={() => requireAdmin(() => setExchangeModalOpen(true))}
      disabled={cartItems.length === 0}
@@ -806,7 +885,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  onKeyDown={(e) => {
  if (e.key === 'Enter') handleLookup(e.currentTarget.value);
  }}
- placeholder="IMEI / SKU..."
+ placeholder="Scan / Type IMEI, Serial, or SKU..."
  className="h-12 pl-12 pr-12 text-[11px] font-bold bg-[var(--bg-app)] border border-[var(--line)] text-[var(--ink)] placeholder:text-[var(--subtle)]/30 focus-visible:border-[var(--brand)] focus-visible:ring-0 transition-none"
  />
  {imeiQuery && (
@@ -863,7 +942,9 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  <p className="text-[9px] text-[var(--subtle)] mt-1 mr-2 truncate">
  {(item.itemRef as PhoneUnit).storage} · {(item.itemRef as PhoneUnit).color} · {(item.itemRef as PhoneUnit).condition.toUpperCase()}
  </p>
- <p className="text-[9px] font-bold text-[var(--success)] mt-1.5 ">REF: #{(item.itemRef as PhoneUnit).imei}</p>
+ <p className="text-[9px] font-bold text-[var(--success)] mt-1.5 ">
+   {(item.itemRef as PhoneUnit).imei ? `IMEI: #${(item.itemRef as PhoneUnit).imei}` : `S/N: #${(item.itemRef as PhoneUnit).serialNumber || (item.itemRef as PhoneUnit).id}`}
+ </p>
  </>
  ) : item.type === 'accessory' ? (
  <>
@@ -989,6 +1070,19 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  />
  </div>
  </div>
+ <div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
+   <span className="text-[8px] font-bold text-[var(--subtle)] uppercase shrink-0 flex items-center gap-1">
+     <ShieldCheck size={11} className="text-[var(--brand)]" />
+     Warranty:
+   </span>
+   <input
+     type="text"
+     value={item.warranty ?? defaultWarranty ?? ''}
+     onChange={(e) => updateCartItem(item.cartId, 'warranty', e.target.value)}
+     placeholder="e.g. 1 Year Apple Care / 6 Months Shop Warranty"
+     className="h-8 px-2 flex-1 bg-[var(--bg-app)] border border-[var(--line)] rounded-lg text-[10px] font-bold text-[var(--ink)] focus:outline-none focus:border-[var(--brand)]"
+   />
+ </div>
  </div>
  </div>
  ))}
@@ -1023,6 +1117,53 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  disabled={cartItems.length === 0}
  className="h-11 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
  />
+ </div>
+ <div className="space-y-2">
+   <div className="flex items-center justify-between">
+     <Label className="text-[9px] font-bold text-[var(--subtle)] uppercase flex items-center gap-1.5">
+       <ShieldCheck size={12} className="text-[var(--brand)]" />
+       Bill Warranty (printed on receipt)
+     </Label>
+     <span className="text-[8px] text-[var(--subtle)]">Applies to items unless customized</span>
+   </div>
+   <div className="grid grid-cols-1 gap-2">
+     <Select
+       value={WARRANTY_PRESETS.includes(defaultWarranty as any) ? defaultWarranty : 'custom'}
+       onValueChange={(val) => {
+         if (val !== 'custom') {
+           setDefaultWarranty(val);
+           setCartItems(prev => prev.map(item => ({ ...item, warranty: val })));
+         }
+       }}
+       disabled={cartItems.length === 0}
+     >
+       <SelectTrigger className="h-10 bg-[var(--bg-app)] border-[var(--line)] text-[11px] font-bold text-[var(--ink)]">
+         <SelectValue placeholder="Select warranty preset..." />
+       </SelectTrigger>
+       <SelectContent>
+         {WARRANTY_PRESETS.map((w) => (
+           <SelectItem key={w} value={w} className="text-[11px] font-medium">
+             {w}
+           </SelectItem>
+         ))}
+         <SelectItem value="custom" className="text-[11px] font-medium text-[var(--brand)]">
+           + Custom Warranty Text...
+         </SelectItem>
+       </SelectContent>
+     </Select>
+     <Input
+       type="text"
+       value={defaultWarranty}
+       onChange={(e) => {
+         const val = e.target.value;
+         setDefaultWarranty(val);
+         setCartItems(prev => prev.map(item => ({ ...item, warranty: val })));
+       }}
+       placeholder="e.g. 1 Year Apple Care / 6 Months Shop Warranty"
+       disabled={cartItems.length === 0}
+       className="h-10 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]"
+     />
+   </div>
  </div>
  <div className="space-y-2">
  <Label className="text-[9px] font-bold text-[var(--subtle)] ">Payment Method</Label>

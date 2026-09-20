@@ -198,7 +198,8 @@ async function generateBill(data: BillData): Promise<jsPDF> {
   // --- Item rows (display only; totals come from data.totals) ---
   doc.setFont('helvetica', 'normal');
   for (const item of data.saleItems) {
-    ensureSpace(12);
+    const hasWarranty = !!item.warranty?.trim();
+    ensureSpace(hasWarranty ? 16 : 12);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     doc.setTextColor(COLORS.INK[0], COLORS.INK[1], COLORS.INK[2]);
@@ -207,7 +208,9 @@ async function generateBill(data: BillData): Promise<jsPDF> {
     doc.setFont('courier', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(COLORS.MUTED[0], COLORS.MUTED[1], COLORS.MUTED[2]);
-    const idText = item.type === 'phone' ? `IMEI ${item.identifier}`
+    const isImei = (/^\d{15}$/).test(item.identifier || '');
+    const idText = item.type === 'phone'
+      ? (isImei ? `IMEI ${item.identifier}` : `S/N ${item.identifier}`)
       : item.type === 'accessory' ? `SKU ${item.identifier}`
       : 'REPAIR / SERVICE';
     doc.text(idText, CONTENT_X, y);
@@ -223,6 +226,14 @@ async function generateBill(data: BillData): Promise<jsPDF> {
     doc.text(unitPrice.toLocaleString(), META_X - 28, y - 2, { align: 'right' });
     doc.text(lineDisc.toLocaleString(), META_X - 16, y - 2, { align: 'right' });
     doc.text(lineTotal.toLocaleString(), META_X, y - 2, { align: 'right' });
+
+    if (hasWarranty) {
+      y += 3.5;
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(6.5);
+      doc.setTextColor(COLORS.INK[0], COLORS.INK[1], COLORS.INK[2]);
+      doc.text(`Warranty: ${item.warranty}`, CONTENT_X, y);
+    }
 
     y += 4;
     doc.setDrawColor(COLORS.LINE[0], COLORS.LINE[1], COLORS.LINE[2]);
