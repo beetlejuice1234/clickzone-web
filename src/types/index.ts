@@ -1,7 +1,7 @@
 export type ConditionGrade = 'sealed' | 'a-plus' | 'a' | 'b' | 'c' | 'open-box' | 'used-excellent' | 'used-good' | 'used-fair' | 'parts-only' | 'damaged';
 export type UnitStatus = 'in-stock' | 'sold' | 'reserved' | 'damaged' | 'pending-refurb';
 export type ItemSource = 'purchased' | 'trade-in' | 'returned';
-export type DeviceType = 'phone' | 'tablet' | 'watch';
+export type DeviceType = 'phone' | 'tablet' | 'watch' | 'macbook';
 
 export interface PhoneUnit {
  id: string;
@@ -56,6 +56,8 @@ export interface SaleItem {
  quantity?: number; // Added for bulk accessories
  condition?: ConditionGrade; // For phones only
  warranty?: string; // Optional per-item warranty description
+ includeBillTerms?: boolean; // Absent on bills issued before terms became optional
+ id?: string; // Stable stock ID for serialized devices
 }
 
 export interface SaleRecord {
@@ -67,7 +69,7 @@ export interface SaleRecord {
  totalDiscount: number;
  date: string;
  time: string;
- returnStatus?: 'none' | 'partial' | 'full';
+ returnStatus?: 'none' | 'partial' | 'full' | 'returned';
  totalRefunded?: number;
  exchangeId?: string;
  tradeInValue?: number;
@@ -106,12 +108,21 @@ export interface Quotation {
  isDeleted?: number;
 }
 
+export interface ReturnAdjustment {
+ id: string;
+ saleId: string;
+ date: string;
+ amount: number;
+ profitReversed: number;
+ isExchange: boolean;
+}
+
 export interface ReturnRecord {
  id: string;
  returnId: string;
  originalSaleId: string;
  originalBillId: string;
- itemType: 'phone' | 'accessory';
+ itemType: SaleItem['type'];
  imei?: string;
  sku?: string;
  quantity: number;
@@ -132,6 +143,7 @@ export interface ReturnRecord {
 
 export interface ExchangeRecord {
  id: string;
+ exchangeType?: string;
  saleId: string;
  tradeInImei: string;
  tradeInModel: string;

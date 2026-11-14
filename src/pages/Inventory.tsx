@@ -80,6 +80,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  const [editAccessory, setEditAccessory] = useState<Accessory | null>(null);
  const [editAccessoryOpen, setEditAccessoryOpen] = useState(false);
  const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null);
+ const [inventoryTab, setInventoryTab] = useState('phones');
  const [searchStr, setSearchStr] = useState('');
  const [phoneFilter, setPhoneFilter] = useState<'all' | 'in-stock' | 'sold' | 'purchased' | 'trade-in' | 'returned'>('all');
  const [accFilter, setAccFilter] = useState<'all' | 'in-stock' | 'out-of-stock'>('all');
@@ -206,7 +207,11 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  });
  }, [requireAdmin]);
 
- const allSelected = filteredPhones.length > 0 && filteredPhones.every((p) => selectedPhoneIds.has(p.id));
+ const filteredMacBooks = filteredPhones.filter(p => p.deviceType === 'macbook');
+ const filteredOtherDevices = filteredPhones.filter(p => p.deviceType !== 'macbook');
+ const shownDevices = inventoryTab === 'macbooks' ? filteredMacBooks : filteredOtherDevices;
+ const allSelected = shownDevices.length > 0 && shownDevices.every(p => selectedPhoneIds.has(p.id));
+ const selectInventoryTab = (value: string) => { setInventoryTab(value); setSelectedPhoneIds(new Set()); };
 
  return (
  <div className="min-h-screen bg-[var(--bg-app)]">
@@ -235,17 +240,20 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <span className="text-[9px] font-bold px-2 py-0.5 border border-[var(--line)] bg-[var(--paper)] text-[var(--subtle)] rounded-xl">SOLD · {phoneStock.sold}</span>
  </div>
 
- <Tabs defaultValue="phones">
+ <Tabs value={inventoryTab} onValueChange={selectInventoryTab}>
  <TabsList className="w-full mb-4 bg-[var(--paper)] border border-[var(--line)] rounded-xl p-1">
  <TabsTrigger value="phones" className="flex-1 rounded-xl text-[10px] font-bold data-[state=active]:bg-[var(--brand)] data-[state=active]:text-[var(--bg-app)] gap-1.5">
- Phones ({filteredPhones.length})
+ Phones ({filteredOtherDevices.length})
+ </TabsTrigger>
+ <TabsTrigger value="macbooks" className="flex-1 rounded-xl text-[10px] font-bold data-[state=active]:bg-[var(--brand)] data-[state=active]:text-[var(--bg-app)]">
+ MacBooks ({filteredMacBooks.length})
  </TabsTrigger>
  <TabsTrigger value="accessories" className="flex-1 rounded-xl text-[10px] font-bold data-[state=active]:bg-[var(--brand)] data-[state=active]:text-[var(--bg-app)] gap-1.5">
  Accessories ({filteredAccessories.length})
  </TabsTrigger>
  </TabsList>
 
- <TabsContent value="phones">
+ <TabsContent value={inventoryTab === 'macbooks' ? 'macbooks' : 'phones'}>
  <div className="flex gap-2 mb-4 overflow-x-auto pb-1 hide-scrollbar">
    {(['all', 'in-stock', 'sold', 'purchased', 'trade-in', 'returned'] as const).map(filter => (
      <button
@@ -266,20 +274,20 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <div className="space-y-3">
  {[1, 2, 3].map(i => <div key={i} className="h-16 bg-[var(--paper)] border border-[var(--line)] rounded-xl animate-pulse" />)}
  </div>
- ) : filteredPhones.length === 0 ? (
+ ) : shownDevices.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-16 text-center opacity-40">
  <Smartphone size={32} className="text-[var(--subtle)] mb-3" />
  <p className="text-[10px] font-bold text-[var(--subtle)] ">No Results</p>
  </div>
  ) : (
  <motion.div className="space-y-2" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.04 } } }}>
- {filteredPhones.map(phone => (
+ {shownDevices.map(phone => (
  <motion.div key={phone.id} variants={{ hidden: { opacity: 0, y: 5 }, show: { opacity: 1, y: 0 } }}
  className="bg-[var(--paper)] rounded-xl p-4 border border-[var(--line)] flex items-center gap-3">
  <div className="flex-1 min-w-0">
  <p className="text-xs font-bold text-[var(--ink)] truncate ">{phone.model}</p>
- <p className="text-[9px] text-[var(--subtle)] ">{phone.storage} · {phone.color}</p>
- <p className="text-[8px] text-[var(--subtle)]/70 mt-0.5">Added {shortDate(phone.dateAdded)}{phone.status === 'sold' ? ` · Sold ${shortDate(soldDateByImei.get(phone.imei))}` : ''}</p>
+ <p className="text-[9px] text-[var(--subtle)] ">{[phone.storage, phone.color, phone.imei || phone.serialNumber].filter(Boolean).join(' · ')}</p>
+ <p className="text-[8px] text-[var(--subtle)]/70 mt-0.5">Added {shortDate(phone.dateAdded)}{phone.status === 'sold' ? ` · Sold ${shortDate(soldDateByImei.get(phone.imei || phone.serialNumber || phone.id))}` : ''}</p>
  </div>
  <div className="text-right shrink-0">
  <p className="text-xs font-bold text-[var(--brand)]">{isAdmin ? formatLKR(phone.costPrice).split(' ')[1] : '---'}</p>
@@ -368,17 +376,20 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  </div>
  </div>
 
- <Tabs defaultValue="phones" className="w-full">
+ <Tabs value={inventoryTab} onValueChange={selectInventoryTab} className="w-full">
  <TabsList className="bg-[var(--bg-app)] p-0 rounded-xl w-fit h-auto border-b border-[var(--line)]">
  <TabsTrigger value="phones" className="px-8 py-2.5 rounded-xl text-[10px] font-bold font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--brand)] data-[state=active]:border-t data-[state=active]:border-x data-[state=active]:border-[var(--line)] border-transparent">
  Phones
+ </TabsTrigger>
+ <TabsTrigger value="macbooks" className="px-8 py-2.5 rounded-xl text-[10px] font-bold data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--brand)]">
+ MacBooks
  </TabsTrigger>
  <TabsTrigger value="accessories" className="px-8 py-2.5 rounded-xl text-[10px] font-bold font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--brand)] data-[state=active]:border-t data-[state=active]:border-x data-[state=active]:border-[var(--line)] border-transparent">
  Accessories
  </TabsTrigger>
  </TabsList>
 
- <TabsContent value="phones" className="mt-0 pt-6">
+ <TabsContent value={inventoryTab === 'macbooks' ? 'macbooks' : 'phones'} className="mt-0 pt-6">
   <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
     {(['all', 'in-stock', 'sold', 'purchased', 'trade-in', 'returned'] as const).map(filter => (
       <button
@@ -401,7 +412,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  <TableRow className="bg-[var(--bg-app)] hover:bg-[var(--bg-app)] border-b border-[var(--line)]">
  <TableHead className="w-12 py-3 px-6">
  <Checkbox checked={allSelected} onCheckedChange={(c) => {
- if (c) setSelectedPhoneIds(new Set(filteredPhones.map(p => p.id)));
+ if (c) setSelectedPhoneIds(new Set(shownDevices.map(p => p.id)));
  else setSelectedPhoneIds(new Set());
  }} className="rounded-xl border-[var(--line)] data-[state=checked]:bg-[var(--brand)] data-[state=checked]:border-[var(--brand)]" />
  </TableHead>
@@ -429,14 +440,14 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  </TableRow>
  </TableHeader>
  <TableBody className="zebra-table">
- {isLoading ? <SkeletonRows cols={isAdmin ? 10 : 9} /> : filteredPhones.length === 0 ? (
+ {isLoading ? <SkeletonRows cols={isAdmin ? 10 : 9} /> : shownDevices.length === 0 ? (
  <TableRow>
  <TableCell colSpan={isAdmin ? 10 : 9} className="h-60 text-center bg-[var(--paper)]">
  <Smartphone size={32} className="mx-auto mb-4 text-[var(--line)]" />
  <p className="text-[10px] font-bold text-[var(--subtle)] ">No results found</p>
  </TableCell>
  </TableRow>
- ) : filteredPhones.map((phone) => (
+ ) : shownDevices.map((phone) => (
  <TableRow key={phone.id} className="border-b border-[var(--line)]/50 transition-all hover:border-l-2 hover:border-l-[var(--success)]">
  <TableCell className="py-3 px-6">
  <Checkbox checked={selectedPhoneIds.has(phone.id)} onCheckedChange={(c) => handleSelectPhone(phone.id, c as boolean)} className="rounded-xl border-[var(--line)] data-[state=checked]:bg-[var(--brand)]" />
@@ -447,7 +458,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  {phone.source === 'trade-in' && <span className="bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 text-[9px] font-bold px-1.5 py-0.5 rounded-xl">TRADE-IN</span>}
  {phone.source === 'returned' && <span className="bg-[var(--teal)]/10 text-[var(--teal)] border border-[var(--teal)]/25 text-[9px] font-bold px-1.5 py-0.5 rounded-xl">RETURNED</span>}
  </div>
- <p className="text-[9px] text-[var(--subtle)] mt-0.5 ">{phone.storage} · {phone.color}</p>
+ <p className="text-[9px] text-[var(--subtle)] mt-0.5 ">{[phone.storage, phone.color, phone.imei || phone.serialNumber].filter(Boolean).join(' · ')}</p>
  </TableCell>
  <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">
  <div className="flex items-center gap-2">
@@ -477,7 +488,7 @@ export default function Inventory({ onAddStock }: InventoryProps) {
  </div>
  </TableCell>
  <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{shortDate(phone.dateAdded)}</TableCell>
- <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{phone.status === 'sold' ? shortDate(soldDateByImei.get(phone.imei)) : '—'}</TableCell>
+ <TableCell className="py-3 px-6 text-[10px] text-[var(--subtle)]">{phone.status === 'sold' ? shortDate(soldDateByImei.get(phone.imei || phone.serialNumber || phone.id)) : '—'}</TableCell>
  <TableCell className="py-3 px-6 text-right">
  <DropdownMenu>
  <DropdownMenuTrigger asChild>

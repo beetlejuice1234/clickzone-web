@@ -11,9 +11,9 @@ import {
  Printer,
  RotateCcw
 , ArrowUpDown, ArrowUp, ArrowDown} from 'lucide-react';
-import { useSales, reloadData, deleteSale } from '@/lib/api';
+import { useSales, useReturnAdjustments, reloadData, deleteSale } from '@/lib/api';
 import type { SaleRecord } from '@/types';
-import { formatLKR, cn, todayColombo, startOfWeekColombo, monthBounds, monthColombo, saleNetRevenue } from '@/lib/utils';
+import { formatLKR, cn, todayColombo, startOfWeekColombo, monthBounds, monthColombo, saleRevenueAfterRefunds, saleReportingTotals, reportableReturns } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +61,7 @@ export default function SalesLog() {
   }, [preset, customFrom, customTo]);
 
   const { sales, isLoading } = useSales(range);
+  const { adjustments } = useReturnAdjustments();
   
   type SortKey = 'billId' | 'date' | 'totalRevenue' | 'customerWhatsapp';
   type SortDir = 'asc' | 'desc';
@@ -139,7 +140,7 @@ export default function SalesLog() {
   const handleExport = useCallback(() => {
     const csvContent = "data:text/csv;charset=utf-8," 
       + "Bill ID,Date,Time,Customer,Total Revenue,Items,Status\n"
-      + filteredSales.map(e => `${e.billId},${e.date},${e.time},${e.customerWhatsapp || 'Walk-in'},${saleNetRevenue(e)},"${e.items.map(i => i.name).join('; ')}",${e.returnStatus || 'none'}`).join("\n");
+      + filteredSales.map(e => `${e.billId},${e.date},${e.time},${e.customerWhatsapp || 'Walk-in'},${saleRevenueAfterRefunds(e)},"${e.items.map(i => i.name).join('; ')}",${e.returnStatus || 'none'}`).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -194,11 +195,11 @@ export default function SalesLog() {
   }
   }, [isMobile]);
 
- const totalRevenue = useMemo(() => filteredSales.reduce((sum, s) => sum + saleNetRevenue(s), 0), [filteredSales]);
- const totalProfit = useMemo(() => filteredSales.reduce((sum, s) => {
-   const cost = s.items.reduce((acc, i) => acc + i.costPrice, 0);
-   return sum + (s.totalRevenue - cost);
- }, 0), [filteredSales]);
+ const { revenue: totalRevenue, profit: totalProfit } = useMemo(() => {
+   const saleIds = new Set(filteredSales.map(s => s.id));
+   return saleReportingTotals(filteredSales, reportableReturns(filteredSales, adjustments)
+     .filter(event => saleIds.has(event.saleId)));
+ }, [filteredSales, adjustments]);
 
  if (isMobile) {
  return (
@@ -289,7 +290,7 @@ export default function SalesLog() {
    {sale.paymentMethod || 'cash'}
  </span>
  {sale.returnStatus && sale.returnStatus !== 'none' && (
-   <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-xl uppercase">{sale.returnStatus} RETURN</span>
+   <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-xl uppercase">{sale.returnStatus === 'returned' ? 'REFUNDED' : `${sale.returnStatus} RETURN`}</span>
  )}
  {sale.exchangeId && (
    <span className="text-[8px] px-1.5 py-0.5 bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 font-medium rounded-xl uppercase">TRADE-IN</span>
@@ -339,7 +340,7 @@ export default function SalesLog() {
  </div>
  <span className="text-[11px] font-medium text-[var(--ink)]">{sale.customerWhatsapp || 'Walk-in Registry'}</span>
  </div>
- <p className="text-sm font-bold text-[var(--brand)]">{formatLKR(sale.netPayable ?? (sale.totalRevenue - (sale.tradeInValue ?? 0)))}</p>
+ <p className="text-sm font-bold text-[var(--brand)]">{formatLKR(saleRevenueAfterRefunds(sale))}</p>
  </div>
  </motion.div>
  ))
@@ -467,7 +468,7 @@ export default function SalesLog() {
      {sale.paymentMethod || 'cash'}
    </span>
    {sale.returnStatus && sale.returnStatus !== 'none' && (
-     <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-xl uppercase">{sale.returnStatus} RETURN</span>
+     <span className="text-[8px] px-1.5 py-0.5 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30 font-medium rounded-xl uppercase">{sale.returnStatus === 'returned' ? 'REFUNDED' : `${sale.returnStatus} RETURN`}</span>
    )}
    {sale.exchangeId && (
      <span className="text-[8px] px-1.5 py-0.5 bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 font-medium rounded-xl uppercase">TRADE-IN</span>
@@ -504,7 +505,7 @@ export default function SalesLog() {
  </TableCell>
  <TableCell className="py-6 px-6 text-right">
  <div className="flex flex-col items-end">
- <span className="text-lg font-bold text-[var(--brand)]">{formatLKR(sale.netPayable ?? (sale.totalRevenue - (sale.tradeInValue ?? 0)))}</span>
+ <span className="text-lg font-bold text-[var(--brand)]">{formatLKR(saleRevenueAfterRefunds(sale))}</span>
  {sale.totalDiscount > 0 && <span className="text-[8px] font-bold bg-[var(--danger)]/20 text-[var(--danger)] border border-[var(--danger)]/30 px-1.5 py-0.5 mt-1 cursor-help" title="Adjustment Applied">-[{formatLKR(sale.totalDiscount).split(' ')[1]}]</span>}
  {sale.tradeInValue && sale.tradeInValue > 0 ? <span className="text-[8px] font-bold bg-[var(--terracotta)]/10 text-[var(--terracotta)] border border-[var(--terracotta)]/30 px-1.5 py-0.5 mt-1" title="Trade-in Applied">Trade-in -{formatLKR(sale.tradeInValue).split(' ')[1]}</span> : null}
  </div>

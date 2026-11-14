@@ -1,3 +1,4 @@
+import type { DeviceType, ReturnAdjustment, SaleRecord } from '@/types';
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -15,6 +16,45 @@ export function formatLKR(amount: number): string {
  *  Profit stays on gross (total_revenue − COGS) so the traded-in asset isn't double-counted. */
 export function saleNetRevenue(s: { netPayable?: number; totalRevenue: number; tradeInValue?: number }): number {
  return s.netPayable ?? (s.totalRevenue - (s.tradeInValue ?? 0));
+}
+
+export function saleRevenueAfterRefunds(sale: SaleRecord): number {
+ return saleNetRevenue(sale) - (sale.totalRefunded ?? 0);
+}
+
+export function saleProfit(sale: SaleRecord): number {
+ const cost = sale.items.reduce((total, item) => total
+   + (item.costPrice ?? 0) * (item.type === 'accessory' ? item.quantity ?? 1 : 1), 0);
+ return sale.totalRevenue - cost;
+}
+
+export function saleReportingTotals(sales: SaleRecord[], returns: ReturnAdjustment[]) {
+ return {
+   revenue: sales.reduce((total, sale) => total + saleNetRevenue(sale), 0)
+     - returns.reduce((total, event) => total + (event.isExchange ? 0 : event.amount), 0),
+   profit: sales.reduce((total, sale) => total + saleProfit(sale), 0)
+     - returns.reduce((total, event) => total + event.profitReversed, 0),
+   count: sales.length,
+ };
+}
+
+export function reportableReturns(sales: SaleRecord[], returns: ReturnAdjustment[]): ReturnAdjustment[] {
+ const recordedBySale = new Map<string, number>();
+ for (const event of returns) {
+   if (!event.isExchange) recordedBySale.set(event.saleId, (recordedBySale.get(event.saleId) ?? 0) + event.amount);
+ }
+ // Older receipts can have only a cumulative refund total and no dated return row.
+ const legacy = sales.flatMap(sale => {
+   const recorded = recordedBySale.get(sale.id);
+   const amount = (sale.totalRefunded ?? 0) - (recorded ?? 0);
+   if (amount <= 0) return [];
+   return [{
+     id: sale.id, saleId: sale.id, date: sale.date, amount, isExchange: false,
+     profitReversed: recorded === undefined && (sale.returnStatus === 'returned' || sale.returnStatus === 'full' || sale.items.length === 1)
+       ? saleProfit(sale) : 0,
+   }];
+ });
+ return [...returns, ...legacy];
 }
 
 /** Normalise any stored date value (plain 'YYYY-MM-DD', ISO timestamp, or 'YYYY-MM-DD HH:MM:SS')
@@ -136,6 +176,10 @@ export const MODEL_OPTIONS = [
  'iPhone 17 Air',
  'iPhone 17 Pro',
  'iPhone 17 Pro Max',
+ 'iPhone 17e',
+ 'iPhone 18 Pro',
+ 'iPhone 18 Pro Max',
+ 'iPhone Duo',
  'iPhone SE (2nd Gen)',
  'iPhone SE (3rd Gen)',
 ] as const;
@@ -178,6 +222,130 @@ export const WATCH_MODELS = [
   'Apple Watch Series 3 (42mm)',
   'Apple Watch Series 3 (38mm)',
 ] as const;
+
+export const MACBOOK_MODELS = [
+  "MacBook Neo",
+  "MacBook Pro (14-inch, M6)",
+  "MacBook Pro (14-inch PROLED XDR, M5 Pro or M5 Max)",
+  "MacBook Pro (16-inch PROLED XDR, M5 Pro or M5 Max)",
+  "MacBook Pro (14-inch, M5 Pro or M5 Max)",
+  "MacBook Pro (16-inch, M5 Pro or M5 Max)",
+  "MacBook Pro (14-inch, M5)",
+  "MacBook Pro (14-inch, M4, 2024)",
+  "MacBook Pro (14-inch, M4 Pro or M4 Max, 2024)",
+  "MacBook Pro (16-inch, M4 Pro or M4 Max, 2024)",
+  "MacBook Pro (14-inch, Nov 2023)",
+  "MacBook Pro (16-inch, Nov 2023)",
+  "MacBook Pro (14-inch, 2023)",
+  "MacBook Pro (16-inch, 2023)",
+  "MacBook Pro (13-inch, M2, 2022)",
+  "MacBook Pro (14-inch, 2021)",
+  "MacBook Pro (16-inch, 2021)",
+  "MacBook Pro (13-inch, M1, 2020)",
+  "MacBook Pro (13-inch, 2020, Two Thunderbolt 3 ports)",
+  "MacBook Pro (13-inch, 2020, Four Thunderbolt 3 ports)",
+  "MacBook Pro (16-inch, 2019)",
+  "MacBook Pro (13-inch, 2019, Two Thunderbolt 3 ports)",
+  "MacBook Pro (15-inch, 2019)",
+  "MacBook Pro (13-inch, 2019, Four Thunderbolt 3 ports)",
+  "MacBook Pro (15-inch, 2018)",
+  "MacBook Pro (13-inch, 2018, Four Thunderbolt 3 ports)",
+  "MacBook Pro (15-inch, 2017)",
+  "MacBook Pro (13-inch, 2017, Four Thunderbolt 3 ports)",
+  "MacBook Pro (13-inch, 2017, Two Thunderbolt 3 ports)",
+  "MacBook Pro (15-inch, 2016)",
+  "MacBook Pro (13-inch, 2016, Four Thunderbolt 3 ports)",
+  "MacBook Pro (13-inch, 2016, Two Thunderbolt 3 ports)",
+  "MacBook Pro (Retina, 15-inch, Mid 2015)",
+  "MacBook Pro (Retina, 13-inch, Early 2015)",
+  "MacBook Pro (Retina, 15-inch, Mid 2014)",
+  "MacBook Pro (Retina, 13-inch, Mid 2014)",
+  "MacBook Pro (Retina, 15-inch, Late 2013)",
+  "MacBook Pro (Retina, 13-inch, Late 2013)",
+  "MacBook Pro (Retina, 15-inch, Early 2013)",
+  "MacBook Pro (Retina, 13-inch, Early 2013)",
+  "MacBook Pro (Retina, 13-inch, Late 2012)",
+  "MacBook Pro (Retina, 15-inch, Mid 2012)",
+  "MacBook Pro (15-inch, Mid 2012)",
+  "MacBook Pro (13-inch, Mid 2012)",
+  "MacBook Pro (17-inch, Late 2011)",
+  "MacBook Pro (15-inch, Late 2011)",
+  "MacBook Pro (13-inch, Late 2011)",
+  "MacBook Pro (17-inch, Early 2011)",
+  "MacBook Pro (15-inch, Early 2011)",
+  "MacBook Pro (13-inch, Early 2011)",
+  "MacBook Pro (17-inch, Mid 2010)",
+  "MacBook Pro (15-inch, Mid 2010)",
+  "MacBook Pro (13-inch, Mid 2010)",
+  "MacBook Pro (17-inch, Mid 2009)",
+  "MacBook Pro (15-inch, Mid 2009)",
+  "MacBook Pro (15-inch, 2.53GHz, Mid 2009)",
+  "MacBook Pro (13-inch, Mid 2009)",
+  "MacBook Pro (17-inch, Early 2009)",
+  "MacBook Pro (15-inch, Late 2008)",
+  "MacBook Pro (17-inch, Early 2008)",
+  "MacBook Pro (15-inch, Early 2008)",
+  "MacBook Air (15-inch, M5)",
+  "MacBook Air (13-inch, M5)",
+  "MacBook Air (15-inch, M4, 2025)",
+  "MacBook Air (13-inch, M4, 2025)",
+  "MacBook Air (15-inch, M3, 2024)",
+  "MacBook Air (13-inch, M3, 2024)",
+  "MacBook Air (15-inch, M2, 2023)",
+  "MacBook Air (M2, 2022)",
+  "MacBook Air (M1, 2020)",
+  "MacBook Air (Retina, 13-inch, 2020)",
+  "MacBook Air (Retina, 13-inch, 2019)",
+  "MacBook Air (Retina, 13-inch, 2018)",
+  "MacBook Air (13-inch, 2017)",
+  "MacBook Air (13-inch, Early 2015)",
+  "MacBook Air (11-inch, Early 2015)",
+  "MacBook Air (13-inch, Early 2014)",
+  "MacBook Air (11-inch, Early 2014)",
+  "MacBook Air (13-inch, Mid 2013)",
+  "MacBook Air (11-inch, Mid 2013)",
+  "MacBook Air (13-inch, Mid 2012)",
+  "MacBook Air (11-inch, Mid 2012)",
+  "MacBook Air (13-inch, Mid 2011)",
+  "MacBook Air (11-inch, Mid 2011)",
+  "MacBook Air (13-inch, Late 2010)",
+  "MacBook Air (11-inch, Late 2010)",
+  "MacBook Air (Mid 2009)",
+  "MacBook Air (Late 2008)",
+  "MacBook Air (Original, 2008)",
+  "MacBook (Retina, 12-inch, 2017)",
+  "MacBook (Retina, 12-inch, Early 2016)",
+  "MacBook (Retina, 12-inch, Early 2015)",
+  "MacBook (13-inch, Mid 2010)",
+  "MacBook (13-inch, Late 2009)",
+  "MacBook (13-inch, Mid 2009)",
+  "MacBook (13-inch, Early 2009)",
+  "MacBook (13-inch, Aluminum, Late 2008)",
+  "MacBook (13-inch, Early 2008)",
+  "MacBook (13-inch, Late 2007)",
+  "MacBook (13-inch, Mid 2007)",
+  "MacBook (13-inch, Late 2006)",
+  "MacBook (13-inch, 2006)",
+  "MacBook Pro (15-inch, 2006)",
+  "MacBook Pro (17-inch, 2006)",
+  "MacBook Pro (15-inch, Late 2006)",
+  "MacBook Pro (17-inch, Late 2006)",
+  "MacBook Pro (15-inch, Mid 2007)",
+  "MacBook Pro (17-inch, Mid 2007)",
+] as const;
+
+export const MACBOOK_STORAGE_OPTIONS = ['128GB', '256GB', '512GB', '1TB', '2TB', '4TB', '8TB'] as const;
+export const MACBOOK_COLOR_OPTIONS = ['Silver', 'Space Gray', 'Space Black', 'Gold', 'Starlight', 'Midnight', 'Sky Blue', 'Blush', 'Indigo', 'Citrus', 'White', 'Black'] as const;
+export const DEVICE_MODELS: Record<DeviceType, readonly string[]> = {
+  phone: MODEL_OPTIONS,
+  tablet: IPAD_MODELS,
+  watch: WATCH_MODELS,
+  macbook: MACBOOK_MODELS,
+};
+
+export function deviceIdentifier(device: { id: string; imei: string; serialNumber?: string }): string {
+  return device.imei.trim() || device.serialNumber?.trim() || device.id;
+}
 
 export const WARRANTY_PRESETS = [
   '1 Year Apple Care / Company Warranty',

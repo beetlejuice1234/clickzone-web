@@ -17,8 +17,8 @@ import {
  SelectTrigger,
  SelectValue,
 } from '@/components/ui/select';
-import { MODEL_OPTIONS, STORAGE_OPTIONS, COLOR_OPTIONS, CONDITION_OPTIONS, CONDITION_LABELS } from '@/lib/utils';
-import type { ConditionGrade, PhoneUnit } from '@/types';
+import { DEVICE_MODELS, MACBOOK_STORAGE_OPTIONS, MACBOOK_COLOR_OPTIONS, STORAGE_OPTIONS, COLOR_OPTIONS, CONDITION_OPTIONS, CONDITION_LABELS } from '@/lib/utils';
+import type { ConditionGrade, DeviceType, PhoneUnit } from '@/types';
 
 interface EditUnitModalProps {
  open: boolean;
@@ -27,13 +27,12 @@ interface EditUnitModalProps {
 }
 
 export default function EditUnitModal({ open, phone, onClose }: EditUnitModalProps) {
- const [deviceType, setDeviceType] = useState<'phone' | 'tablet' | 'watch'>(phone?.deviceType ?? 'phone');
+ const [deviceType, setDeviceType] = useState<DeviceType>(phone?.deviceType ?? 'phone');
  const [imei, setImei] = useState(phone?.imei ?? '');
  const [serialNumber, setSerialNumber] = useState(phone?.serialNumber ?? '');
  const [model, setModel] = useState(phone?.model ?? '');
- // Other/Android model: start in free-text mode when the current model isn't an iPhone catalog entry
- // (so editing an Other-brand phone shows its model instead of a blank select).
- const [modelOther, setModelOther] = useState<boolean>(!!phone && !(MODEL_OPTIONS as readonly string[]).includes(phone.model));
+ // Preserve custom model names when editing an existing device.
+ const [modelOther, setModelOther] = useState<boolean>(!!phone && !DEVICE_MODELS[phone.deviceType ?? 'phone'].includes(phone.model));
  const [storage, setStorage] = useState(phone?.storage ?? '');
  const [color, setColor] = useState(phone?.color ?? '');
  const [condition, setCondition] = useState<ConditionGrade>(phone?.condition ?? 'a');
@@ -56,19 +55,19 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  if (!imei.trim()) return setError('IMEI is required for phones');
  if (imei.length !== 15) return setError('IMEI must be 15 digits');
  } else if (!serialNumber.trim()) {
- return setError('Serial Number is required for tablets/watches');
+ return setError('Serial Number is required for this device');
  }
  if (!imei.trim() && !serialNumber.trim()) return setError('Enter an IMEI or a Serial Number');
- if (!model || !storage || !color) return setError('Model, storage, and color are required');
+ if (!model.trim() || !storage || !color) return setError('Model, storage, and color are required');
  if (!costPrice || isNaN(Number(costPrice))) return setError('Valid cost price is required');
  if (!targetSalePrice || isNaN(Number(targetSalePrice))) return setError('Valid target sale price is required');
  if (Number(batteryHealth) < 0 || Number(batteryHealth) > 100) return setError('Invalid battery health');
 
  const updatePayload = {
  deviceType,
- imei: imei.trim(),
- serialNumber: serialNumber.trim(),
- model,
+ imei: deviceType === 'macbook' ? '' : imei.trim(),
+ serialNumber: serialNumber.trim().toUpperCase(),
+ model: model.trim(),
  storage,
  color,
  condition,
@@ -97,7 +96,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--success)]/30 to-transparent" />
  <div className="bg-[var(--bg-app)] px-8 pt-8 pb-6 border-b border-[var(--line)]">
  <DialogHeader>
- <DialogTitle className="text-3xl text-[var(--ink)]">Edit Phone</DialogTitle>
+ <DialogTitle className="text-3xl text-[var(--ink)]">Edit Device</DialogTitle>
  <p className="text-sm text-[var(--subtle)] mt-1.5">Update phone details and status</p>
  </DialogHeader>
  </div>
@@ -114,12 +113,13 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Device Type</Label>
- <Select value={deviceType} onValueChange={(v) => setDeviceType(v as 'phone'|'tablet'|'watch')}>
+ <Select value={deviceType} onValueChange={(v) => { setDeviceType(v as DeviceType); setModelOther(!!model && !DEVICE_MODELS[v as DeviceType].includes(model)); }}>
  <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-medium"><SelectValue /></SelectTrigger>
  <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)]">
  <SelectItem value="phone" className="text-[10px] font-medium">Phone</SelectItem>
  <SelectItem value="tablet" className="text-[10px] font-medium">Tablet (iPad)</SelectItem>
  <SelectItem value="watch" className="text-[10px] font-medium">Watch</SelectItem>
+ <SelectItem value="macbook" className="text-[10px] font-medium">MacBook</SelectItem>
  </SelectContent>
  </Select>
  </div>
@@ -139,6 +139,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">IMEI {deviceType === 'phone' && <span className="text-[var(--brand)]">*</span>}</Label>
  <Input
  value={imei}
+ disabled={deviceType === 'macbook'}
  onChange={(e) => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
  className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--success)] focus-visible:ring-0 text-[11px] "
  />
@@ -151,15 +152,15 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  >
  <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-medium "><SelectValue placeholder="Select model" /></SelectTrigger>
  <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl max-h-[300px]">
- {MODEL_OPTIONS.map((m) => <SelectItem key={m} value={m} className="text-[10px] font-medium ">{m}</SelectItem>)}
- <SelectItem value="__other__" className="text-[10px] font-medium ">Other (Android / specify)…</SelectItem>
+ {DEVICE_MODELS[deviceType].map((m) => <SelectItem key={m} value={m} className="text-[10px] font-medium ">{m}</SelectItem>)}
+ <SelectItem value="__other__" className="text-[10px] font-medium ">Custom model…</SelectItem>
  </SelectContent>
  </Select>
  {modelOther && (
  <Input
  value={model}
  onChange={(e) => setModel(e.target.value)}
- placeholder="e.g. Samsung Galaxy S23"
+ placeholder="Enter the model name"
  className="h-11 mt-2 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--success)] focus-visible:ring-0 text-[11px]"
  />
  )}
@@ -172,7 +173,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  <Select value={storage} onValueChange={setStorage}>
  <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-bold"><SelectValue /></SelectTrigger>
  <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)]">
- {STORAGE_OPTIONS.map((s) => <SelectItem key={s} value={s} className="text-[10px] font-bold">{s}</SelectItem>)}
+ {(deviceType === 'macbook' ? MACBOOK_STORAGE_OPTIONS : STORAGE_OPTIONS).map((s) => <SelectItem key={s} value={s} className="text-[10px] font-bold">{s}</SelectItem>)}
  </SelectContent>
  </Select>
  </div>
@@ -181,7 +182,7 @@ export default function EditUnitModal({ open, phone, onClose }: EditUnitModalPro
  <Select value={color} onValueChange={setColor}>
  <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-medium"><SelectValue /></SelectTrigger>
  <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)]">
- {COLOR_OPTIONS.map((c) => <SelectItem key={c} value={c} className="text-[10px] font-medium">{c}</SelectItem>)}
+ {(deviceType === 'macbook' ? MACBOOK_COLOR_OPTIONS : COLOR_OPTIONS).map((c) => <SelectItem key={c} value={c} className="text-[10px] font-medium">{c}</SelectItem>)}
  </SelectContent>
  </Select>
  </div>

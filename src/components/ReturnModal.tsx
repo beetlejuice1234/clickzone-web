@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { formatLKR, cn } from '@/lib/utils';
+import { formatLKR, cn, deviceIdentifier } from '@/lib/utils';
 import { returnItem, usePhones } from '@/lib/api';
 import type { SaleRecord } from '@/types';
 
@@ -65,10 +65,10 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
 
   // Active stock the customer can swap into (exclude the phone being returned).
   const availablePhones = useMemo(
-    () => phones.filter(p => p.status === 'in-stock' && p.imei && p.imei !== returnedItem?.identifier),
+    () => phones.filter(p => p.status === 'in-stock' && p.id !== returnedItem?.id && deviceIdentifier(p).toLowerCase() !== returnedItem?.identifier.toLowerCase()),
     [phones, returnedItem]
   );
-  const replPhone = availablePhones.find(p => p.imei === replacementImei) ?? null;
+  const replPhone = availablePhones.find(p => deviceIdentifier(p) === replacementImei) ?? null;
   const replValue = replacementValue !== "" ? Number(replacementValue) : (replPhone?.targetSalePrice ?? 0);
   const delta = returnedValue - replValue; // > 0 customer is owed; < 0 customer owes
 
@@ -84,7 +84,7 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
 
   const selectReplacement = (imei: string) => {
     setReplacementImei(imei);
-    const p = availablePhones.find(x => x.imei === imei);
+    const p = availablePhones.find(x => deviceIdentifier(x) === imei);
     setReplacementValue(p?.targetSalePrice ? String(p.targetSalePrice) : "");
   };
 
@@ -100,7 +100,12 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
       toast.error("Please fill all required fields");
       return;
     }
-    const item = sale.items[parseInt(selectedItemIdx)];
+    const item = sale.items[Number(selectedItemIdx)];
+    const amount = Number(refundAmount);
+    if (!item || !Number.isFinite(amount) || amount < 0 || amount > item.finalPrice) {
+      toast.error('Enter a refund from zero up to the item’s sale price');
+      return;
+    }
     setIsSubmitting(true);
     try {
       await returnItem({
@@ -108,12 +113,13 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
         return_type: 'return',
         item_type: item.type,
         identifier: item.identifier,
+        sale_item_index: Number(selectedItemIdx),
         quantity: item.quantity || 1,
-        refund_amount: parseFloat(refundAmount),
+        refund_amount: amount,
         reason,
         condition_on_return: condition,
         refund_method: refundMethod,
-        restock,
+        restock: item.type !== 'repair' && restock,
       });
       toast.success("Refund processed");
       onSuccess();
@@ -131,11 +137,11 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
       return;
     }
     if (returnedItem?.type !== 'phone') {
-      toast.error("Device exchange applies to a phone line only");
+      toast.error("Select a serialized device for an exchange");
       return;
     }
     if (!replacementImei) {
-      toast.error("Pick the replacement phone the customer takes");
+      toast.error("Pick the replacement device the customer takes");
       return;
     }
     // Cash refund is the rare exception — make it deliberate.
@@ -150,6 +156,7 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
         return_type: 'trade-in-return',
         item_type: 'phone',
         identifier: returnedItem.identifier,
+        sale_item_index: Number(selectedItemIdx),
         replacement_identifier: replacementImei,
         replacement_value: replValue,
         difference_direction: effectiveDirection,
@@ -196,7 +203,7 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
         <div className="grid gap-4 py-2">
           <div className="space-y-2">
             <Label className="text-[10px] font-bold text-[var(--subtle)]">
-              {mode === 'exchange' ? 'Phone being returned' : 'Select item'}
+              {mode === 'exchange' ? 'Device being returned' : 'Select item'}
             </Label>
             <Select value={selectedItemIdx} onValueChange={setSelectedItemIdx}>
               <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)]">
@@ -248,8 +255,8 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
                   </SelectTrigger>
                   <SelectContent>
                     {availablePhones.map(p => (
-                      <SelectItem key={p.id} value={p.imei}>
-                        {p.model} ({p.imei}) - {formatLKR(p.targetSalePrice)}
+                      <SelectItem key={p.id} value={deviceIdentifier(p)}>
+                        {p.model} ({deviceIdentifier(p)}) - {formatLKR(p.targetSalePrice)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -315,7 +322,7 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
 
           <div className="space-y-2">
             <Label className="text-[10px] font-bold text-[var(--subtle)]">
-              {mode === 'exchange' ? 'Returned phone condition' : 'Item Condition'}
+              {mode === 'exchange' ? 'Returned device condition' : 'Item Condition'}
             </Label>
             <Select value={condition} onValueChange={setCondition}>
               <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)]">
@@ -331,7 +338,7 @@ export function ReturnModal({ isOpen, onClose, sale, onSuccess }: ReturnModalPro
             </Select>
           </div>
 
-          {mode === 'refund' && (
+          {mode === 'refund' && returnedItem?.type !== 'repair' && (
             <div className="flex items-center space-x-2 pt-2">
               <Checkbox
                 id="restock"

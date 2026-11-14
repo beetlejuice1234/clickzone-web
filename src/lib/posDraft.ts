@@ -29,6 +29,8 @@ interface PosDraft {
   paymentMethod: PaymentMethod;
   specialNotes: string;
   defaultWarranty: string;
+  includeBillTerms: boolean;
+  setIncludeBillTerms: (value: boolean) => void;
   pendingExchanges: ExchangePayload[];
   setCartItems: (u: SetArg<CartItem[]>) => void;
   setCustomerWhatsapp: (u: SetArg<string>) => void;
@@ -54,7 +56,9 @@ export const usePosDraft = create<PosDraft>((set) => ({
   customerNic: '',
   paymentMethod: 'cash',
   specialNotes: '',
-  defaultWarranty: '1 Month Checking Warranty',
+  defaultWarranty: '',
+  includeBillTerms: false,
+  setIncludeBillTerms: (includeBillTerms) => set({ includeBillTerms }),
   pendingExchanges: [],
   setCartItems: (u) => set((s) => ({ cartItems: apply(s.cartItems, u) })),
   setCustomerWhatsapp: (u) => set((s) => ({ customerWhatsapp: apply(s.customerWhatsapp, u) })),
@@ -66,6 +70,6 @@ export const usePosDraft = create<PosDraft>((set) => ({
   setPendingExchanges: (u) => set((s) => ({ pendingExchanges: apply(s.pendingExchanges, u) })),
   resetDraft: () => set({
     cartItems: [], customerWhatsapp: '', customerName: '', customerNic: '',
-    paymentMethod: 'cash', specialNotes: '', defaultWarranty: '1 Month Checking Warranty', pendingExchanges: [],
+    paymentMethod: 'cash', specialNotes: '', defaultWarranty: '', includeBillTerms: false, pendingExchanges: [],
   }),
 }));

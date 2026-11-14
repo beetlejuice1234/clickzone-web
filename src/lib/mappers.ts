@@ -90,7 +90,7 @@ export function mapReturn(row: Record<string, unknown>): ReturnRecord {
     returnId: (row.return_id as string) ?? '',
     originalSaleId: (row.original_sale_id as string) ?? '',
     originalBillId: (row.original_bill_id as string) ?? '',
-    itemType: (row.item_type as 'phone' | 'accessory') ?? 'phone',
+    itemType: (row.item_type as ReturnRecord['itemType']) ?? 'phone',
     imei: (row.imei as string) ?? undefined,
     sku: (row.sku as string) ?? undefined,
     quantity: num(row.quantity, 1),
@@ -114,6 +114,7 @@ export function mapExchange(row: Record<string, unknown>): ExchangeRecord {
   return {
     id: row.id as string,
     saleId: (row.sale_id as string) ?? '',
+    exchangeType: (row.exchange_type as string) ?? undefined,
     tradeInImei: (row.trade_in_imei as string) ?? '',
     tradeInModel: (row.trade_in_model as string) ?? '',
     tradeInValuation: num(row.trade_in_valuation, 0),

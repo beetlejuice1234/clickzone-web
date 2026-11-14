@@ -47,7 +47,7 @@ export default function StockLevels() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[var(--line)] pb-6">
         <div>
           <h1 className="font-display text-3xl font-semibold text-[var(--teal)]">Stock Levels</h1>
-          <p className="text-[var(--subtle)] text-sm mt-1">Units in stock per model · {rows.length} models · {totalInStock} phones in stock</p>
+          <p className="text-[var(--subtle)] text-sm mt-1">Units in stock per model · {rows.length} models · {totalInStock} devices in stock</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -78,7 +78,7 @@ export default function StockLevels() {
         <div className="bg-[var(--cream)] rounded-2xl shadow-sm p-6 space-y-3">
           <p className="text-[11px] font-semibold text-[var(--teal)]/70 uppercase tracking-wide">Total In-Stock Cost</p>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-[12px] font-medium text-[var(--teal)]/70">Phones · {totalInStock} in stock</span>
+            <span className="text-[12px] font-medium text-[var(--teal)]/70">Devices · {totalInStock} in stock</span>
             <span className="font-display text-2xl font-semibold text-[var(--teal)]">{formatLKR(totalCost)}</span>
           </div>
           <div className="flex items-center justify-between gap-4">

@@ -5,13 +5,14 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { cn, formatLKR, MODEL_OPTIONS, IPAD_MODELS, WATCH_MODELS, STORAGE_OPTIONS, COLOR_OPTIONS } from '@/lib/utils';
+import { cn, formatLKR, DEVICE_MODELS, MACBOOK_STORAGE_OPTIONS, MACBOOK_COLOR_OPTIONS, STORAGE_OPTIONS, COLOR_OPTIONS } from '@/lib/utils';
 import { usePhones } from '@/lib/api';
+import type { DeviceType } from '@/types';
 import { toast } from 'sonner';
 
 export interface ExchangePayload {
-  type: 'phone' | 'tablet' | 'watch' | 'accessory';
-  tradeInDeviceType?: 'phone' | 'tablet' | 'watch';
+  type: DeviceType | 'accessory';
+  tradeInDeviceType?: DeviceType;
   // Device trade-in
   tradeInImei?: string;
   tradeInSerialNumber?: string;
@@ -43,7 +44,7 @@ const WATCH_SIZES = ['38mm', '40mm', '41mm', '42mm', '44mm', '45mm', '46mm', '49
 export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }: ExchangeModalProps) {
   const { phones } = usePhones();
 
-  const [type, setType] = useState<'phone' | 'tablet' | 'watch' | 'accessory'>('phone');
+  const [type, setType] = useState<DeviceType | 'accessory'>('phone');
 
   // Device fields
   const [imei, setImei] = useState('');
@@ -82,19 +83,14 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
     let match = null;
     if (type === 'phone' && imei.length === 15) {
       match = phones.find(p => p.imei === imei);
-    } else if ((type === 'tablet' || type === 'watch') && serialNumber.trim().length >= 4) {
+    } else if (type !== 'phone' && serialNumber.trim().length >= 4) {
       const q = serialNumber.trim().toLowerCase();
       match = phones.find(p => p.serialNumber && p.serialNumber.trim().toLowerCase() === q);
     }
 
     if (match) {
       setModel(match.model);
-      const isKnownModel = (
-        type === 'phone' ? (MODEL_OPTIONS as readonly string[]).includes(match.model)
-        : type === 'tablet' ? (IPAD_MODELS as readonly string[]).includes(match.model)
-        : (WATCH_MODELS as readonly string[]).includes(match.model)
-      );
-      setModelOther(!isKnownModel);
+      setModelOther(!DEVICE_MODELS[type].includes(match.model));
       if (match.condition) setCondition(match.condition);
       if (match.batteryHealth) setBatteryHealth(String(match.batteryHealth));
       if (match.storage) setStorage(match.storage);
@@ -140,7 +136,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
       return;
     }
 
-    // Phone / Tablet / Watch trade-in
+    // Serialized device trade-in
     if (type === 'phone') {
       if (!imei || !/^\d{15}$/.test(imei)) { toast.error('IMEI must be exactly 15 digits'); return; }
       const match = phones.find(p => p.imei === imei);
@@ -149,9 +145,8 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
         return;
       }
     } else {
-      // Tablet or Watch requires Serial Number
       if (!serialNumber.trim()) {
-        toast.error('Serial Number is required for iPad / Apple Watch');
+        toast.error('Serial Number is required for this device');
         return;
       }
       const match = phones.find(p => p.serialNumber && p.serialNumber.trim().toLowerCase() === serialNumber.trim().toLowerCase());
@@ -161,7 +156,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
       }
     }
 
-    if (!model) { toast.error('Model is required'); return; }
+    if (!model.trim()) { toast.error('Model is required'); return; }
     if (!condition) { toast.error('Condition is required'); return; }
     if (!customerName) { toast.error('Customer Name is required'); return; }
     if (!customerNic) { toast.error('Customer NIC is required'); return; }
@@ -169,9 +164,9 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
     onConfirm({
       type,
       tradeInDeviceType: type,
-      tradeInImei: imei.trim() || undefined,
+      tradeInImei: type === 'macbook' ? undefined : imei.trim() || undefined,
       tradeInSerialNumber: serialNumber.trim() ? serialNumber.trim().toUpperCase() : undefined,
-      tradeInModel: model,
+      tradeInModel: model.trim(),
       tradeInValuation: numValuation,
       tradeInCondition: condition,
       tradeInBatteryHealth: batteryHealth ? parseInt(batteryHealth) : undefined,
@@ -197,11 +192,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
     onClose();
   };
 
-  const activeModels = (
-    type === 'phone' ? MODEL_OPTIONS
-    : type === 'tablet' ? IPAD_MODELS
-    : WATCH_MODELS
-  );
+  const activeModels = type === 'accessory' ? [] : DEVICE_MODELS[type];
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && handleClose()}>
@@ -209,22 +200,23 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
         <DialogHeader>
           <DialogTitle className="text-xl font-bold uppercase tracking-widest text-[var(--ink)]">Add Trade-In</DialogTitle>
           <DialogDescription className="text-[10px] uppercase text-[var(--subtle)] tracking-widest font-bold">
-            Customer Exchange Details · Phone, iPad, Watch or Accessory
+            Customer Exchange Details · Phone, iPad, Watch, MacBook or Accessory
           </DialogDescription>
         </DialogHeader>
 
         {/* Type toggle */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {([
             { id: 'phone', label: 'Phone' },
             { id: 'tablet', label: 'iPad / Tablet' },
             { id: 'watch', label: 'Apple Watch' },
+            { id: 'macbook', label: 'MacBook' },
             { id: 'accessory', label: 'Accessory' },
           ] as const).map(t => (
             <button
               key={t.id}
               type="button"
-              onClick={() => { setType(t.id); setModel(''); setModelOther(false); }}
+              onClick={() => { if (t.id !== type) { setType(t.id); setModel(''); setModelOther(false); setImei(''); setSerialNumber(''); setStorage(''); setColor(''); } }}
               className={cn(
                 'h-10 text-[10px] font-bold uppercase rounded-xl border-2 transition-all px-1',
                 type === t.id
@@ -266,11 +258,11 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                     <Input
                       value={serialNumber}
                       onChange={(e) => setSerialNumber(e.target.value.toUpperCase())}
-                      placeholder={type === 'watch' ? 'Apple Watch Serial Number' : 'iPad Serial Number'}
+                      placeholder="Device serial number"
                       className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)] uppercase font-mono"
                     />
                   </div>
-                  <div className="space-y-2 col-span-2 sm:col-span-1">
+                  {type !== 'macbook' && <div className="space-y-2 col-span-2 sm:col-span-1">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-[var(--subtle)]">IMEI (Optional / Cellular)</Label>
                     <Input
                       value={imei}
@@ -278,7 +270,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                       placeholder="Optional for cellular units"
                       className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
                     />
-                  </div>
+                  </div>}
                   {identifierWarning && (
                     <p className={`col-span-2 text-[10px] font-bold px-2 py-1 rounded-xl border ${prevSoldBill ? 'text-[var(--warning)] bg-[var(--warning)]/10 border-[var(--warning)]/30' : 'text-[var(--danger)] bg-[var(--danger)]/5 border-[var(--danger)]/20'}`}>
                       {identifierWarning}
@@ -295,20 +287,20 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                   onValueChange={(v) => { if (v === '__other__') { setModelOther(true); setModel(''); } else { setModelOther(false); setModel(v); } }}
                 >
                   <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]">
-                    <SelectValue placeholder={`Select ${type === 'watch' ? 'Apple Watch' : type === 'tablet' ? 'iPad' : 'phone'} model`} />
+                    <SelectValue placeholder={`Select ${type === 'watch' ? 'Apple Watch' : type === 'tablet' ? 'iPad' : type === 'macbook' ? 'MacBook' : 'phone'} model`} />
                   </SelectTrigger>
                   <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
                     {activeModels.map(m => (
                       <SelectItem key={m} value={m} className="rounded-xl text-[10px] font-medium">{m}</SelectItem>
                     ))}
-                    <SelectItem value="__other__" className="rounded-xl text-[10px] font-medium">Other (Specify model)…</SelectItem>
+                    <SelectItem value="__other__" className="rounded-xl text-[10px] font-medium">Custom model…</SelectItem>
                   </SelectContent>
                 </Select>
                 {modelOther && (
                   <Input
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    placeholder={type === 'watch' ? 'e.g. Apple Watch Hermès 45mm' : type === 'tablet' ? 'e.g. Samsung Galaxy Tab S9' : 'e.g. Samsung Galaxy S23'}
+                    placeholder="Enter the model name"
                     className="mt-2 bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"
                   />
                 )}
@@ -351,7 +343,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                   <Select value={storage} onValueChange={setStorage}>
                     <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"><SelectValue placeholder="Storage" /></SelectTrigger>
                     <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
-                      {STORAGE_OPTIONS.map(s => <SelectItem key={s} value={s} className="rounded-xl text-[10px] font-medium">{s}</SelectItem>)}
+                      {(type === 'macbook' ? MACBOOK_STORAGE_OPTIONS : STORAGE_OPTIONS).map(s => <SelectItem key={s} value={s} className="rounded-xl text-[10px] font-medium">{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 )}
@@ -363,7 +355,7 @@ export default function ExchangeModal({ open, onClose, cartSubtotal, onConfirm }
                 <Select value={color} onValueChange={setColor}>
                   <SelectTrigger className="bg-[var(--bg-app)] border-[var(--line)] rounded-xl text-[var(--ink)]"><SelectValue placeholder="Colour" /></SelectTrigger>
                   <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] rounded-xl text-[var(--ink)] max-h-[300px]">
-                    {COLOR_OPTIONS.map(c => <SelectItem key={c} value={c} className="rounded-xl text-[10px] font-medium">{c}</SelectItem>)}
+                    {(type === 'macbook' ? MACBOOK_COLOR_OPTIONS : COLOR_OPTIONS).map(c => <SelectItem key={c} value={c} className="rounded-xl text-[10px] font-medium">{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

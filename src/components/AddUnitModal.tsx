@@ -28,9 +28,9 @@ import {
  SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Smartphone, Package } from 'lucide-react';
-import { MODEL_OPTIONS, STORAGE_OPTIONS, COLOR_OPTIONS, CONDITION_OPTIONS, CONDITION_LABELS, todayColombo } from '@/lib/utils';
-import type { ConditionGrade } from '@/types';
+import { Laptop, Smartphone, Package } from 'lucide-react';
+import { DEVICE_MODELS, MACBOOK_STORAGE_OPTIONS, MACBOOK_COLOR_OPTIONS, STORAGE_OPTIONS, COLOR_OPTIONS, CONDITION_OPTIONS, CONDITION_LABELS, todayColombo } from '@/lib/utils';
+import type { ConditionGrade, DeviceType } from '@/types';
 
 interface AddUnitModalProps {
  open: boolean;
@@ -39,11 +39,11 @@ interface AddUnitModalProps {
 
 export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  // Common states
- const [activeTab, setActiveTab] = useState<'phone' | 'accessory'>('phone');
+ const [activeTab, setActiveTab] = useState<'phone' | 'accessory' | 'macbook'>('phone');
  const [error, setError] = useState('');
 
  // Phone states
- const [deviceType, setDeviceType] = useState<'phone' | 'tablet' | 'watch'>('phone');
+ const [deviceType, setDeviceType] = useState<DeviceType>('phone');
  const [imei, setImei] = useState('');
  const [serialNumber, setSerialNumber] = useState('');
  const [model, setModel] = useState('');
@@ -87,7 +87,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  onClose();
  }, [onClose]);
 
- const resetPhoneForm = () => { setImei(''); setSerialNumber(''); setDeviceType('phone'); setCostPrice(''); setSalePrice(''); setModel(''); setModelOther(false); setNote(''); };
+ const resetPhoneForm = () => { setActiveTab('phone'); setImei(''); setSerialNumber(''); setDeviceType('phone'); setStorage('128GB'); setColor('Black'); setCostPrice(''); setSalePrice(''); setModel(''); setModelOther(false); setNote(''); };
 
  // Actual write: `reviveId` set => revive the existing (sold/deleted) record in place.
  const writePhone = useCallback(async (
@@ -107,25 +107,25 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  const handleSubmit = useCallback(async () => {
  setError('');
  
- if (activeTab === 'phone') {
+ if (activeTab !== 'accessory') {
  if (deviceType === 'phone') {
  if (!imei.trim()) return setError('IMEI is required for phones');
  if (imei.length !== 15) return setError('IMEI must be 15 digits');
  } else {
- if (!serialNumber.trim()) return setError('Serial Number is required for tablets/watches');
+ if (!serialNumber.trim()) return setError('Serial Number is required for this device');
  }
  // Match the DB CHECK: at least one identifier.
  if (!imei.trim() && !serialNumber.trim()) return setError('Enter an IMEI or a Serial Number');
- if (!model) return setError('Model is required');
+ if (!model.trim()) return setError('Model is required');
  if (!costPrice || isNaN(Number(costPrice))) return setError('Valid cost price is required');
  if (!salePrice || isNaN(Number(salePrice))) return setError('Valid sale price is required');
 
  const phoneData = {
  id: `p${Date.now()}`,
  deviceType,
- imei: imei.trim(),
- serialNumber: serialNumber.trim(),
- model,
+ imei: deviceType === 'macbook' ? '' : imei.trim(),
+ serialNumber: serialNumber.trim().toUpperCase(),
+ model: model.trim(),
  storage,
  color,
  condition,
@@ -139,7 +139,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  };
 
  try {
- const idf = imei.trim() || serialNumber.trim();
+ const idf = phoneData.imei || phoneData.serialNumber;
  const match = await findPhoneByIdentifier(idf);
  if (match?.found && match.active) {
  setError('This IMEI/serial is already in ACTIVE stock — it is a duplicate.');
@@ -195,15 +195,31 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <>
  <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
  <DialogContent className="sm:max-w-xl bg-[var(--paper)] border border-[var(--line)] p-0 max-h-[90vh] overflow-y-auto rounded-xl shadow-none">
- <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'phone' | 'accessory')} className="w-full">
+ <Tabs value={activeTab} onValueChange={(value) => {
+   const tab = value as typeof activeTab;
+   setActiveTab(tab);
+   setError('');
+   if (tab !== 'accessory') {
+     setDeviceType(tab);
+     setModel('');
+     setModelOther(false);
+     setImei('');
+     setSerialNumber('');
+     setColor(tab === 'macbook' ? 'Silver' : 'Black');
+     setStorage(tab === 'macbook' ? '256GB' : '128GB');
+   }
+ }} className="w-full">
  <div className="bg-[var(--bg-app)] px-8 pt-8 pb-6 border-b border-[var(--line)]">
  <DialogHeader className="mb-6">
  <DialogTitle className="text-3xl text-[var(--ink)]">Add Stock</DialogTitle>
- <p className="text-sm text-[var(--subtle)] mt-1.5">Add new phones or accessories to inventory</p>
+ <p className="text-sm text-[var(--subtle)] mt-1.5">Add devices or accessories to inventory</p>
  </DialogHeader>
- <TabsList className="grid grid-cols-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl p-1">
+ <TabsList className="grid grid-cols-3 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl p-1">
  <TabsTrigger value="phone" className="rounded-xl flex items-center gap-3 text-[10px] font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--brand)] data-[state=active]:border-[var(--line)] transition-all">
  <Smartphone size={14} /> Phone
+ </TabsTrigger>
+ <TabsTrigger value="macbook" className="rounded-xl gap-2 text-[10px] font-medium data-[state=active]:text-[var(--brand)]">
+ <Laptop size={14} /> MacBook
  </TabsTrigger>
  <TabsTrigger value="accessory" className="rounded-xl flex items-center gap-3 text-[10px] font-medium data-[state=active]:bg-[var(--paper)] data-[state=active]:text-[var(--brand)] data-[state=active]:border-[var(--line)] transition-all">
  <Package size={14} /> Accessory
@@ -219,16 +235,17 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  </div>
  )}
 
- <TabsContent value="phone" className="mt-0 space-y-6">
+ <TabsContent value={activeTab === 'macbook' ? 'macbook' : 'phone'} className="mt-0 space-y-6">
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Device Type</Label>
- <Select value={deviceType} onValueChange={(v) => setDeviceType(v as 'phone'|'tablet'|'watch')}>
+ <Select disabled={activeTab === 'macbook'} value={deviceType} onValueChange={(v) => { setDeviceType(v as DeviceType); setModel(''); setModelOther(false); }}>
  <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 focus:border-[var(--brand)] text-[11px] font-medium"><SelectValue /></SelectTrigger>
  <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
  <SelectItem value="phone" className="text-[10px] font-medium">Phone</SelectItem>
  <SelectItem value="tablet" className="text-[10px] font-medium">Tablet (iPad)</SelectItem>
  <SelectItem value="watch" className="text-[10px] font-medium">Watch</SelectItem>
+ {activeTab === 'macbook' && <SelectItem value="macbook">MacBook</SelectItem>}
  </SelectContent>
  </Select>
  </div>
@@ -238,13 +255,13 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  value={serialNumber}
  onChange={(e) => setSerialNumber(e.target.value.trim())}
  disabled={deviceType === 'phone'}
- placeholder={deviceType === 'phone' ? 'For tablets/watches' : 'Serial (no IMEI)'}
+ placeholder="Device serial number"
  className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] disabled:opacity-40"
  />
  </div>
  </div>
  <div className="grid grid-cols-2 gap-6">
- <div className="space-y-2 relative group">
+ {deviceType !== 'macbook' && (<div className="space-y-2 relative group">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">IMEI Number {deviceType === 'phone' && <span className="text-[var(--brand)]">*</span>}</Label>
  <Input
  value={imei}
@@ -252,7 +269,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  placeholder={deviceType === 'phone' ? '15-digit hardware ID' : 'Optional for tablet/watch'}
  className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] "
  />
- </div>
+ </div>)}
  <div className="space-y-2">
  <Label className="text-[13px] font-medium text-[var(--ink)] mb-2 block">Model</Label>
  <Select
@@ -263,15 +280,15 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <SelectValue placeholder="Identify Model" />
  </SelectTrigger>
  <SelectContent position="popper" className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl max-h-[300px]">
- {MODEL_OPTIONS.map(m => <SelectItem key={m} value={m} className="text-[10px] font-medium hover:bg-[var(--bg-app)]">{m}</SelectItem>)}
- <SelectItem value="__other__" className="text-[10px] font-medium hover:bg-[var(--bg-app)]">Other (Android / specify)…</SelectItem>
+ {DEVICE_MODELS[deviceType].map(m => <SelectItem key={m} value={m} className="text-[10px] font-medium hover:bg-[var(--bg-app)]">{m}</SelectItem>)}
+ <SelectItem value="__other__" className="text-[10px] font-medium hover:bg-[var(--bg-app)]">Custom model…</SelectItem>
  </SelectContent>
  </Select>
  {modelOther && (
  <Input
  value={model}
  onChange={(e) => setModel(e.target.value)}
- placeholder="e.g. Samsung Galaxy S23"
+ placeholder="Enter the model name"
  className="h-11 mt-2 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px]"
  />
  )}
@@ -284,7 +301,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <Select value={storage} onValueChange={setStorage}>
  <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-bold"><SelectValue /></SelectTrigger>
  <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
- {STORAGE_OPTIONS.map(s => <SelectItem key={s} value={s} className="text-[10px] font-bold">{s}</SelectItem>)}
+ {(deviceType === 'macbook' ? MACBOOK_STORAGE_OPTIONS : STORAGE_OPTIONS).map(s => <SelectItem key={s} value={s} className="text-[10px] font-bold">{s}</SelectItem>)}
  </SelectContent>
  </Select>
  </div>
@@ -293,7 +310,7 @@ export default function AddUnitModal({ open, onClose }: AddUnitModalProps) {
  <Select value={color} onValueChange={setColor}>
  <SelectTrigger className="h-11 rounded-xl bg-[var(--bg-app)] border-[var(--line)] text-[var(--ink)] focus:ring-0 text-[11px] font-bold"><SelectValue /></SelectTrigger>
  <SelectContent className="bg-[var(--paper)] border-[var(--line)] text-[var(--ink)] rounded-xl">
- {COLOR_OPTIONS.map(c => <SelectItem key={c} value={c} className="text-[10px] font-medium">{c}</SelectItem>)}
+ {(deviceType === 'macbook' ? MACBOOK_COLOR_OPTIONS : COLOR_OPTIONS).map(c => <SelectItem key={c} value={c} className="text-[10px] font-medium">{c}</SelectItem>)}
  </SelectContent>
  </Select>
  </div>

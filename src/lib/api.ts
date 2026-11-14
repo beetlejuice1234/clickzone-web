@@ -7,7 +7,7 @@ import {
   mapPhone, mapAccessory, mapSale, mapReturn, mapExchange, mapQuotation,
   phoneToUpsertPayload,
 } from '@/lib/mappers';
-import type { PhoneUnit, Accessory, Customer } from '@/types';
+import type { PhoneUnit, Accessory, Customer, ReturnAdjustment } from '@/types';
 
 /**
  * Phase 6 data layer — TanStack Query over Supabase.
@@ -117,6 +117,33 @@ export function useSales(range?: { from?: string; to?: string }) {
     ...listOpts,
   });
   return { sales: data ?? [], isLoading, isError: error };
+}
+
+// The view scopes staff to their store and omits their profit adjustments.
+export function useReturnAdjustments() {
+  const { isAdmin } = useAuth();
+  const activeStore = useStoreScope(s => s.activeStoreId);
+  const scoped = isAdmin ? activeStore : null;
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['return-adjustments', isAdmin ? 'owner' : 'staff', scoped],
+    queryFn: async () => {
+      const rows = await fetchAllRows((from, to) => {
+        let q = supabase.from('v_return_adjustments').select('*');
+        if (scoped) q = q.eq('store_id', scoped);
+        return q.order('refund_date').order('id').range(from, to);
+      });
+      return rows.map((row): ReturnAdjustment => ({
+        id: row.id,
+        saleId: row.sale_id,
+        date: row.refund_date,
+        amount: Number(row.refund_amount ?? 0),
+        profitReversed: Number(row.profit_reversed ?? 0),
+        isExchange: row.is_exchange,
+      }));
+    },
+    ...listOpts,
+  });
+  return { adjustments: data ?? [], isLoading, isError: error };
 }
 
 // Owner-only records — disabled for staff (never hits base-table RLS).
@@ -342,7 +369,7 @@ export async function phoneSwap(payload: Record<string, unknown>) {
 
 /** Invalidate all list caches after a write. */
 export const reloadData = () => {
-  for (const k of ['phones', 'accessories', 'sales', 'returns', 'exchanges', 'customers', 'stores', 'quotations']) {
+  for (const k of ['phones', 'accessories', 'sales', 'returns', 'return-adjustments', 'exchanges', 'customers', 'stores', 'quotations']) {
     queryClient.invalidateQueries({ queryKey: [k] });
   }
 };

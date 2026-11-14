@@ -1,7 +1,8 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2, Wrench, ShieldCheck } from 'lucide-react';
+import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2, Wrench, ShieldCheck, Laptop } from 'lucide-react';
 import { usePhones, useAccessories, reloadData, checkout, createQuotation } from '@/lib/api';
-import { formatLKR, cn, todayColombo, WARRANTY_PRESETS } from '@/lib/utils';
+import { formatLKR, cn, todayColombo, WARRANTY_PRESETS, deviceIdentifier } from '@/lib/utils';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,8 @@ export default function POS() {
  const setSpecialNotes = usePosDraft(s => s.setSpecialNotes);
  const defaultWarranty = usePosDraft(s => s.defaultWarranty);
  const setDefaultWarranty = usePosDraft(s => s.setDefaultWarranty);
+ const includeBillTerms = usePosDraft(s => s.includeBillTerms);
+ const setIncludeBillTerms = usePosDraft(s => s.setIncludeBillTerms);
  const pendingExchanges = usePosDraft(s => s.pendingExchanges);
  const setPendingExchanges = usePosDraft(s => s.setPendingExchanges);
  const resetDraft = usePosDraft(s => s.resetDraft);
@@ -61,8 +64,6 @@ export default function POS() {
  phonesRef.current = phones;
  const accRef = useRef(accessories);
  accRef.current = accessories;
- const defaultWarrantyRef = useRef(defaultWarranty);
- defaultWarrantyRef.current = defaultWarranty;
 
  const handleLookup = useCallback((value: string) => {
  const query = value.trim();
@@ -87,7 +88,6 @@ export default function POS() {
          finalPrice: phone.targetSalePrice ? String(phone.targetSalePrice) : '',
          discount: '0',
          quantity: 1,
-         warranty: defaultWarrantyRef.current || undefined,
        }]);
        toast.success(`Added ${phone.model} to cart`);
      } else {
@@ -127,7 +127,6 @@ export default function POS() {
         finalPrice: String(accessory.salePrice),
         discount: '0',
         quantity: 1,
-        warranty: defaultWarrantyRef.current || undefined,
       }]);
       toast.success(`Added ${accessory.name} to cart`);
     }
@@ -190,7 +189,6 @@ export default function POS() {
      quantity: 1,
      repairDescription: r.description,
      repairCost: r.cost,
-     warranty: defaultWarrantyRef.current || undefined,
    }]);
    setRepairModalOpen(false);
    toast.success('Repair added to cart');
@@ -251,20 +249,21 @@ export default function POS() {
  const saleItems: SaleItem[] = cartItems.map(c => {
  const p = parseInt(c.finalPrice) || 0;
  const d = parseInt(c.discount) || 0;
- const itemWarranty = c.warranty ?? defaultWarranty ?? undefined;
+ const itemWarranty = includeBillTerms ? (c.warranty ?? defaultWarranty).trim() || undefined : undefined;
  if (c.type === 'phone') {
  const phone = c.itemRef as PhoneUnit;
- const deviceIdentifier = (phone.imei && phone.imei.trim()) || (phone.serialNumber && phone.serialNumber.trim()) || phone.id;
  return {
  type: 'phone',
+ id: phone.id,
  name: `${phone.model} ${phone.storage}`.trim(),
- identifier: deviceIdentifier,
+ identifier: deviceIdentifier(phone),
  costPrice: phone.costPrice,
  finalPrice: Math.max(0, p - d),
  discount: d,
  quantity: 1,
  condition: phone.condition,
  warranty: itemWarranty,
+ includeBillTerms,
  };
  } else if (c.type === 'accessory') {
  const acc = c.itemRef as Accessory;
@@ -277,6 +276,7 @@ export default function POS() {
  discount: d * c.quantity,
  quantity: c.quantity,
  warranty: itemWarranty,
+ includeBillTerms,
  };
  } else {
  // repair / service line — no stock; entered parts cost feeds owner profit
@@ -289,6 +289,7 @@ export default function POS() {
  discount: d,
  quantity: 1,
  warranty: itemWarranty,
+ includeBillTerms,
  };
  }
  });
@@ -420,7 +421,7 @@ ${discountLine}${tradeInLine}
 
 ━━━━━━━━━━━━━━━━━━━━
 🙏 *Thank you for choosing ClickZone Mobile!*
-We appreciate your trust and support. Your purchase comes with manufacturer warranty — reach out to us anytime if you need assistance.
+Reach out to us anytime if you need assistance.
 
 🌐 www.clickzonemobiles.com
 📍 Kandy, Sri Lanka
@@ -446,7 +447,7 @@ _Please keep this message as your digital receipt._`;
       console.error("Receipt generation failed:", err);
       toast.error("Receipt generation failed, but the sale was saved successfully.");
     }
-  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, netAmount, totalDiscount, pendingExchanges, tradeInTotal, isMobile]);
+  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, defaultWarranty, includeBillTerms, netAmount, totalDiscount, pendingExchanges, tradeInTotal, isMobile, resetDraft]);
 
  // Save a quotation from the current cart (no sale, no stock change) + share via WhatsApp/PDF.
  const handleGenerateQuotation = useCallback(async () => {
@@ -463,20 +464,21 @@ _Please keep this message as your digital receipt._`;
  const quoteItems: SaleItem[] = cartItems.map(c => {
  const p = parseInt(c.finalPrice) || 0;
  const d = parseInt(c.discount) || 0;
- const itemWarranty = c.warranty ?? defaultWarranty ?? undefined;
+ const itemWarranty = includeBillTerms ? (c.warranty ?? defaultWarranty).trim() || undefined : undefined;
  if (c.type === 'phone') {
  const phone = c.itemRef as PhoneUnit;
- const deviceIdentifier = (phone.imei && phone.imei.trim()) || (phone.serialNumber && phone.serialNumber.trim()) || phone.id;
  return {
  type: 'phone',
+ id: phone.id,
  name: `${phone.model} ${phone.storage}`.trim(),
- identifier: deviceIdentifier,
+ identifier: deviceIdentifier(phone),
  costPrice: 0,
  finalPrice: Math.max(0, p - d),
  discount: d,
  quantity: 1,
  condition: phone.condition,
  warranty: itemWarranty,
+ includeBillTerms,
  };
  }
  if (c.type === 'accessory') {
@@ -490,6 +492,7 @@ _Please keep this message as your digital receipt._`;
  discount: d * c.quantity,
  quantity: c.quantity,
  warranty: itemWarranty,
+ includeBillTerms,
  };
  }
  return {
@@ -501,6 +504,7 @@ _Please keep this message as your digital receipt._`;
  discount: d,
  quantity: 1,
  warranty: itemWarranty,
+ includeBillTerms,
  };
  });
 
@@ -569,7 +573,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  waWin?.close();
  console.error('Quotation receipt failed:', err);
  }
- }, [cartItems, customerWhatsapp, customerName, customerNic, specialNotes, netAmount, totalDiscount, isMobile]);
+ }, [cartItems, customerWhatsapp, customerName, customerNic, specialNotes, defaultWarranty, includeBillTerms, netAmount, totalDiscount, isMobile]);
 
  useEffect(() => {
  if (!billGenerated) return;
@@ -589,6 +593,41 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  }
  }, [lastBillData, isMobile]);
 
+ const warrantyOptions = (
+  <Dialog>
+    <DialogTrigger asChild>
+      <Button type="button" variant="outline" className="w-full" disabled={cartItems.length === 0}>
+        <ShieldCheck size={14} />
+        {includeBillTerms ? 'Edit warranty & terms' : 'Add warranty & terms'}
+      </Button>
+    </DialogTrigger>
+    <DialogContent className="bg-[var(--paper)] text-[var(--ink)]">
+      <DialogHeader>
+        <DialogTitle>Bill warranty & terms</DialogTitle>
+        <DialogDescription>Choose the warranty for this bill and include the terms at the bottom of the PDF.</DialogDescription>
+      </DialogHeader>
+      <Select
+        value={WARRANTY_PRESETS.find(preset => preset === defaultWarranty) ?? ''}
+        onValueChange={(value) => setDefaultWarranty(value === 'custom' ? '' : value)}
+      >
+        <SelectTrigger><SelectValue placeholder="Choose a warranty preset" /></SelectTrigger>
+        <SelectContent>
+          {WARRANTY_PRESETS.map(preset => <SelectItem key={preset} value={preset}>{preset}</SelectItem>)}
+          <SelectItem value="custom">Custom warranty</SelectItem>
+        </SelectContent>
+      </Select>
+      <Input aria-label="Warranty text" value={defaultWarranty} onChange={e => setDefaultWarranty(e.target.value)}
+        placeholder="Warranty text (optional)" />
+      <div className="flex justify-end gap-2">
+        {includeBillTerms && (
+          <DialogClose asChild><Button type="button" variant="outline" onClick={() => setIncludeBillTerms(false)}>Remove from bill</Button></DialogClose>
+        )}
+        <DialogClose asChild><Button type="button" onClick={() => setIncludeBillTerms(true)}>Include on bill</Button></DialogClose>
+      </div>
+    </DialogContent>
+  </Dialog>
+ );
+
  if (isMobile) {
  return (
  <div className="flex flex-col h-[calc(100vh-7.5rem)] px-4 py-4 gap-4 bg-[var(--bg-app)]">
@@ -601,7 +640,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  value={imeiQuery}
  onChange={(e) => setImeiQuery(e.target.value)}
  onKeyDown={(e) => e.key === 'Enter' && handleLookup(e.currentTarget.value)}
- placeholder="IMEI or SKU..."
+ placeholder="IMEI, serial, or SKU…"
  className="w-full h-10 pl-9 pr-4 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-medium text-[var(--ink)] placeholder:text-[var(--subtle)]/50 focus:outline-none focus:border-[var(--brand)] transition-all"
  autoComplete="off"
  />
@@ -702,7 +741,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
   className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--danger)] focus:outline-none focus:border-[var(--brand)]"
   />
   </div>
-  <div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
+  {includeBillTerms && (<div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
     <span className="text-[8px] font-bold text-[var(--subtle)] uppercase shrink-0">Warranty</span>
     <input
       type="text"
@@ -711,7 +750,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
       placeholder="e.g. 1 Year Apple Care"
       className="h-7 px-2 flex-1 bg-[var(--bg-app)] border border-[var(--line)] rounded-lg text-[9px] font-bold text-[var(--ink)] focus:outline-none focus:border-[var(--brand)]"
     />
-  </div>
+  </div>)}
   </div>
   </motion.div>
   );
@@ -783,6 +822,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  </button>
  ))}
  </div>
+ {warrantyOptions}
  <textarea
  value={specialNotes}
  onChange={(e) => setSpecialNotes(e.target.value)}
@@ -933,7 +973,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  <div className="flex items-center gap-5 min-w-0">
  <div className={cn("w-12 h-12 border flex items-center justify-center shrink-0", 
  item.type === 'phone' ? 'border-[var(--brand)] bg-[var(--brand)]/5 text-[var(--brand)]' : 'border-[var(--subtle)] bg-[var(--paper)] text-[var(--subtle)]')}>
- {item.type === 'phone' ? <Smartphone size={20} /> : item.type === 'repair' ? <Wrench size={20} /> : <Package size={20} />}
+ {item.type === 'phone' ? ((item.itemRef as PhoneUnit).deviceType === 'macbook' ? <Laptop size={20} /> : <Smartphone size={20} />) : item.type === 'repair' ? <Wrench size={20} /> : <Package size={20} />}
  </div>
  <div className="flex-1 min-w-0">
  {item.type === 'phone' ? (
@@ -1070,7 +1110,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  />
  </div>
  </div>
- <div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
+ {includeBillTerms && (<div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
    <span className="text-[8px] font-bold text-[var(--subtle)] uppercase shrink-0 flex items-center gap-1">
      <ShieldCheck size={11} className="text-[var(--brand)]" />
      Warranty:
@@ -1082,7 +1122,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
      placeholder="e.g. 1 Year Apple Care / 6 Months Shop Warranty"
      className="h-8 px-2 flex-1 bg-[var(--bg-app)] border border-[var(--line)] rounded-lg text-[10px] font-bold text-[var(--ink)] focus:outline-none focus:border-[var(--brand)]"
    />
- </div>
+ </div>)}
  </div>
  </div>
  ))}
@@ -1118,53 +1158,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  className="h-11 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
  />
  </div>
- <div className="space-y-2">
-   <div className="flex items-center justify-between">
-     <Label className="text-[9px] font-bold text-[var(--subtle)] uppercase flex items-center gap-1.5">
-       <ShieldCheck size={12} className="text-[var(--brand)]" />
-       Bill Warranty (printed on receipt)
-     </Label>
-     <span className="text-[8px] text-[var(--subtle)]">Applies to items unless customized</span>
-   </div>
-   <div className="grid grid-cols-1 gap-2">
-     <Select
-       value={WARRANTY_PRESETS.includes(defaultWarranty as any) ? defaultWarranty : 'custom'}
-       onValueChange={(val) => {
-         if (val !== 'custom') {
-           setDefaultWarranty(val);
-           setCartItems(prev => prev.map(item => ({ ...item, warranty: val })));
-         }
-       }}
-       disabled={cartItems.length === 0}
-     >
-       <SelectTrigger className="h-10 bg-[var(--bg-app)] border-[var(--line)] text-[11px] font-bold text-[var(--ink)]">
-         <SelectValue placeholder="Select warranty preset..." />
-       </SelectTrigger>
-       <SelectContent>
-         {WARRANTY_PRESETS.map((w) => (
-           <SelectItem key={w} value={w} className="text-[11px] font-medium">
-             {w}
-           </SelectItem>
-         ))}
-         <SelectItem value="custom" className="text-[11px] font-medium text-[var(--brand)]">
-           + Custom Warranty Text...
-         </SelectItem>
-       </SelectContent>
-     </Select>
-     <Input
-       type="text"
-       value={defaultWarranty}
-       onChange={(e) => {
-         const val = e.target.value;
-         setDefaultWarranty(val);
-         setCartItems(prev => prev.map(item => ({ ...item, warranty: val })));
-       }}
-       placeholder="e.g. 1 Year Apple Care / 6 Months Shop Warranty"
-       disabled={cartItems.length === 0}
-       className="h-10 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)]"
-     />
-   </div>
- </div>
+ {warrantyOptions}
  <div className="space-y-2">
  <Label className="text-[9px] font-bold text-[var(--subtle)] ">Payment Method</Label>
  <div className="grid grid-cols-3 gap-2">

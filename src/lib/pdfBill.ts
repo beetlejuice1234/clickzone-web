@@ -198,7 +198,7 @@ async function generateBill(data: BillData): Promise<jsPDF> {
   // --- Item rows (display only; totals come from data.totals) ---
   doc.setFont('helvetica', 'normal');
   for (const item of data.saleItems) {
-    const hasWarranty = !!item.warranty?.trim();
+    const hasWarranty = item.includeBillTerms !== false && !!item.warranty?.trim();
     ensureSpace(hasWarranty ? 16 : 12);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
@@ -322,30 +322,32 @@ async function generateBill(data: BillData): Promise<jsPDF> {
     y += 3;
   }
 
-  // --- Terms & Conditions (always render) ---
-  const terms = [
-    '1. Warranty cannot be claimed for water & physical damages.',
-    '2. Checking warranty doesn\'t include a warranty for the display.',
-    '3. Warranty cannot be claimed if the warranty sticker is damaged or removed.',
-    '4. Cash will not be refunded under any circumstances.',
-  ];
-  ensureSpace(8 + terms.length * 3);
-  doc.setDrawColor(COLORS.LINE[0], COLORS.LINE[1], COLORS.LINE[2]);
-  doc.setLineWidth(0.1);
-  doc.line(CONTENT_X, y, META_X, y);
-  y += 4;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(COLORS.INK[0], COLORS.INK[1], COLORS.INK[2]);
-  doc.text('TERMS & CONDITIONS', CONTENT_X, y);
-  y += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6);
-  doc.setTextColor(COLORS.MUTED[0], COLORS.MUTED[1], COLORS.MUTED[2]);
-  for (const term of terms) {
-    ensureSpace(3);
-    doc.text(term, CONTENT_X, y);
-    y += 3;
+  if (data.saleItems.some(item => item.includeBillTerms === true)
+    || data.saleItems.every(item => item.includeBillTerms === undefined)) {
+    const terms = [
+      '1. Warranty cannot be claimed for water & physical damages.',
+      '2. Checking warranty doesn\'t include a warranty for the display.',
+      '3. Warranty cannot be claimed if the warranty sticker is damaged or removed.',
+      '4. Cash will not be refunded under any circumstances.',
+    ];
+    ensureSpace(8 + terms.length * 3);
+    doc.setDrawColor(COLORS.LINE[0], COLORS.LINE[1], COLORS.LINE[2]);
+    doc.setLineWidth(0.1);
+    doc.line(CONTENT_X, y, META_X, y);
+    y += 4;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(COLORS.INK[0], COLORS.INK[1], COLORS.INK[2]);
+    doc.text('TERMS & CONDITIONS', CONTENT_X, y);
+    y += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.setTextColor(COLORS.MUTED[0], COLORS.MUTED[1], COLORS.MUTED[2]);
+    for (const term of terms) {
+      ensureSpace(3);
+      doc.text(term, CONTENT_X, y);
+      y += 3;
+    }
   }
 
   // --- Footer strip (bottom of the final page) ---

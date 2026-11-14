@@ -4,8 +4,8 @@ import {
  Calendar,
  Receipt
 } from 'lucide-react';
-import { usePhones, useAccessories, useSales, useExchanges } from '@/lib/api';
-import { formatLKR, cn, monthColombo, monthBounds, todayColombo, lastNDaysColombo, weekdayShortColombo, saleNetRevenue } from '@/lib/utils';
+import { usePhones, useAccessories, useSales, useExchanges, useReturnAdjustments } from '@/lib/api';
+import { formatLKR, cn, monthColombo, monthBounds, todayColombo, lastNDaysColombo, weekdayShortColombo, saleRevenueAfterRefunds, saleReportingTotals, reportableReturns } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -15,6 +15,8 @@ export default function Dashboard() {
  const { accessories } = useAccessories();
  const { sales } = useSales();
  const { exchanges } = useExchanges();
+ const { adjustments, isLoading: returnsLoading, isError: returnsError } = useReturnAdjustments();
+ const returns = useMemo(() => reportableReturns(sales, adjustments), [sales, adjustments]);
  const { isAdmin } = useAuth();
 
  // Monthly summary — a second, month-scoped query (gte/lte pushed into Supabase),
@@ -22,90 +24,40 @@ export default function Dashboard() {
  const [selectedMonth, setSelectedMonth] = useState<string>(monthColombo()); // 'YYYY-MM'
  const monthRange = useMemo(() => monthBounds(selectedMonth), [selectedMonth]);
  const { sales: monthSales, isLoading: monthLoading } = useSales(monthRange);
- const monthly = useMemo(() => {
-   const revenue = monthSales.reduce((sum, s) => sum + saleNetRevenue(s), 0);
-   const profit = monthSales.reduce((sum, s) => {
-     const cost = s.items.reduce((acc, item) => acc + item.costPrice, 0);
-     return sum + (s.totalRevenue - cost);
-   }, 0);
-   return { revenue, count: monthSales.length, profit };
- }, [monthSales]);
+ const monthly = useMemo(() => saleReportingTotals(
+   monthSales, returns.filter(event => event.date.startsWith(selectedMonth)),
+ ), [monthSales, returns, selectedMonth]);
 
+ const today = todayColombo();
+ const thisMonth = today.slice(0, 7);
  const stats = useMemo(() => {
-  const phonesInStock = phones.filter(p => p.status === 'in-stock').length;
-  const accessoriesInStock = accessories.reduce((sum, a) => sum + a.quantity, 0);
-  const soldPhones = phones.filter(p => p.status === 'sold').length;
-  const totalSoldAccessories = sales.reduce((sum, sale) => {
-  return sum + sale.items.filter(i => i.type === 'accessory').reduce((qtySum, i) => qtySum + (i.quantity || 1), 0);
-  }, 0);
-  
-  const today = todayColombo();
-  const todaySales = sales.filter(s => s.date === today);
-  const todayRevenue = todaySales.reduce((sum, s) => sum + saleNetRevenue(s), 0);
-  const todayProfit = todaySales.reduce((sum, s) => {
-  const cost = s.items.reduce((acc, item) => acc + item.costPrice, 0);
-  return sum + (s.totalRevenue - cost);
-  }, 0);
+   const inStock = phones.filter(p => p.status === 'in-stock');
+   const daily = saleReportingTotals(sales.filter(s => s.date === today), returns.filter(r => r.date === today));
+   const monthReturns = returns.filter(r => r.date.startsWith(thisMonth));
+   const saleDates = new Map(sales.map(sale => [sale.id, sale.date]));
+   return {
+     phonesInStock: inStock.filter(p => p.deviceType !== 'macbook').length,
+     macBooksInStock: inStock.filter(p => p.deviceType === 'macbook').length,
+     accessoriesInStock: accessories.reduce((sum, a) => sum + a.quantity, 0),
+     soldPhones: phones.filter(p => p.status === 'sold').length,
+     todayRevenue: daily.revenue,
+     todayProfit: daily.profit,
+     todayCount: daily.count,
+     inventoryValue: inStock.reduce((sum, p) => sum + p.costPrice, 0)
+       + accessories.reduce((sum, a) => sum + a.costPrice * a.quantity, 0),
+     potentialProfit: inStock.reduce((sum, p) => sum + (p.targetSalePrice ? p.targetSalePrice - p.costPrice : 0), 0),
+     returnsThisMonthCount: monthReturns.filter(r => r.amount > 0).length,
+     tradeInsThisMonth: exchanges.filter(e =>
+       e.exchangeType !== 'trade-in-return' && (saleDates.get(e.saleId) ?? '').startsWith(thisMonth)).length,
+     returnsThisMonthValue: monthReturns.reduce((sum, r) => sum + r.amount, 0),
+   };
+ }, [phones, accessories, sales, exchanges, returns, today, thisMonth]);
 
-  const inventoryValue = [
- ...phones.filter(p => p.status === 'in-stock'),
- ...accessories
- ].reduce((sum, item) => sum + (item.costPrice * (('quantity' in item) ? item.quantity : 1)), 0);
-
- const totalRevenueAllTime = sales.reduce((sum, s) => sum + s.totalRevenue, 0);
- const totalRefundedAllTime = sales.reduce((sum, s) => sum + (s.totalRefunded ?? 0), 0);
- const totalCostAllTime = sales.reduce((sum, s) => {
- const saleCost = s.items.reduce((itemSum, item) => itemSum + item.costPrice, 0);
- return sum + saleCost;
- }, 0);
- 
- // Potential profit only on in-stock phones (Target Price - Cost)
- const potentialProfit = phones
- .filter(p => p.status === 'in-stock')
- .reduce((sum, p) => sum + (p.targetSalePrice ? (p.targetSalePrice - p.costPrice) : 0), 0);
-
- const thisMonth = monthColombo(); // 'YYYY-MM' (Asia/Colombo)
- const returnsThisMonth = sales.filter(s =>
- s.date.startsWith(thisMonth) && (s.returnStatus === 'partial' || s.returnStatus === 'full')
- );
- const returnsThisMonthCount = returnsThisMonth.length;
- const returnsThisMonthValue = returnsThisMonth.reduce((sum, s) => sum + (s.totalRefunded ?? 0), 0);
-
- const tradeInsThisMonth = exchanges.filter(e =>
-   (e.localUpdatedAt ?? '').startsWith(thisMonth)
- ).length;
-
- return {
- phonesInStock,
- accessoriesInStock,
- soldPhones,
- totalSoldAccessories,
- todayRevenue,
- todayProfit,
- inventoryValue,
- totalProfit: (totalRevenueAllTime - totalRefundedAllTime) - totalCostAllTime,
- potentialProfit,
- todayCount: todaySales.length,
- returnsThisMonthCount,
- returnsThisMonthValue,
- tradeInsThisMonth
- };
- }, [phones, accessories, sales, exchanges]);
-
- // Chart data: Sales for last 7 days
- const chartData = useMemo(() => {
- // Last 7 Asia/Colombo days so the weekly boundary matches how sales.date is stored (Colombo),
- // fixing the off-by-one "weekly revenue" bug near midnight.
- return lastNDaysColombo(7).map(date => {
- const daySales = sales.filter(s => s.date === date);
- const revenue = daySales.reduce((sum, s) => sum + saleNetRevenue(s), 0);
- const profit = daySales.reduce((sum, s) => {
- const cost = s.items.reduce((acc, item) => acc + item.costPrice, 0);
- return sum + (s.totalRevenue - cost);
- }, 0);
- return { label: weekdayShortColombo(date), revenue, profit, date };
- });
- }, [sales]);
+ const chartData = useMemo(() => lastNDaysColombo(7).map(date => ({
+   label: weekdayShortColombo(date),
+   ...saleReportingTotals(sales.filter(s => s.date === date), returns.filter(r => r.date === date)),
+   date,
+ })), [sales, returns]);
 
  const recentSales = useMemo(() => {
  return [...sales]
@@ -184,11 +136,12 @@ export default function Dashboard() {
  <p className="text-xs font-medium text-[var(--subtle)] mb-2">Stock Units</p>
  <div className="flex flex-col gap-0.5">
  <div className="flex items-center justify-between"><span className="text-[11px] font-bold text-[var(--subtle)]">Phones:</span><span className="text-lg font-bold text-[var(--ink)]">{stats.phonesInStock}</span></div>
+ <div className="flex items-center justify-between"><span className="text-[11px] font-bold text-[var(--subtle)]">MacBooks:</span><span className="text-lg font-bold text-[var(--ink)]">{stats.macBooksInStock}</span></div>
  <div className="flex items-center justify-between"><span className="text-[11px] font-bold text-[var(--subtle)]">Accessories:</span><span className="text-lg font-bold text-[var(--ink)]">{stats.accessoriesInStock}</span></div>
  </div>
  <div className="mt-4 flex gap-1 h-1">
  {[...Array(12)].map((_, i) => (
- <div key={i} className={cn("flex-1 rounded-xl", i < Math.round(((stats.phonesInStock + stats.accessoriesInStock)/200)*12) ? 'bg-[var(--success)]' : 'bg-[var(--line)]')} />
+ <div key={i} className={cn("flex-1 rounded-xl", i < Math.round(((stats.phonesInStock + stats.macBooksInStock + stats.accessoriesInStock)/200)*12) ? 'bg-[var(--success)]' : 'bg-[var(--line)]')} />
  ))}
  </div>
  </div>
@@ -220,10 +173,10 @@ export default function Dashboard() {
  <div className="bg-[var(--paper)] rounded-2xl shadow-sm p-5 border border-[var(--line)] relative overflow-hidden group">
  <p className="text-xs font-medium text-[var(--danger)] mb-2">Returns This Month</p>
  <div className="flex items-baseline gap-1">
- <span className="font-display text-3xl font-semibold text-[var(--teal)]">{stats.returnsThisMonthCount + stats.tradeInsThisMonth}</span>
+ <span className="font-display text-3xl font-semibold text-[var(--teal)]">{returnsLoading ? '…' : returnsError ? '—' : stats.returnsThisMonthCount}</span>
  <span className="text-xs font-medium text-[var(--danger)]">total</span>
  </div>
- <p className="text-[11px] text-[var(--subtle)] mt-2">{stats.returnsThisMonthCount} refunds · {stats.tradeInsThisMonth} trade-ins · LKR {stats.returnsThisMonthValue.toLocaleString()} refunded</p>
+ <p className="text-[11px] text-[var(--subtle)] mt-2">{returnsError ? 'Refund records unavailable' : returnsLoading ? 'Loading refunds…' : `${stats.returnsThisMonthCount} refunds · ${stats.tradeInsThisMonth} trade-ins · ${formatLKR(stats.returnsThisMonthValue)} refunded`}</p>
  </div>
  </motion.div>
  </div>
@@ -332,7 +285,7 @@ export default function Dashboard() {
  </div>
  </div>
  <div className="text-right shrink-0">
- <p className="text-[11px] font-bold text-[var(--brand)]">{formatLKR(saleNetRevenue(sale))}</p>
+ <p className="text-[11px] font-bold text-[var(--brand)]">{formatLKR(saleRevenueAfterRefunds(sale))}</p>
  <span className="text-[8px] font-bold text-[var(--success)] ">VERIFIED</span>
  </div>
  </div>
