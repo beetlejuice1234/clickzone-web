@@ -30,6 +30,8 @@ interface PosDraft {
   specialNotes: string;
   defaultWarranty: string;
   includeBillTerms: boolean;
+  includeItemWarranty: boolean;
+  setIncludeItemWarranty: (value: boolean) => void;
   setIncludeBillTerms: (value: boolean) => void;
   pendingExchanges: ExchangePayload[];
   setCartItems: (u: SetArg<CartItem[]>) => void;
@@ -58,6 +60,8 @@ export const usePosDraft = create<PosDraft>((set) => ({
   specialNotes: '',
   defaultWarranty: '',
   includeBillTerms: false,
+  includeItemWarranty: false,
+  setIncludeItemWarranty: (includeItemWarranty) => set({ includeItemWarranty }),
   setIncludeBillTerms: (includeBillTerms) => set({ includeBillTerms }),
   pendingExchanges: [],
   setCartItems: (u) => set((s) => ({ cartItems: apply(s.cartItems, u) })),
@@ -70,6 +74,6 @@ export const usePosDraft = create<PosDraft>((set) => ({
   setPendingExchanges: (u) => set((s) => ({ pendingExchanges: apply(s.pendingExchanges, u) })),
   resetDraft: () => set({
     cartItems: [], customerWhatsapp: '', customerName: '', customerNic: '',
-    paymentMethod: 'cash', specialNotes: '', defaultWarranty: '', includeBillTerms: false, pendingExchanges: [],
+    paymentMethod: 'cash', specialNotes: '', defaultWarranty: '', includeBillTerms: false, includeItemWarranty: false, pendingExchanges: [],
   }),
 }));

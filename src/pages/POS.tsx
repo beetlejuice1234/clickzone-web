@@ -3,11 +3,12 @@ import { ShoppingCart, Smartphone, X, FileDown, Package, Scan, CheckCircle2, Wre
 import { usePhones, useAccessories, reloadData, checkout, createQuotation } from '@/lib/api';
 import { formatLKR, cn, todayColombo, WARRANTY_PRESETS, deviceIdentifier } from '@/lib/utils';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { shareBillPDF, downloadBillPDF, openBillPDF, type BillData } from '@/lib/pdfBill';
+import { shareBillPDF, downloadBillPDF, openBillPDF, BILL_TERMS, type BillData } from '@/lib/pdfBill';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { useMobile } from '@/hooks/useMobile';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,6 +44,9 @@ export default function POS() {
  const setDefaultWarranty = usePosDraft(s => s.setDefaultWarranty);
  const includeBillTerms = usePosDraft(s => s.includeBillTerms);
  const setIncludeBillTerms = usePosDraft(s => s.setIncludeBillTerms);
+ const includeItemWarranty = usePosDraft(s => s.includeItemWarranty);
+ const setIncludeItemWarranty = usePosDraft(s => s.setIncludeItemWarranty);
+ const [billOptions, setBillOptions] = useState({ terms: false, warranty: false, text: '' });
  const pendingExchanges = usePosDraft(s => s.pendingExchanges);
  const setPendingExchanges = usePosDraft(s => s.setPendingExchanges);
  const resetDraft = usePosDraft(s => s.resetDraft);
@@ -249,7 +253,7 @@ export default function POS() {
  const saleItems: SaleItem[] = cartItems.map(c => {
  const p = parseInt(c.finalPrice) || 0;
  const d = parseInt(c.discount) || 0;
- const itemWarranty = includeBillTerms ? (c.warranty ?? defaultWarranty).trim() || undefined : undefined;
+ const itemWarranty = includeItemWarranty ? (c.warranty ?? defaultWarranty).trim() || undefined : undefined;
  if (c.type === 'phone') {
  const phone = c.itemRef as PhoneUnit;
  return {
@@ -447,7 +451,7 @@ _Please keep this message as your digital receipt._`;
       console.error("Receipt generation failed:", err);
       toast.error("Receipt generation failed, but the sale was saved successfully.");
     }
-  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, defaultWarranty, includeBillTerms, netAmount, totalDiscount, pendingExchanges, tradeInTotal, isMobile, resetDraft]);
+  }, [cartItems, customerWhatsapp, customerName, customerNic, paymentMethod, specialNotes, defaultWarranty, includeBillTerms, includeItemWarranty, netAmount, totalDiscount, pendingExchanges, tradeInTotal, isMobile, resetDraft]);
 
  // Save a quotation from the current cart (no sale, no stock change) + share via WhatsApp/PDF.
  const handleGenerateQuotation = useCallback(async () => {
@@ -464,7 +468,7 @@ _Please keep this message as your digital receipt._`;
  const quoteItems: SaleItem[] = cartItems.map(c => {
  const p = parseInt(c.finalPrice) || 0;
  const d = parseInt(c.discount) || 0;
- const itemWarranty = includeBillTerms ? (c.warranty ?? defaultWarranty).trim() || undefined : undefined;
+ const itemWarranty = includeItemWarranty ? (c.warranty ?? defaultWarranty).trim() || undefined : undefined;
  if (c.type === 'phone') {
  const phone = c.itemRef as PhoneUnit;
  return {
@@ -573,7 +577,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  waWin?.close();
  console.error('Quotation receipt failed:', err);
  }
- }, [cartItems, customerWhatsapp, customerName, customerNic, specialNotes, defaultWarranty, includeBillTerms, netAmount, totalDiscount, isMobile]);
+ }, [cartItems, customerWhatsapp, customerName, customerNic, specialNotes, defaultWarranty, includeBillTerms, includeItemWarranty, netAmount, totalDiscount, isMobile]);
 
  useEffect(() => {
  if (!billGenerated) return;
@@ -593,36 +597,63 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  }
  }, [lastBillData, isMobile]);
 
- const warrantyOptions = (
-  <Dialog>
+ const receiptOptions = (
+  <Dialog onOpenChange={(open) => {
+    if (open) setBillOptions({ terms: includeBillTerms, warranty: includeItemWarranty, text: defaultWarranty });
+  }}>
     <DialogTrigger asChild>
       <Button type="button" variant="outline" className="w-full" disabled={cartItems.length === 0}>
         <ShieldCheck size={14} />
-        {includeBillTerms ? 'Edit warranty & terms' : 'Add warranty & terms'}
+        Terms & Conditions {includeBillTerms ? '· On' : '· Off'}
       </Button>
     </DialogTrigger>
-    <DialogContent className="bg-[var(--paper)] text-[var(--ink)]">
+    <DialogContent className="max-h-[90vh] overflow-y-auto bg-[var(--paper)] text-[var(--ink)]">
       <DialogHeader>
-        <DialogTitle>Bill warranty & terms</DialogTitle>
-        <DialogDescription>Choose the warranty for this bill and include the terms at the bottom of the PDF.</DialogDescription>
+        <DialogTitle>Terms & Conditions</DialogTitle>
+        <DialogDescription>Choose what to print on this bill.</DialogDescription>
       </DialogHeader>
-      <Select
-        value={WARRANTY_PRESETS.find(preset => preset === defaultWarranty) ?? ''}
-        onValueChange={(value) => setDefaultWarranty(value === 'custom' ? '' : value)}
-      >
-        <SelectTrigger><SelectValue placeholder="Choose a warranty preset" /></SelectTrigger>
-        <SelectContent>
-          {WARRANTY_PRESETS.map(preset => <SelectItem key={preset} value={preset}>{preset}</SelectItem>)}
-          <SelectItem value="custom">Custom warranty</SelectItem>
-        </SelectContent>
-      </Select>
-      <Input aria-label="Warranty text" value={defaultWarranty} onChange={e => setDefaultWarranty(e.target.value)}
-        placeholder="Warranty text (optional)" />
-      <div className="flex justify-end gap-2">
-        {includeBillTerms && (
-          <DialogClose asChild><Button type="button" variant="outline" onClick={() => setIncludeBillTerms(false)}>Remove from bill</Button></DialogClose>
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <Checkbox checked={billOptions.terms}
+            onCheckedChange={value => setBillOptions(prev => ({ ...prev, terms: value === true }))} />
+          Include Terms & Conditions at the bottom
+        </Label>
+        <div className="space-y-1 rounded-md border p-3 text-xs text-[var(--subtle)]">
+          {BILL_TERMS.map(term => <p key={term}>{term}</p>)}
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <Checkbox checked={billOptions.warranty}
+            onCheckedChange={value => setBillOptions(prev => ({ ...prev, warranty: value === true }))} />
+          Include item warranty text
+        </Label>
+        {billOptions.warranty && (
+          <>
+            <Select
+              value={WARRANTY_PRESETS.find(preset => preset === billOptions.text) ?? ''}
+              onValueChange={value => setBillOptions(prev => ({ ...prev, text: value === 'custom' ? '' : value }))}
+            >
+              <SelectTrigger><SelectValue placeholder="Choose a warranty preset" /></SelectTrigger>
+              <SelectContent>
+                {WARRANTY_PRESETS.map(preset => <SelectItem key={preset} value={preset}>{preset}</SelectItem>)}
+                <SelectItem value="custom">Custom warranty</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input aria-label="Warranty text" value={billOptions.text} placeholder="Warranty text (optional)"
+              onChange={e => setBillOptions(prev => ({ ...prev, text: e.target.value }))} />
+          </>
         )}
-        <DialogClose asChild><Button type="button" onClick={() => setIncludeBillTerms(true)}>Include on bill</Button></DialogClose>
+      </div>
+      <div className="flex justify-end gap-2">
+        <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+        <DialogClose asChild>
+          <Button type="button" onClick={() => {
+            setIncludeBillTerms(billOptions.terms);
+            setIncludeItemWarranty(billOptions.warranty);
+            setDefaultWarranty(billOptions.text);
+          }}>Save bill options</Button>
+        </DialogClose>
       </div>
     </DialogContent>
   </Dialog>
@@ -741,7 +772,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
   className="w-full h-8 px-2 bg-[var(--bg-app)] border border-[var(--line)] rounded-xl text-[10px] font-bold text-[var(--danger)] focus:outline-none focus:border-[var(--brand)]"
   />
   </div>
-  {includeBillTerms && (<div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
+  {includeItemWarranty && (<div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
     <span className="text-[8px] font-bold text-[var(--subtle)] uppercase shrink-0">Warranty</span>
     <input
       type="text"
@@ -822,7 +853,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  </button>
  ))}
  </div>
- {warrantyOptions}
+ {receiptOptions}
  <textarea
  value={specialNotes}
  onChange={(e) => setSpecialNotes(e.target.value)}
@@ -1110,7 +1141,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  />
  </div>
  </div>
- {includeBillTerms && (<div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
+ {includeItemWarranty && (<div className="col-span-2 pt-2 border-t border-[var(--line)]/50 flex items-center justify-between gap-2">
    <span className="text-[8px] font-bold text-[var(--subtle)] uppercase shrink-0 flex items-center gap-1">
      <ShieldCheck size={11} className="text-[var(--brand)]" />
      Warranty:
@@ -1158,7 +1189,7 @@ _This is a quotation, not a receipt. Prices valid until ${validUntil}._
  className="h-11 bg-[var(--bg-app)] border-[var(--line)] focus-visible:border-[var(--brand)] focus-visible:ring-0 text-[11px] font-bold text-[var(--ink)] disabled:opacity-30 transition-none"
  />
  </div>
- {warrantyOptions}
+ {receiptOptions}
  <div className="space-y-2">
  <Label className="text-[9px] font-bold text-[var(--subtle)] ">Payment Method</Label>
  <div className="grid grid-cols-3 gap-2">
